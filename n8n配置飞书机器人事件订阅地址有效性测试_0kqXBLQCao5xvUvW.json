@@ -1,0 +1,111 @@
+{
+  "updatedAt": "2026-07-27T15:02:23.141Z",
+  "createdAt": "2026-07-27T15:02:23.141Z",
+  "id": "0kqXBLQCao5xvUvW",
+  "name": "n8n配置飞书机器人事件订阅地址有效性测试",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 配置飞书机器人事件订阅地址有效性测试\n填写URL后，飞书服务器会向其发送一个 HTTP POST 以验证地址有效期，请求格式为 JSON ，带 CHALLENGE 参数。应用接收此请求后，需要解析出 CHALLENGE 值，并在 1 秒内回复 CHALLENGE 值。",
+        "height": 336,
+        "width": 720,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "5b2381d2-a0f1-4b65-adb2-3e7af2f45780",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"challenge\": {{ $json.body.challenge.toJsonString() }}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        528,
+        144
+      ],
+      "id": "79f1e2cb-2dab-4576-8541-1f871cd6a35d",
+      "name": "返回CHALLENGE",
+      "notesInFlow": true,
+      "notes": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "feishu-smart-bookkeeping",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        144
+      ],
+      "id": "8d1a7026-c6e5-4dc2-b9a7-78e0546fe993",
+      "name": "接收飞书端POST请求",
+      "webhookId": "a612e681-a437-4839-9e35-0f3049fd445c",
+      "notesInFlow": true,
+      "notes": "Webhook"
+    }
+  ],
+  "connections": {
+    "接收飞书端POST请求": {
+      "main": [
+        [
+          {
+            "node": "返回CHALLENGE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "a37a833b-4dd7-4a04-ac69-aa806ecd5dd0",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-27T15:02:23.143Z",
+      "createdAt": "2026-07-27T15:02:23.143Z",
+      "role": "workflow:owner",
+      "workflowId": "0kqXBLQCao5xvUvW",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-27T15:02:21.497Z",
+      "createdAt": "2026-07-27T15:02:21.497Z",
+      "id": "eWZAanZz3oeJRFED",
+      "name": "事件订阅"
+    },
+    {
+      "updatedAt": "2026-07-27T15:02:21.538Z",
+      "createdAt": "2026-07-27T15:02:21.538Z",
+      "id": "lurGXXTwnrvAyfXr",
+      "name": "飞书机器人"
+    }
+  ]
+}
