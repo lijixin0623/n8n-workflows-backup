@@ -1,0 +1,110 @@
+{
+  "updatedAt": "2026-08-08T16:28:20.938Z",
+  "createdAt": "2026-08-08T10:40:22.533Z",
+  "id": "4QOTVYy2Vh8hjbl2",
+  "name": "My workflow",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "triggerOn": "folder",
+        "path": "/data/RunningHub_Project/00_Inbox",
+        "events": [
+          "add"
+        ],
+        "options": {
+          "usePolling": true
+        }
+      },
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -128
+      ],
+      "id": "d00ac1ca-e1c0-4b2e-adb2-1b425c6f9543",
+      "name": "Local File Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 统一存放的目标总库\nconst targetDir = '/data/RunningHub_Project/01_All_Assets';\n\nconst today = new Date();\nconst dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');\n\nconst rawItems = $input.all();\nconst result = [];\n\nfor (const item of rawItems) {\n  const filePath = item.json.filepath || item.json.path || item.json.filename || '';\n  if (!filePath || !/\\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(filePath)) continue;\n\n  const fileNameOnly = filePath.split(/[/\\\\]/).pop();\n  const extMatch = fileNameOnly.match(/\\.[^.]+$/);\n  const ext = extMatch ? extMatch[0] : '.jpg';\n\n  // 1. 匹配人工填写的编号前缀，例如 M001-01 或 M002-03\n  const idMatch = fileNameOnly.match(/(M\\d{3}-\\d{2})/i);\n\n  let newFileName = '';\n\n  if (idMatch) {\n    const mainID = idMatch[1].toUpperCase(); // 统一转大写如 M001-01\n    const lower = fileNameOnly.toLowerCase();\n\n    // 自动根据文件名里的关键字识别后缀，如果没有关键字则给默认衍生后缀 _UPS\n    let tag = '_UPS';\n    if (lower.includes('bg') || lower.includes('换背景') || lower.includes('抠图')) {\n      tag = '_BG';\n    } else if (lower.includes('dress') || lower.includes('换装')) {\n      tag = '_DRESS';\n    } else if (lower.includes('clr') || lower.includes('高清')) {\n      tag = '_CLR';\n    }\n\n    newFileName = `${dateStr}-${mainID}${tag}${ext}`;\n  } else {\n    // 无法识别编号的保底处理\n    newFileName = `UNSORTED_${fileNameOnly}`;\n  }\n\n  const targetPath = `${targetDir}/${newFileName}`;\n\n  result.push({\n    json: {\n      originalPath: filePath,\n      newFileName: newFileName,\n      targetPath: targetPath\n    }\n  });\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        864,
+        -128
+      ],
+      "id": "11e905b1-d1f6-49c3-bba2-d81ceb370780",
+      "name": "按人物归类并重命名"
+    },
+    {
+      "parameters": {
+        "command": "=mkdir -p /data/RunningHub_Project/01_All_Assets && mv \"{{ $json.originalPath }}\" \"{{ $json.targetPath }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        -128
+      ],
+      "id": "80f875ef-6be2-411a-a644-8bc120bb66ab",
+      "name": "Execute Command"
+    }
+  ],
+  "connections": {
+    "Local File Trigger": {
+      "main": [
+        [
+          {
+            "node": "按人物归类并重命名",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "按人物归类并重命名": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "e13bb1c2-3068-4050-bc9e-6b47f50dc1d6",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-08-08T10:40:22.539Z",
+      "createdAt": "2026-08-08T10:40:22.539Z",
+      "role": "workflow:owner",
+      "workflowId": "4QOTVYy2Vh8hjbl2",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
