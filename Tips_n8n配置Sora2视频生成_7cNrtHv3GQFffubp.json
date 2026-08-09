@@ -1,0 +1,957 @@
+{
+  "updatedAt": "2026-08-05T11:52:45.196Z",
+  "createdAt": "2026-07-30T18:28:08.555Z",
+  "id": "7cNrtHv3GQFffubp",
+  "name": "Tips_n8n配置Sora2视频生成",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        2528,
+        1312
+      ],
+      "id": "b9734164-fe81-4717-a554-5332bcc58dd7",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "=https://nangeai.top/v1/videos/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Sora参数设置1').first().json.api_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3536,
+        1168
+      ],
+      "id": "f9eadf6d-ac98-467c-9fa2-f3f6e530727d",
+      "name": "查询任务1",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "=https://nangeai.top/v1/videos/{{ $json.id }}/content\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Sora参数设置1').first().json.api_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3936,
+        1152
+      ],
+      "id": "e765e450-8658-45bd-9331-75c2d76d2e5a",
+      "name": "下载视频1",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8fe131d8-b29b-442d-bdfe-7df098b02c6b",
+              "name": "api_key",
+              "value": "sk-ZjFN89KPEt86y5oaeOBIRoK7W3Bn0HLEKPUjWwPBJCVSBvdB",
+              "type": "string"
+            },
+            {
+              "id": "061c7b31-d48b-4f94-b167-641b2cadadad",
+              "name": "model",
+              "value": "=sora-2",
+              "type": "string"
+            },
+            {
+              "id": "ffb2f910-546f-41da-a814-c4136a9d1edc",
+              "name": "prompt",
+              "value": "={{ $json.ideo }}",
+              "type": "string"
+            },
+            {
+              "id": "ecfe759b-a8fd-4acd-bd00-d894b548ea6f",
+              "name": "seconds",
+              "value": "=12",
+              "type": "number"
+            },
+            {
+              "id": "0230cb83-8410-4b39-8b1c-89a1b76a4a9d",
+              "name": "size",
+              "value": "=720x1280",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2928,
+        1168
+      ],
+      "id": "eb86e171-398c-4759-9ab2-aa98a2ee468d",
+      "name": "Sora参数设置1",
+      "notesInFlow": true,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://nangeai.top/v1/videos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.api_key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "={{ $json.model }}"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.prompt }}"
+            },
+            {
+              "name": "seconds",
+              "value": "={{ $json.seconds }}"
+            },
+            {
+              "name": "size",
+              "value": "={{ $json.size }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3120,
+        1168
+      ],
+      "id": "a8fa2f7d-b43f-45e8-b2e8-9e84ee94888e",
+      "name": "Sora文生视频1",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3344,
+        1168
+      ],
+      "id": "6f51f105-c432-4c4f-808e-a9b14ecd27af",
+      "name": "等待10秒1",
+      "webhookId": "13ea0552-2d25-4d1f-aefd-be080d124cf4",
+      "notesInFlow": true,
+      "notes": "Wait"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f5d66584-990a-4d75-ae70-22e521de4e91",
+              "leftValue": "={{ $json.progress }}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3728,
+        1168
+      ],
+      "id": "339c4407-f5df-4f6d-946e-4dfb1a364f77",
+      "name": "任务是否完成1",
+      "notesInFlow": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./.n8n-files/{{ $now.toFormat(\"yyyyMMddHHmmss\") }}.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        4112,
+        1152
+      ],
+      "id": "fca560aa-07ca-4985-927b-60fc6df86413",
+      "name": "保存视频到本地1",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7f724f2f-0c6c-45ab-9786-7dbeee37081a",
+              "name": "ideo",
+              "value": "=中国古装短剧",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2720,
+        1168
+      ],
+      "id": "ffd3af06-ef5e-4745-89c5-d8b3f23ab38a",
+      "name": "创意想法输入1"
+    },
+    {
+      "parameters": {
+        "url": "=https://nangeai.top/v1/videos/{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Sora参数设置2').first().json.api_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4176,
+        1456
+      ],
+      "id": "ad02a490-0263-42fd-9bbe-ccf65ed0ee25",
+      "name": "查询任务2",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "=https://nangeai.top/v1/videos/{{ $json.id }}/content\n",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Sora参数设置2').first().json.api_key }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4576,
+        1440
+      ],
+      "id": "ac810fcb-833f-4eba-84d3-7a8d5a919d9a",
+      "name": "下载视频2",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        3248,
+        1680
+      ],
+      "id": "76613beb-230b-4feb-a67e-7c3b0cfa6b21",
+      "name": "gpt-4o-mini 1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"sora_prompt\": \"风格：手持、亲密剧情片。窗侧柔光、暖灯补光；色调：琥珀色、米白、胡桃棕。浅景深。\\n\\n小型咖啡馆，木桌，背景有咖啡机。两人对坐，一人前倾，一人双臂环抱。\\n\\n镜头语言：\\n景别与机位：中近景，略从一人身后取角度；缓慢、轻微手持漂移。\\n情绪：紧张、亲密、未说破的冲突。\\n\\n动作：\\n- 甲放下杯子，目光移开。\\n- 甲：「我们不能一直这样。」\\n- 乙停顿，然后缓缓点头。\\n- 乙：「我知道。」\\n\\n背景声：\\n咖啡机嗡鸣、人声低语、杯碟轻响。\",\n  \"api_params\": {\n    \"seconds\": \"8\",\n    \"size\": \"1280x720\",\n    \"model\": \"sora-2\"\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3392,
+        1680
+      ],
+      "id": "757fc07c-d56f-4fc1-8f99-43601a1c9ac7",
+      "name": "Structured Output Parser 1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=【创意想法输入】\n- 想法：{{ $json.ideo }}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# 角色 : Sora 创意输入结构化助手\n- 专注于根据用户的粗想法、零散描述或一句话创意，整理并扩展为**结构化的创意输入**，便于直接填入 Sora 视频提示词生成助手的【创意输入】模板。\n- 只基于用户提供的信息进行合理推断与补全，不编造与用户意图明显冲突的情节或风格。\n\n## 背景 :\n- Sora 视频提示词生成助手需要**固定 7 项**的创意输入（场景/环境、角色/主体、情绪/氛围、风格参考、主要动作或节奏、对白需求、环境音需求），用户往往只有粗想法或一句话。\n- 本助手负责把「粗想法」补全为可用的结构化描述，**以 JSON 格式输出** 一个键的创意输入全文，便于程序解析或填入 Sora 视频提示词生成助手。\n\n## 简介 :\n- author: 南哥\n- version: 1.0\n- language: 中文\n- description: 根据用户的一句或几句粗想法（如「咖啡馆两人对话，有点紧张，有环境音」），以 **JSON 格式** 输出**仅含一个键**的创意输入全文（与【创意输入】模板一致），可直接用于 Sora 视频提示词生成助手或下游流程。\n\n## 任务 :\n- 理解用户的粗想法（场景、人物、情绪、风格、对白、声音等，可非常简略）。\n- 对未明确的信息做**合理、克制**的补全（如年代、画质、具体动作节奏），并保持与用户意图一致。\n- **以 JSON 格式输出**，仅包含**一个键**，其值为完整的【创意输入】区块文本（含标题与 7 条，换行用 `\\n`），可直接被程序解析或粘贴到 Sora 助手。\n\n## 约束条件 :\n- **输出必须为合法 JSON 对象**，不得在 JSON 外包裹 markdown 代码块（如 \\`\\`\\`json）、说明文字、标题或任何非 JSON 字符。\n- 补全内容须与用户粗想法一致，不强行加入用户未提及的类型（如用户只说「海边散步」则不加入对话或紧张感）。\n- 若用户某方面完全未提及，该条内容用「未指定，可留空或由下一环节补充」或一句中性建议填充，7 条均须存在且非空。\n\n## 技能 :\n- 从一句话中拆解出场景、角色、情绪、风格、动作、对白、声音等维度。\n- 用 1～3 句具体化描述补全每项（地点、光线、人物关系、年代/片种、动作节奏、对白有无及大意、环境声类型）。\n- 严格按 JSON 规范输出，保证可被程序解析；字符串内特殊字符正确转义。\n\n## 工作流：\n- 第一步：完整理解用户粗想法，识别已提及与未提及的维度。\n- 第二步：按 7 项顺序逐项填充：先写用户已给的，再对未给的做合理补全或标注「未指定」。\n- 第三步：检查 7 项齐全、与用户意图一致，且字符串已正确转义。\n- 第四步：将结果封装为 JSON 对象，仅含规定键，校验 JSON 合法性后输出。\n\n## 输出格式（必遵）:\n- **格式**：纯 JSON 对象，UTF-8 编码，无 BOM。\n- **根对象键**（仅此一个）：\n  - `creative_input`：字符串，完整的【创意输入】区块全文。内容须包含标题「【创意输入】」及 7 条（场景/环境、角色/主体、情绪/氛围、风格参考、主要动作或节奏、对白需求、环境音需求），每条格式为 `- 字段名：` 后接 1～3 句内容；段落间换行用 `\\n`。\n- **禁止**：在 JSON 外再包一层 markdown 代码块、说明文字或任何非 JSON 字符；字符串内 `\"`、`\\`、换行须正确转义为 `\\\"`、`\\\\`、`\\n`。\n\n## 输出样例（仅供参考）:\n**用户输入**：咖啡馆里两人对话，有一点紧张感，有环境音。\n\n```json\n{\n  \"creative_input\": \"【创意输入】\\n- 场景/环境：小型咖啡馆内，木桌、背景有咖啡机，室内暖光、略拥挤，白天或傍晚。\\n- 角色/主体：两人对坐，一人前倾、一人双臂环抱；关系中有未说破的张力（如情侣、同事或熟人）。\\n- 情绪/氛围：紧张、克制、略带对峙感，有未说出口的冲突或秘密。\\n- 风格参考（如年代、片种、画质）：手持、intimate drama；35mm 或数字仿胶片，自然光+暖灯，浅景深。\\n- 主要动作或节奏：一人放下杯子、移开视线；另一人停顿后缓缓点头；可穿插一两句短对白，节奏慢、有停顿。\\n- 是否需要对白/台词？若有，请写出大意或原文：需要。示例：A：「我们不能一直这样。」B 停顿后点头：「我知道。」（可替换为用户自定台词。）\\n- 是否需要环境音/背景声描述：需要。咖啡机嗡鸣、周围低声交谈、杯碟轻响，无配乐，以环境声为主。\"\n}\n```\n\n## 输出执行步骤：\n### 第一步：理解粗想法\n- 提取用户已提到的：场景、人物、情绪、风格、对白、声音等；标出完全未提的项。\n### 第二步：逐项填充\n- 已提及：用 1～3 句具体化，不改变用户意图。\n- 未提及：做合理补全或写「未指定，可留空或由下一环节补充」。\n### 第三步：封装为 JSON\n- 将完整【创意输入】区块（标题 + 7 条）拼成一段文本，换行处用 `\\n`，写入唯一键 `creative_input`。\n- 检查字符串中特殊字符已正确转义（如 `\"` → `\\\"`，`\\` → `\\\\`）。\n### 第四步：输出\n- **仅输出一个合法 JSON 对象**，无其他任何文字。\n\n## 输出标准\n### 内容要求\n- **完整性**：`creative_input` 值含标题【创意输入】及 7 条，无缺项。\n- **一致性**：补全内容与用户粗想法不冲突。\n- **可用性**：可直接被 `JSON.parse` 解析；将值中 `\\n` 还原为换行后即可粘贴到 Sora 助手的【创意输入】位置。\n\n### JSON 要求\n- 键名必须为 `creative_input`；值为字符串类型，内容为完整创意输入区块。\n- 可直接被标准 JSON 解析器解析；输出不得包含 markdown 代码块或说明文字。\n\n## 初始化\n作为 Sora 创意输入结构化助手，我只根据你的**粗想法或一句话描述**，以 **JSON 格式** 输出**仅含一个键** `creative_input` 的结果（值为完整【创意输入】区块文本），便于程序解析或填入 Sora 视频提示词生成助手。请按下面格式提供你的创意想法（一句或几句即可）：\n\n【创意想法输入】\n- 想法："
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        2912,
+        1456
+      ],
+      "id": "9e0ddf5d-a5cb-4b18-87bc-4b2a95a132e5",
+      "name": "Sora创意输入结构化助手1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output.creative_input }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# 角色 : Sora 视频提示词生成高手\n- 专注于根据用户的创意意图或粗描述，生成符合 Sora 特性、可直接用于视频生成的优质**中文** prompt。\n- 只基于用户提供的场景/主题/风格等信息进行扩展与结构化，不凭空编造与用户意图无关的情节或元素。\n\n## 背景 :\n- Sora 是文本/图像驱动视频生成模型，prompt 越像「给从未见过分镜的摄影师下的 brief」，效果越可控；本助手默认采用**高可控的详细版**写法，**输出为中文 prompt**。\n- 时长、分辨率、模型等由 API 参数控制，**不可在 prompt 正文中请求**（如「再长一点」无效）；prompt 只负责内容：场景、主体、动作、镜头、光线、风格、对白与声音。\n- 短片段（如 4 秒）比长片段更易稳定执行指令；多镜头时建议按「一个镜头一个 setup」拆开写，便于后期剪辑或分段生成。\n\n## 简介 :\n- author: 南哥\n- version: 1.1\n- language: 中文\n- description: 根据用户提供的「场景/主题/风格/情绪/对白/参考」等输入，以 **JSON 格式** 输出：可直接用于视频生成的中文 prompt（`sora_prompt`）与建议 API 参数（`api_params`），符合 Sora 最佳实践的结构与颗粒度。\n\n## 任务 :\n- 理解用户想要呈现的画面、氛围、动作与节奏。\n- 按 Sora 推荐结构组织中文prompt：场景与风格 → 镜头与景别 → 动作节奏（按 beat 描述）→ 光线与色调 → 对白/音效（若有）。\n- 使用**具体、可见**的中文名词与动词（如「湿漉漉的沥青路、斑马线、霓虹灯在积水中的倒影」而非「夜晚很美的街道」）。\n- **以 JSON 格式输出**，包含可直接复制使用的中文 prompt 与建议 API 参数（seconds、size、model），且 API 参数不写入 prompt 正文。\n\n## 约束条件 :\n- **输出必须为合法 JSON 对象**，不得在 JSON 外包裹 markdown 代码块（如 \\`\\`\\`json）、说明文字、标题或任何非 JSON 字符。\n- 不在 prompt 正文中写时长、分辨率、模型选择；这些仅放在 JSON 的 `api_params` 中。\n- 每个镜头只写**一个明确的镜头设定、一个清晰的主体动作**；多镜头时分区块写，避免混在一段里。\n- 对白需单独成块（如「对白：」），且简洁，以便与 4–8 秒剪辑节奏匹配。\n- 不添加与视频生成无关的说明、问候或元描述；输出仅为单例 JSON 对象，键与格式严格按下方「输出格式」。\n\n## 技能 :\n- 将抽象意图转化为具体、可拍摄的中文视觉与动作描述。\n- 运用镜头语言（中文）：景别（广角/中近景/航拍）、角度（低角度/平视）、运动（推轨/摇镜/手持）、景深（浅景深/深景深）。\n- 用光线与调色锚定情绪：光源方向、软硬、色温、以及 3–5 个具体颜色词（如琥珀色、米白、胡桃棕）稳定画面色调。\n- 用「节奏化动作」替代模糊动作：如「向窗户走四步、停顿、在最后一秒拉开窗帘」而非「走过房间」。\n- 以**强控制的详细描述**获得更稳定输出：镜头语言、动作 beats、光线与色调、对白与环境声分块清晰。\n- 严格按 JSON 规范输出，保证可被程序解析；字符串内特殊字符正确转义。\n\n## 工作流：\n- 第一步：完整理解用户输入（场景、角色、情绪、风格、是否有对白/音效、期望节奏）。\n- 第二步：确定镜头与叙事策略（单镜头单动作；多镜头则按 Shot 分块）。\n- 第三步：按「场景与风格 → 镜头与构图 → 动作与节奏 → 光线与色调 → 对白/音效」组织中文描述。\n- 第四步：用具体中文名词与动词替换模糊表述，检查单镜头单动作、多镜头分块。\n- 第五步：将结果封装为 JSON 对象，仅含规定键，校验 JSON 合法性后输出。\n\n## 输出格式（必遵）:\n- **格式**：纯 JSON 对象，UTF-8 编码，无 BOM。\n- **根对象键**（必含如下，顺序不限）：\n  - `sora_prompt`：字符串，可直接用于视频生成的**中文 prompt**（主输出；可含「镜头语言」「动作」「对白」「背景声」等小标题）。\n  - `api_params`：对象，建议 API 参数（不写入 prompt 正文），包含：\n    - `seconds`：字符串，取 \"4\" | \"8\" | \"12\"（默认 \"4\" 更易控）\n    - `size`：字符串，如 \"1280x720\" | \"720x1280\"（sora-2）；sora-2-pro 可选 \"1024x1792\" | \"1792x1024\"\n    - `model`：字符串，取 \"sora-2\" | \"sora-2-pro\"\n- **禁止**：在 JSON 外再包一层 markdown 代码块（如 \\`\\`\\`json）、说明文字、标题或任何非 JSON 字符；禁止在 `sora_prompt` 正文中出现「再长一点」「4K」「用 sora-2-pro」等 API 级指令。\n\n## 中文 prompt 特性速查（写 prompt 时须结合）:\n| 维度 | 建议写法 | 避免写法 |\n|------|----------|----------|\n| 场景 | 具体环境、天气、时间、材质（如「湿漉漉的沥青路、斑马线、霓虹在积水中的倒影」） | 「夜晚很美的街道」 |\n| 动作 | 按 beat/秒描述（如「向窗走四步、停顿、最后一秒拉开窗帘」） | 「走过房间」 |\n| 镜头 | 景别+角度+运动+景深（如「广角、低角度、浅景深」） | 「电影感」 |\n| 光线与色调 | 光源方向+软硬+3–5 个颜色锚定（如「窗侧柔光、暖灯补光；色调：琥珀、米白、胡桃棕」） | 「房间很亮」 |\n| 风格 | 具体参考（如「70 年代 35mm 胶片、柔光晕、轻微片门晃动」） | 仅写「电影感」 |\n| 对白 | 单独「对白：」块，句子精炼自然，与镜头时长匹配 | 长段独白塞进 4 秒镜头 |\n\n## 输出样例（仅供参考）:\n**用户输入**：咖啡馆里两人对话，有一点紧张感，有环境音。\n\n```json\n{\n  \"sora_prompt\": \"风格：手持、亲密剧情片。窗侧柔光、暖灯补光；色调：琥珀色、米白、胡桃棕。浅景深。\\n\\n小型咖啡馆，木桌，背景有咖啡机。两人对坐，一人前倾，一人双臂环抱。\\n\\n镜头语言：\\n景别与机位：中近景，略从一人身后取角度；缓慢、轻微手持漂移。\\n情绪：紧张、亲密、未说破的冲突。\\n\\n动作：\\n- 甲放下杯子，目光移开。\\n- 甲：「我们不能一直这样。」\\n- 乙停顿，然后缓缓点头。\\n- 乙：「我知道。」\\n\\n背景声：\\n咖啡机嗡鸣、人声低语、杯碟轻响。\",\n  \"api_params\": {\n    \"seconds\": \"8\",\n    \"size\": \"1280x720\",\n    \"model\": \"sora-2\"\n  }\n}\n```\n\n## 输出执行步骤：\n### 第一步：理解输入\n- 提取场景、角色、情绪、风格、对白/音效、节奏偏好；确认用户要「高一致」还是「多创意」。\n### 第二步：确定镜头策略\n- 单镜头：固定一个镜头设定 + 一个主体动作（按 beats）。\n- 多镜头：按镜头分块，每个镜头单独写机位与动作 beats。\n### 第三步：撰写中文 prompt\n- 先写场景与风格，再写镜头与构图，再写按 beat 的动作与对白，最后光线/色调与背景声。\n- 用具体中文名词与动词；多镜头则分块写，每块一个镜头设定 + 一个主体动作。\n### 第四步：检查与优化\n- 确认无时长/分辨率/模型等 API 参数混入正文。\n- 确认单镜头单动作、对白简洁、颜色与光线可落地。\n### 第五步：封装为 JSON 并输出\n- 将 `sora_prompt`、`api_params` 填入 JSON 对象。\n- 检查字符串中的特殊字符已正确转义（如 `\"` → `\\\"`，`\\` → `\\\\`，换行 → `\\n`）。\n- 确认无 JSON 外的前缀、后缀或 markdown 包裹。\n- **仅输出一个合法 JSON 对象**，无其他任何文字。\n\n## 输出标准\n### 内容要求\n- **可执行性**：`sora_prompt` 可直接用于接受中文的生成流程，且不包含 API 参数类语句。\n- **结构友好**：结构清晰、动作按节奏、镜头与光线具体、风格有明确参考。\n- **语言**：prompt 正文为**中文**，与用户创意输入一致。\n\n### JSON 要求\n- 键名必须为 `sora_prompt`、`api_params`；`api_params` 内含 `seconds`、`size`、`model`。\n- 值为规定类型：`sora_prompt` 与 `api_params` 必填。\n- 可直接被标准 JSON 解析器解析（如 `JSON.parse`）；输出不得包含 markdown 代码块或说明文字。\n\n## 初始化\n作为 Sora 视频提示词生成高手（中文版），我只根据你提供的**场景/主题/风格/情绪/对白或音效需求**，生成**以 JSON 格式输出**的结果，包含可直接用于视频生成的**中文** prompt（`sora_prompt`）与建议 API 参数（`api_params`）。请按下面格式提供你的创意意图（可简可详）：\n\n【创意输入】\n- 场景/环境：\n- 角色/主体：\n- 情绪/氛围：\n- 风格参考（如年代、片种、画质）：\n- 主要动作或节奏：\n- 是否需要对白/台词？若有，请写出大意或原文：\n- 是否需要环境音/背景声描述：\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        3248,
+        1456
+      ],
+      "id": "03f17c8a-c6c0-47b9-9e95-404306bdb066",
+      "name": "Sora视频提示词生成助手1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7f724f2f-0c6c-45ab-9786-7dbeee37081a",
+              "name": "ideo",
+              "value": "=中国古装短剧",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2720,
+        1456
+      ],
+      "id": "8ebff2ac-06ee-4c83-9c3b-9e209f273648",
+      "name": "创意想法输入2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2912,
+        1680
+      ],
+      "id": "fc5b7fc4-e2d8-4671-870c-146f1750e8fa",
+      "name": "gpt-4o-mini1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"creative_input\": \"【创意输入】\\n- 场景/环境：小型咖啡馆内，木桌、背景有咖啡机，室内暖光、略拥挤，白天或傍晚。\\n- 角色/主体：两人对坐，一人前倾、一人双臂环抱；关系中有未说破的张力（如情侣、同事或熟人）。\\n- 情绪/氛围：紧张、克制、略带对峙感，有未说出口的冲突或秘密。\\n- 风格参考（如年代、片种、画质）：手持、intimate drama；35mm 或数字仿胶片，自然光+暖灯，浅景深。\\n- 主要动作或节奏：一人放下杯子、移开视线；另一人停顿后缓缓点头；可穿插一两句短对白，节奏慢、有停顿。\\n- 是否需要对白/台词？若有，请写出大意或原文：需要。示例：A：「我们不能一直这样。」B 停顿后点头：「我知道。」（可替换为用户自定台词。）\\n- 是否需要环境音/背景声描述：需要。咖啡机嗡鸣、周围低声交谈、杯碟轻响，无配乐，以环境声为主。\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        3056,
+        1680
+      ],
+      "id": "3ed8c802-ab41-418d-91b0-ef17c3610e14",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8fe131d8-b29b-442d-bdfe-7df098b02c6b",
+              "name": "api_key",
+              "value": "sk-ZjFN89KPEt86y5oaeOBIRoK7W3Bn0HLEKPUjWwPBJCVSBvdB",
+              "type": "string"
+            },
+            {
+              "id": "061c7b31-d48b-4f94-b167-641b2cadadad",
+              "name": "model",
+              "value": "={{ $json.output.api_params.model }}",
+              "type": "string"
+            },
+            {
+              "id": "ffb2f910-546f-41da-a814-c4136a9d1edc",
+              "name": "prompt",
+              "value": "={{ $json.output.sora_prompt }}",
+              "type": "string"
+            },
+            {
+              "id": "ecfe759b-a8fd-4acd-bd00-d894b548ea6f",
+              "name": "seconds",
+              "value": "={{ $json.output.api_params.seconds }}",
+              "type": "number"
+            },
+            {
+              "id": "0230cb83-8410-4b39-8b1c-89a1b76a4a9d",
+              "name": "size",
+              "value": "={{ $json.output.api_params.size }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3568,
+        1456
+      ],
+      "id": "f86d3421-fcaf-4b2a-be42-e880528ab1c2",
+      "name": "Sora参数设置2",
+      "notesInFlow": true,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://nangeai.top/v1/videos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.api_key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "={{ $json.model }}"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $json.prompt }}"
+            },
+            {
+              "name": "seconds",
+              "value": "={{ $json.seconds }}"
+            },
+            {
+              "name": "size",
+              "value": "={{ $json.size }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3760,
+        1456
+      ],
+      "id": "914f61fd-8ba8-4a96-bf95-855eb7c6a834",
+      "name": "Sora文生视频2",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3984,
+        1456
+      ],
+      "id": "c10454e3-a3b2-4415-8190-d639228b00de",
+      "name": "等待10秒2",
+      "webhookId": "13ea0552-2d25-4d1f-aefd-be080d124cf4",
+      "notesInFlow": true,
+      "notes": "Wait"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f5d66584-990a-4d75-ae70-22e521de4e91",
+              "leftValue": "={{ $json.progress }}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4368,
+        1456
+      ],
+      "id": "a008cc7a-1cfc-4671-9a64-8ccad51ef8bb",
+      "name": "任务是否完成2",
+      "notesInFlow": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./.n8n-files/{{ $now.toFormat(\"yyyyMMddHHmmss\") }}.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        4752,
+        1440
+      ],
+      "id": "ec53186e-f6c2-4f5f-bfe9-fafb39618aec",
+      "name": "保存视频到本地2",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Read/Write Files from Disk"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "创意想法输入2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "创意想法输入1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询任务1": {
+      "main": [
+        [
+          {
+            "node": "任务是否完成1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载视频1": {
+      "main": [
+        [
+          {
+            "node": "保存视频到本地1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sora参数设置1": {
+      "main": [
+        [
+          {
+            "node": "Sora文生视频1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sora文生视频1": {
+      "main": [
+        [
+          {
+            "node": "等待10秒1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待10秒1": {
+      "main": [
+        [
+          {
+            "node": "查询任务1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "任务是否完成1": {
+      "main": [
+        [
+          {
+            "node": "下载视频1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "等待10秒1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "创意想法输入1": {
+      "main": [
+        [
+          {
+            "node": "Sora参数设置1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询任务2": {
+      "main": [
+        [
+          {
+            "node": "任务是否完成2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载视频2": {
+      "main": [
+        [
+          {
+            "node": "保存视频到本地2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o-mini 1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sora视频提示词生成助手1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser 1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Sora视频提示词生成助手1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sora创意输入结构化助手1": {
+      "main": [
+        [
+          {
+            "node": "Sora视频提示词生成助手1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sora视频提示词生成助手1": {
+      "main": [
+        [
+          {
+            "node": "Sora参数设置2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "创意想法输入2": {
+      "main": [
+        [
+          {
+            "node": "Sora创意输入结构化助手1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4o-mini1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Sora创意输入结构化助手1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Sora创意输入结构化助手1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sora参数设置2": {
+      "main": [
+        [
+          {
+            "node": "Sora文生视频2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sora文生视频2": {
+      "main": [
+        [
+          {
+            "node": "等待10秒2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待10秒2": {
+      "main": [
+        [
+          {
+            "node": "查询任务2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "任务是否完成2": {
+      "main": [
+        [
+          {
+            "node": "下载视频2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "等待10秒2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "2066aa1b-b83c-4f61-be54-e6d19ca9b529",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-30T18:28:08.569Z",
+      "createdAt": "2026-07-30T18:28:08.569Z",
+      "role": "workflow:owner",
+      "workflowId": "7cNrtHv3GQFffubp",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-30T18:29:13.212Z",
+      "createdAt": "2026-07-30T18:29:13.212Z",
+      "id": "8O7mTemJ19TShbG8",
+      "name": "文生视频"
+    },
+    {
+      "updatedAt": "2026-07-30T18:29:13.254Z",
+      "createdAt": "2026-07-30T18:29:13.254Z",
+      "id": "BqGkqGfu29Q61i2W",
+      "name": "Sora"
+    },
+    {
+      "updatedAt": "2026-07-15T07:56:34.425Z",
+      "createdAt": "2026-07-15T07:56:34.425Z",
+      "id": "GtDhh1imDFFEmCOs",
+      "name": "AI"
+    },
+    {
+      "updatedAt": "2026-07-24T15:52:55.777Z",
+      "createdAt": "2026-07-24T15:52:55.777Z",
+      "id": "MIohFRPCPzCHovzG",
+      "name": "多维表格"
+    },
+    {
+      "updatedAt": "2026-07-30T18:28:30.545Z",
+      "createdAt": "2026-07-30T18:28:30.545Z",
+      "id": "QHkDbaKGi2szILH8",
+      "name": "群消息"
+    },
+    {
+      "updatedAt": "2026-07-22T21:49:07.897Z",
+      "createdAt": "2026-07-22T21:49:07.897Z",
+      "id": "d4eYQQSD7AYbi8vK",
+      "name": "飞书"
+    }
+  ]
+}
