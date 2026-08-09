@@ -1,0 +1,1734 @@
+{
+  "updatedAt": "2026-07-28T12:21:52.910Z",
+  "createdAt": "2026-07-22T16:48:28.178Z",
+  "id": "MQTp02CuPhpJ4Nhd",
+  "name": "7x24小时无人值守工单分诊自动化工作流",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "107f44d8-9d03-4ea0-935f-c55e5a917b62",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1264,
+        384
+      ],
+      "id": "6257b412-97de-45df-af26-a5475c12e9b2",
+      "name": "接收POST请求",
+      "webhookId": "107f44d8-9d03-4ea0-935f-c55e5a917b62",
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mkaDCN5JEBuykV9N",
+          "name": "Webhook-Apifox凭证"
+        }
+      },
+      "notes": "用户反馈的工单"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取AI分析结果和原始数据\nconst aiAnalysis = $input.first().json.output;\nconst originalData = $('接收POST请求').first().json.body;\n\n// 合并数据\nconst processedData = {\n  originalData,\n  aiAnalysis,\n  // 添加时间戳\n  received_at: new Date().toISOString(),\n  // 生成工单ID\n  ticket_id: 'T' + Date.now() + Math.random().toString(36).substr(2, 5)\n};\n\n// 决策逻辑\nlet action = 'normal';\n\nif (aiAnalysis.true_urgency === 'critical' || \n    aiAnalysis.sentiment === 'angry' ||\n    aiAnalysis.requires_immediate_human_intervention) {\n  action = 'urgent';\n} else if (aiAnalysis.true_urgency === 'low') {\n    action = 'auto_reply';\n}\n\nprocessedData.action_required = action;\n\n// 返回处理后的数据\nreturn [{ json: processedData }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        384
+      ],
+      "id": "f4b32c59-a5fd-4b87-a049-3874d143fb42",
+      "name": "综合决策处理"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一个专业的客户支持分析AI。请分析以下客户工单：\n\n工单标题：{{ $('接收POST请求').item.json.body.issue_title }}\n工单描述：{{ $('接收POST请求').item.json.body.issue_description }}\n客户信息：{{ $('接收POST请求').item.json.body.customer_name }}\n\n请以JSON格式返回分析结果：\n1. 情感分析：positive, neutral, negative, angry\n2. 真实紧急程度：critical, high, medium, low（基于问题内容而非用户自评）\n3. 问题分类：billing, technical, feature_request, bug, general\n4. 关键问题摘要：用一句话总结核心问题\n\n返回的分析结果示例\n{\n  \"sentiment\": \"angry\",\n  \"true_urgency\": \"critical\", \n  \"category\": \"billing\",\n  \"summary\": \"客户支付成功但订单状态未更新，导致重复付款\",\n  \"requires_immediate_human_intervention\": true\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -848,
+        384
+      ],
+      "id": "48f8801f-749e-4d43-aaee-21675fc86b49",
+      "name": "AI情感分析"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"sentiment\": \"angry\",\n  \"true_urgency\": \"critical\", \n  \"category\": \"billing\",\n  \"summary\": \"客户支付成功但订单状态未更新，导致重复付款\",\n  \"requires_immediate_human_intervention\": true\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -688,
+        592
+      ],
+      "id": "804d79e5-46bf-44e7-b816-2b691207e523",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.action_required }}",
+                    "rightValue": "urgent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "c4103d18-50ad-4545-82eb-515c939aa0bb"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "紧急分支"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a62dfac5-37fe-4fab-8ec1-a2a520fe95d9",
+                    "leftValue": "={{ $json.action_required }}",
+                    "rightValue": "normal",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "常规处理"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f02f13af-50bf-4694-b263-3853d382f560",
+                    "leftValue": "={{ $json.action_required }}",
+                    "rightValue": "auto_reply",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "自动回复"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -320,
+        368
+      ],
+      "id": "4fc0890e-4e4e-45a5-9713-2e3e592fcc05",
+      "name": "条件分支"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=作为技术支持专家，请为这个紧急问题提供立即行动方案：\n\n  问题：{{ $json.originalData.issue_title }}\n  详细描述：{{ $json.originalData.issue_description }}\n  问题类型：{{ $json.aiAnalysis.category }}\n  客户情绪：{{ $json.aiAnalysis.sentiment }}\n\n  请提供：\n  1. 立即检查项（3个最重要的系统检查点）\n  2. 临时解决方案（如果可以立即实施）\n  3. 与客户沟通的关键话术\n  4. 需要通知的团队或人员\n\n用清晰的markdown格式回复。",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "36f52da4-685c-414f-a0f7-0505acddc51a",
+      "name": "AI解决方案生成"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.0-flash"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -32,
+        176
+      ],
+      "id": "27daf792-b12b-4062-bd83-808e2228b172",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"app_id\": \"cli_aac4c96597b85bcd\",\n    \"app_secret\": \"0CCdv8CG5aB4mjaVLGkupgDeemcvMdSM\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1040,
+        384
+      ],
+      "id": "05784df2-f768-49df-a181-664cf96933bf",
+      "name": "获取飞书Token",
+      "notesInFlow": true,
+      "notes": "获取飞书token"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一个友好的客户支持代表。请为这个咨询问题生成温暖专业的回复。\n\n  客户信息：\n  姓名：{{ $json.originalData.customer_name }}\n  问题：{{ $json.originalData.issue_title }}\n  详细描述：{{ $json.originalData.issue_description }}\n\n  要求：\n  - 首先表达理解和感谢\n  - 提供清晰的解决方案或下一步\n  - 告知大致处理时间\n  - 语气友好专业\n  - 在结尾表达继续提供帮助的意愿\n\n  请直接生成回复内容，内容只输出HTML内容，不要添加额外代码说明。",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -16,
+        656
+      ],
+      "id": "ee8ed582-93da-4d27-9f3d-3bcc08285dd2",
+      "name": "AI自动回复生成"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.0-flash"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -48,
+        848
+      ],
+      "id": "ff442e58-50d8-4675-bb0f-81ff6ccda7fc",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e0d95449-c9e7-4635-97ac-3700d4a5fb04",
+              "name": "auto_replied",
+              "value": "待处理",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        784,
+        384
+      ],
+      "id": "53d162c3-f9b4-4025-8c49-c2df0dc53ba8",
+      "name": "处理状态:待处理"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e0d95449-c9e7-4635-97ac-3700d4a5fb04",
+              "name": "auto_replied",
+              "value": "已自动回复",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        656
+      ],
+      "id": "c231b9ce-5363-41b0-9ab4-3f32b8bd325a",
+      "name": "处理状态:已自动回复"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        384
+      ],
+      "id": "bc3b421a-4b5d-47e6-90df-113b494bcff6",
+      "name": "等待2小时",
+      "webhookId": "2f518e86-df14-4104-afe9-4652cbbd1818"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $json.app_token }}/tables/{{ $json.table_id }}/records",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"工单ID\": {{ $json.ticket_id.toJsonString() }},\n    \"接收时间\": {{ $json.received_at.toJsonString() }},\n    \"客户姓名\": {{ $json.customer_name.toJsonString() }},\n    \"客户邮箱\": {{ $json.customer_email.toJsonString() }},\n    \"问题标题\": {{ $json.issue_title.toJsonString() }},\n    \"问题分类\": {{ $json.category.toJsonString() }},\n    \"AI问题摘要\": {{ $json.summary.toJsonString() }},\n    \"问题描述\": {{ $json.issue_description.toJsonString() }},\n    \"紧急程度\": {{ $json.true_urgency.toJsonString() }},\n    \"处理状态\": {{ $json.auto_replied.toJsonString() }},\n    \"情感分析\": {{ $json.sentiment.toJsonString() }},\n    \"工单来源\": {{ $json.source.toJsonString() }}\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1248,
+        384
+      ],
+      "id": "754da312-f869-4435-9296-a3f040108c08",
+      "name": "新增记录到表格"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 假设输入数据为 items[0].json.content\nconst content = $input.first().json.output;\n\n// 1. 去除首尾空白\n// 2. 替换所有换行符为 \\\\n\n// 3. 替换所有制表符为一个空格（可选，根据需要）\nconst compressed = content.trim().replace(/\\n/g, '\\\\n').replace(/\\t/g, ' ');\n\nreturn [\n  {\n    json: {\n      compressedContent: compressed\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        0
+      ],
+      "id": "abbea0e9-2a9d-4768-b615-24e19cc98d43",
+      "name": "压缩并转义"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_1faf20cbac5dddf8e9e7aa75253a411b\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"紧急工单\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**工单ID**:{{ $('条件分支').item.json.ticket_id }}\\\\\\n **接收时间**:{{ DateTime.fromISO($('条件分支').item.json.received_at).toFormat(\"yyyy-MM-dd HH:mm:ss\") }}\\\\\\n **工单来源**:{{ $('条件分支').item.json.originalData.source }}\\\\\\n **客户姓名**:{{ $('条件分支').item.json.originalData.customer_name }}\\\\\\n **客户邮箱**:{{ $('条件分支').item.json.originalData.customer_email }}\\\\\\n **问题分类**:{{ $('条件分支').item.json.originalData.issue_title }}\\\\\\n **问题描述**:{{ $('条件分支').item.json.originalData.issue_description }}\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**AI提供的解决方案(仅供参考)**\\\\\\n {{ $('压缩并转义').item.json.compressedContent.toJsonString().slice(1, -1) }}\\\"},{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://nangeai.top\\\",\\\"text\\\":\\\"nangeai.top\\\"}]]}}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        0
+      ],
+      "id": "4ade6fb7-44ac-4451-9781-180f0b1b1367",
+      "name": "向群组发送紧急工单信息"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5d06deb-33dc-471e-8892-bbf2bb8c94f5",
+              "name": "app_token",
+              "value": "UTP6bOwx1aScPEsZwjAcUrCZn9f",
+              "type": "string"
+            },
+            {
+              "id": "1817ab91-0b11-40ed-b13e-2d8367d99638",
+              "name": "table_id",
+              "value": "tbltCfmMxOCA3gFq",
+              "type": "string"
+            },
+            {
+              "id": "d69d6ef0-89ad-4ee9-805e-81f49d759414",
+              "name": "source",
+              "value": "={{ $('条件分支').item.json.originalData.source }}",
+              "type": "string"
+            },
+            {
+              "id": "f1fcbcbf-15c8-4a86-ad0e-22fb36709a9c",
+              "name": "customer_name",
+              "value": "={{ $('条件分支').item.json.originalData.customer_name }}",
+              "type": "string"
+            },
+            {
+              "id": "d232f160-5d6f-4447-ad2e-25094f16707c",
+              "name": "customer_email",
+              "value": "={{ $('条件分支').item.json.originalData.customer_email }}",
+              "type": "string"
+            },
+            {
+              "id": "d4ebf2cc-82ce-4018-94fd-d007011b1724",
+              "name": "issue_title",
+              "value": "={{ $('条件分支').item.json.originalData.issue_title }}",
+              "type": "string"
+            },
+            {
+              "id": "5e6ecc5f-9190-4c1a-9a02-c2099dd2c1f9",
+              "name": "issue_description",
+              "value": "={{ $('条件分支').item.json.originalData.issue_description }}",
+              "type": "string"
+            },
+            {
+              "id": "327ebedf-2783-4f36-8c6f-af478e02fcd8",
+              "name": "sentiment",
+              "value": "={{ $('条件分支').item.json.aiAnalysis.sentiment }}",
+              "type": "string"
+            },
+            {
+              "id": "4619f12a-a8f7-4265-86f6-e8b96b19016b",
+              "name": "true_urgency",
+              "value": "={{ $('条件分支').item.json.aiAnalysis.true_urgency }}",
+              "type": "string"
+            },
+            {
+              "id": "19919cf2-ea11-42e4-af00-981fbec5c423",
+              "name": "category",
+              "value": "={{ $('条件分支').item.json.aiAnalysis.category }}",
+              "type": "string"
+            },
+            {
+              "id": "7c0b8fd3-0aae-44b9-97c2-b7e7923300b9",
+              "name": "summary",
+              "value": "={{ $('条件分支').item.json.aiAnalysis.summary }}",
+              "type": "string"
+            },
+            {
+              "id": "cc15c70a-ed9a-47f2-8e8e-4d6fd8cca3b7",
+              "name": "received_at",
+              "value": "={{ DateTime.fromISO($('条件分支').item.json.received_at).toFormat(\"yyyy-MM-dd HH:mm:ss\") }}",
+              "type": "string"
+            },
+            {
+              "id": "3ffadd44-bd7b-4b18-8941-fbae00d88b00",
+              "name": "ticket_id",
+              "value": "={{ $('条件分支').item.json.ticket_id }}",
+              "type": "string"
+            },
+            {
+              "id": "4cbbbe6e-8679-461d-b4ae-1b3a004f5242",
+              "name": "action_required",
+              "value": "={{ $('条件分支').item.json.action_required }}",
+              "type": "string"
+            },
+            {
+              "id": "8933d27c-bcab-4d67-a305-e5708b9252a4",
+              "name": "auto_replied",
+              "value": "={{ $json.auto_replied }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        384
+      ],
+      "id": "ad12dd8b-f0d9-493b-be15-d53a6274010c",
+      "name": "配置多维表格ID"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_1faf20cbac5dddf8e9e7aa75253a411b\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"常规工单\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**工单ID**:{{ $('条件分支').item.json.ticket_id }}\\\\\\n **接收时间**:{{ DateTime.fromISO($('条件分支').item.json.received_at).toFormat(\"yyyy-MM-dd HH:mm:ss\") }}\\\\\\n **工单来源**:{{ $('条件分支').item.json.originalData.source }}\\\\\\n **客户姓名**:{{ $('条件分支').item.json.originalData.customer_name }}\\\\\\n **客户邮箱**:{{ $('条件分支').item.json.originalData.customer_email }}\\\\\\n **问题分类**:{{ $('条件分支').item.json.originalData.issue_title }}\\\\\\n **问题描述**:{{ $('条件分支').item.json.originalData.issue_description }}\\\"}]]}}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        384
+      ],
+      "id": "d355d91e-b1b5-46fa-b299-8ff5142bbbac",
+      "name": "向群组发送常规工单信息"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -880,
+        592
+      ],
+      "id": "2c23d14b-5ee7-4736-8c36-09961c0145d3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "LgM5dRO1oUqcxm6i",
+          "name": "Google Gemini(PaLM) Api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "lijixin0616@163.com",
+        "subject": "Hello World !",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        656
+      ],
+      "id": "40dab9f1-984d-42e9-a943-cb48c4d18846",
+      "name": "自动给客户发送邮件Gmail",
+      "webhookId": "554026fa-6b6d-44b2-99a9-8b728b3e10ff",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "5DALUOY8bTM5ftAX",
+          "name": "Gmail OAuth2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "接收POST请求": {
+      "main": [
+        [
+          {
+            "node": "获取飞书Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "综合决策处理": {
+      "main": [
+        [
+          {
+            "node": "条件分支",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI情感分析": {
+      "main": [
+        [
+          {
+            "node": "综合决策处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI情感分析",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "条件分支": {
+      "main": [
+        [
+          {
+            "node": "AI解决方案生成",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "等待2小时",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI自动回复生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI解决方案生成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI解决方案生成": {
+      "main": [
+        [
+          {
+            "node": "压缩并转义",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取飞书Token": {
+      "main": [
+        [
+          {
+            "node": "AI情感分析",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI自动回复生成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI自动回复生成": {
+      "main": [
+        [
+          {
+            "node": "自动给客户发送邮件Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待2小时": {
+      "main": [
+        [
+          {
+            "node": "向群组发送常规工单信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理状态:待处理": {
+      "main": [
+        [
+          {
+            "node": "配置多维表格ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "处理状态:已自动回复": {
+      "main": [
+        [
+          {
+            "node": "配置多维表格ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "压缩并转义": {
+      "main": [
+        [
+          {
+            "node": "向群组发送紧急工单信息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "向群组发送紧急工单信息": {
+      "main": [
+        [
+          {
+            "node": "处理状态:待处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "配置多维表格ID": {
+      "main": [
+        [
+          {
+            "node": "新增记录到表格",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "向群组发送常规工单信息": {
+      "main": [
+        [
+          {
+            "node": "处理状态:待处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI情感分析",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "自动给客户发送邮件Gmail": {
+      "main": [
+        [
+          {
+            "node": "处理状态:已自动回复",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {
+    "AI解决方案生成": [
+      {
+        "json": {
+          "output": "针对您遇到的支付成功但订单状态未更新的问题，这通常是由于支付网关与内部订单系统之间的异步回调延迟或网络超时导致的。请按照以下紧急行动方案处理：\n\n### 1. 立即检查项（关键系统检查点）\n\n1.  **核对支付网关交易流水**\n    *   **操作**：登录支付后台（如 Stripe, PayPal, Alipay, WeChat Pay等），使用订单号、交易时间或客户提供的支付凭证ID，查询具体的交易状态。\n    *   **确认重点**：确认状态是否为 `Captured` / `Success` / `Paid`。如果支付侧显示“失败”或“待处理”，则需引导客户重新支付；如果显示“成功”，则进入下一步。\n\n2.  **检查内部系统的事件总线/Webhook日志**\n    *   **操作**：查看后端服务器日志，搜索与该支付请求相关的 Webhook 接收记录或轮询机制状态。\n    *   **确认重点**：确认系统是否收到了支付成功的回调通知。如果没有收到，可能是回调 URL 配置错误、防火墙拦截或网络故障。如果有收到但状态未更新，检查数据库写入逻辑是否有报错。\n\n3.  **验证数据库订单状态同步机制**\n    *   **操作**：直接在数据库中查询该订单 ID 的状态字段（`status`）。\n    *   **确认重点**：对比数据库中的状态与前端展示的状态。确认是否存在因并发竞争条件导致的状态锁定问题，或者是否有延迟任务（Job Queue）未能及时处理状态更新。\n\n### 2. 临时解决方案\n\n*   **手动强制更新订单状态**：\n    *   在确认支付网关确实扣款成功且无退款记录后，技术人员可通过后台管理界面或数据库脚本，将该订单状态手动修改为“已支付/处理中”。\n    *   **注意**：此操作必须附带审计日志，注明“人工干预：支付成功但系统回调丢失”，以确保财务对账准确。\n\n*   **提供临时访问权限或发货承诺**：\n    *   如果是虚拟商品，立即手动激活账户或发送密钥。\n    *   如果是实体商品，向客户发送一封确认邮件，告知“已确认收款，正在加急处理发货”，以缓解客户焦虑，确保后续流程不受影响。\n\n### 3. 与客户沟通的关键话术\n\n> “您好，非常理解您的焦急心情，请放心，我们非常重视您的体验。\n>\n> 经初步排查，我们的支付系统显示您的款项已成功入账，但由于网络通信波动，订单状态的自动同步出现了短暂延迟。这并不是重复收费，也不是交易失败。\n>\n> 我们正在通过技术通道为您**手动更新订单状态**并优先处理您的订单。预计将在 [例如：10分钟] 内完成更新，届时您将收到通知/可以在页面看到最新进度。为了表达歉意，我们将随订单附赠 [小礼品/优惠券/积分]，感谢您的耐心与信任。”\n\n### 4. 需要通知的团队或人员\n\n*   **财务/结算团队**：确认资金已实际到账，避免后续对账异常，并标记该笔交易为“手动同步”，防止财务误判为漏单。\n*   **后端开发团队**：分析 Webhook 日志，找出回调丢失或状态更新的根本原因，修复潜在的 Bug，防止问题再次发生。\n*   **客服主管/资深支持**：知情以便在客户后续咨询中保持口径一致，并提供必要的安抚资源（如优惠券审批）。"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "向群组发送紧急工单信息": [
+      {
+        "json": {
+          "code": 0,
+          "data": {
+            "body": {
+              "content": "{\"title\":\"紧急工单\",\"content\":[[{\"tag\":\"at\",\"user_id\":\"\",\"user_name\":\"所有人\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"工单ID\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\":T17847578519999kbp0\\n\",\"style\":[]},{\"tag\":\"text\",\"text\":\"接收时间\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\":2026-07-22 18:04:11\\n\",\"style\":[]},{\"tag\":\"text\",\"text\":\"工单来源\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\":网站表单\\n\",\"style\":[]},{\"tag\":\"text\",\"text\":\"客户姓名\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\":新哥\\n\",\"style\":[]},{\"tag\":\"text\",\"text\":\"客户邮箱\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\":\",\"style\":[]},{\"tag\":\"a\",\"href\":\"test@example.com\",\"text\":\"test@example.com\",\"style\":[]},{\"tag\":\"text\",\"text\":\"\\n\",\"style\":[]},{\"tag\":\"text\",\"text\":\"问题分类\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\":支付问题\\n\",\"style\":[]},{\"tag\":\"text\",\"text\":\"问题描述\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\":我支付成功了但是订单没有更新，这让我很着急！\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"AI提供的解决方案(仅供参考)\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"\\n\",\"style\":[]},{\"tag\":\"text\",\"text\":\"针对您遇到的支付成功但订单状态未更新的问题，这通常是由于支付网关与内部订单系统之间的异步回调延迟或网络超时导致的。请按照以下紧急行动方案处理：\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"1. 立即检查项（关键系统检查点）\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"1. \",\"style\":[]},{\"tag\":\"text\",\"text\":\"核对支付网关交易流水\",\"style\":[\"bold\"]}],[{\"tag\":\"text\",\"text\":\"  - \",\"style\":[]},{\"tag\":\"text\",\"text\":\"操作\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：登录支付后台（如 Stripe, PayPal, Alipay, WeChat Pay等），使用订单号、交易时间或客户提供的支付凭证ID，查询具体的交易状态。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"  - \",\"style\":[]},{\"tag\":\"text\",\"text\":\"确认重点\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：确认状态是否为 \",\"style\":[]},{\"tag\":\"text\",\"text\":\"Captured\",\"style\":[]},{\"tag\":\"text\",\"text\":\" / \",\"style\":[]},{\"tag\":\"text\",\"text\":\"Success\",\"style\":[]},{\"tag\":\"text\",\"text\":\" / \",\"style\":[]},{\"tag\":\"text\",\"text\":\"Paid\",\"style\":[]},{\"tag\":\"text\",\"text\":\"。如果支付侧显示“失败”或“待处理”，则需引导客户重新支付；如果显示“成功”，则进入下一步。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"2. \",\"style\":[]},{\"tag\":\"text\",\"text\":\"检查内部系统的事件总线/Webhook日志\",\"style\":[\"bold\"]}],[{\"tag\":\"text\",\"text\":\"  - \",\"style\":[]},{\"tag\":\"text\",\"text\":\"操作\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：查看后端服务器日志，搜索与该支付请求相关的 Webhook 接收记录或轮询机制状态。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"  - \",\"style\":[]},{\"tag\":\"text\",\"text\":\"确认重点\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：确认系统是否收到了支付成功的回调通知。如果没有收到，可能是回调 URL 配置错误、防火墙拦截或网络故障。如果有收到但状态未更新，检查数据库写入逻辑是否有报错。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"3. \",\"style\":[]},{\"tag\":\"text\",\"text\":\"验证数据库订单状态同步机制\",\"style\":[\"bold\"]}],[{\"tag\":\"text\",\"text\":\"  - \",\"style\":[]},{\"tag\":\"text\",\"text\":\"操作\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：直接在数据库中查询该订单 ID 的状态字段（\",\"style\":[]},{\"tag\":\"text\",\"text\":\"status\",\"style\":[]},{\"tag\":\"text\",\"text\":\"）。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"  - \",\"style\":[]},{\"tag\":\"text\",\"text\":\"确认重点\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：对比数据库中的状态与前端展示的状态。确认是否存在因并发竞争条件导致的状态锁定问题，或者是否有延迟任务（Job Queue）未能及时处理状态更新。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"2. 临时解决方案\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"- \",\"style\":[]},{\"tag\":\"text\",\"text\":\"手动强制更新订单状态\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"  - \",\"style\":[]},{\"tag\":\"text\",\"text\":\"在确认支付网关确实扣款成功且无退款记录后，技术人员可通过后台管理界面或数据库脚本，将该订单状态手动修改为“已支付/处理中”。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"  - \",\"style\":[]},{\"tag\":\"text\",\"text\":\"注意\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：此操作必须附带审计日志，注明“人工干预：支付成功但系统回调丢失”，以确保财务对账准确。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"- \",\"style\":[]},{\"tag\":\"text\",\"text\":\"提供临时访问权限或发货承诺\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"  - \",\"style\":[]},{\"tag\":\"text\",\"text\":\"如果是虚拟商品，立即手动激活账户或发送密钥。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"  - \",\"style\":[]},{\"tag\":\"text\",\"text\":\"如果是实体商品，向客户发送一封确认邮件，告知“已确认收款，正在加急处理发货”，以缓解客户焦虑，确保后续流程不受影响。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"3. 与客户沟通的关键话术\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"“您好，非常理解您的焦急心情，请放心，我们非常重视您的体验。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"经初步排查，我们的支付系统显示您的款项已成功入账，但由于网络通信波动，订单状态的自动同步出现了短暂延迟。这并不是重复收费，也不是交易失败。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"我们正在通过技术通道为您\",\"style\":[]},{\"tag\":\"text\",\"text\":\"手动更新订单状态\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"并优先处理您的订单。预计将在 [\",\"style\":[]},{\"tag\":\"text\",\"text\":\"例如：10分钟] 内完成更新，届时您将收到通知/可以在页面看到最新进度。为了表达歉意，我们将随订单附赠 [\",\"style\":[]},{\"tag\":\"text\",\"text\":\"小礼品/优惠券/积分\",\"style\":[]},{\"tag\":\"text\",\"text\":\"]，感谢您的耐心与信任。”\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"4. 需要通知的团队或人员\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"- \",\"style\":[]},{\"tag\":\"text\",\"text\":\"财务/结算团队\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：确认资金已实际到账，避免后续对账异常，并标记该笔交易为“手动同步”，防止财务误判为漏单。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"- \",\"style\":[]},{\"tag\":\"text\",\"text\":\"后端开发团队\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：分析 Webhook 日志，找出回调丢失或状态更新的根本原因，修复潜在的 Bug，防止问题再次发生。\",\"style\":[]}],[{\"tag\":\"text\",\"text\":\"- \",\"style\":[]},{\"tag\":\"text\",\"text\":\"客服主管/资深支持\",\"style\":[\"bold\"]},{\"tag\":\"text\",\"text\":\"：知情以便在客户后续咨询中保持口径一致，并提供必要的安抚资源（如优惠券审批）。\",\"style\":[]}],[{\"tag\":\"a\",\"href\":\"https://nangeai.top\",\"text\":\"nangeai.top\",\"style\":[]}]],\"content_v2\":[[{\"tag\":\"at\",\"user_id\":\"\",\"user_name\":\"所有人\",\"style\":[]}],[{\"tag\":\"md\",\"text\":\"**工单ID**:T17847578519999kbp0\\n **接收时间**:2026-07-22 18:04:11\\n **工单来源**:网站表单\\n **客户姓名**:新哥\\n **客户邮箱**:test@example.com\\n **问题分类**:支付问题\\n **问题描述**:我支付成功了但是订单没有更新，这让我很着急！\"}],[{\"tag\":\"md\",\"text\":\"**AI提供的解决方案(仅供参考)**\\n 针对您遇到的支付成功但订单状态未更新的问题，这通常是由于支付网关与内部订单系统之间的异步回调延迟或网络超时导致的。请按照以下紧急行动方案处理：\\n\\n### 1. 立即检查项（关键系统检查点）\\n\\n1.  **核对支付网关交易流水**\\n    *   **操作**：登录支付后台（如 Stripe, PayPal, Alipay, WeChat Pay等），使用订单号、交易时间或客户提供的支付凭证ID，查询具体的交易状态。\\n    *   **确认重点**：确认状态是否为 `Captured` / `Success` / `Paid`。如果支付侧显示“失败”或“待处理”，则需引导客户重新支付；如果显示“成功”，则进入下一步。\\n\\n2.  **检查内部系统的事件总线/Webhook日志**\\n    *   **操作**：查看后端服务器日志，搜索与该支付请求相关的 Webhook 接收记录或轮询机制状态。\\n    *   **确认重点**：确认系统是否收到了支付成功的回调通知。如果没有收到，可能是回调 URL 配置错误、防火墙拦截或网络故障。如果有收到但状态未更新，检查数据库写入逻辑是否有报错。\\n\\n3.  **验证数据库订单状态同步机制**\\n    *   **操作**：直接在数据库中查询该订单 ID 的状态字段（`status`）。\\n    *   **确认重点**：对比数据库中的状态与前端展示的状态。确认是否存在因并发竞争条件导致的状态锁定问题，或者是否有延迟任务（Job Queue）未能及时处理状态更新。\\n\\n### 2. 临时解决方案\\n\\n*   **手动强制更新订单状态**：\\n    *   在确认支付网关确实扣款成功且无退款记录后，技术人员可通过后台管理界面或数据库脚本，将该订单状态手动修改为“已支付/处理中”。\\n    *   **注意**：此操作必须附带审计日志，注明“人工干预：支付成功但系统回调丢失”，以确保财务对账准确。\\n\\n*   **提供临时访问权限或发货承诺**：\\n    *   如果是虚拟商品，立即手动激活账户或发送密钥。\\n    *   如果是实体商品，向客户发送一封确认邮件，告知“已确认收款，正在加急处理发货”，以缓解客户焦虑，确保后续流程不受影响。\\n\\n### 3. 与客户沟通的关键话术\\n\\n> “您好，非常理解您的焦急心情，请放心，我们非常重视您的体验。\\n>\\n> 经初步排查，我们的支付系统显示您的款项已成功入账，但由于网络通信波动，订单状态的自动同步出现了短暂延迟。这并不是重复收费，也不是交易失败。\\n>\\n> 我们正在通过技术通道为您**手动更新订单状态**并优先处理您的订单。预计将在 [例如：10分钟] 内完成更新，届时您将收到通知/可以在页面看到最新进度。为了表达歉意，我们将随订单附赠 [小礼品/优惠券/积分]，感谢您的耐心与信任。”\\n\\n### 4. 需要通知的团队或人员\\n\\n*   **财务/结算团队**：确认资金已实际到账，避免后续对账异常，并标记该笔交易为“手动同步”，防止财务误判为漏单。\\n*   **后端开发团队**：分析 Webhook 日志，找出回调丢失或状态更新的根本原因，修复潜在的 Bug，防止问题再次发生。\\n*   **客服主管/资深支持**：知情以便在客户后续咨询中保持口径一致，并提供必要的安抚资源（如优惠券审批）。\"}],[{\"tag\":\"a\",\"href\":\"https://nangeai.top\",\"text\":\"nangeai.top\",\"style\":[]}]]}"
+            },
+            "chat_id": "oc_1faf20cbac5dddf8e9e7aa75253a411b",
+            "create_time": "1784757926920",
+            "deleted": false,
+            "message_id": "om_x100b6927a4a670a0b4c6b9cce43f1c9",
+            "msg_type": "post",
+            "sender": {
+              "id": "cli_aac4c96597b85bcd",
+              "id_type": "app_id",
+              "sender_type": "app",
+              "tenant_key": "2c557904420f575d"
+            },
+            "update_time": "1784757926920",
+            "updated": false
+          },
+          "msg": "success"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "c0d58278-89ba-4a88-9e2e-1287d79857df",
+  "activeVersionId": "0da32eec-1aa9-44a1-9251-2d8db4f348b5",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-22T16:48:28.194Z",
+      "createdAt": "2026-07-22T16:48:28.194Z",
+      "role": "workflow:owner",
+      "workflowId": "MQTp02CuPhpJ4Nhd",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-27T11:14:37.000Z",
+    "createdAt": "2026-07-23T16:20:09.435Z",
+    "versionId": "0da32eec-1aa9-44a1-9251-2d8db4f348b5",
+    "workflowId": "MQTp02CuPhpJ4Nhd",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "107f44d8-9d03-4ea0-935f-c55e5a917b62",
+          "authentication": "headerAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1264,
+          384
+        ],
+        "id": "6257b412-97de-45df-af26-a5475c12e9b2",
+        "name": "接收POST请求",
+        "webhookId": "107f44d8-9d03-4ea0-935f-c55e5a917b62",
+        "notesInFlow": true,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "mkaDCN5JEBuykV9N",
+            "name": "Webhook-Apifox凭证"
+          }
+        },
+        "notes": "用户反馈的工单"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 获取AI分析结果和原始数据\nconst aiAnalysis = $input.first().json.output;\nconst originalData = $('接收POST请求').first().json.body;\n\n// 合并数据\nconst processedData = {\n  originalData,\n  aiAnalysis,\n  // 添加时间戳\n  received_at: new Date().toISOString(),\n  // 生成工单ID\n  ticket_id: 'T' + Date.now() + Math.random().toString(36).substr(2, 5)\n};\n\n// 决策逻辑\nlet action = 'normal';\n\nif (aiAnalysis.true_urgency === 'critical' || \n    aiAnalysis.sentiment === 'angry' ||\n    aiAnalysis.requires_immediate_human_intervention) {\n  action = 'urgent';\n} else if (aiAnalysis.true_urgency === 'low') {\n    action = 'auto_reply';\n}\n\nprocessedData.action_required = action;\n\n// 返回处理后的数据\nreturn [{ json: processedData }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -512,
+          384
+        ],
+        "id": "f4b32c59-a5fd-4b87-a049-3874d143fb42",
+        "name": "综合决策处理"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=你是一个专业的客户支持分析AI。请分析以下客户工单：\n\n工单标题：{{ $('接收POST请求').item.json.body.issue_title }}\n工单描述：{{ $('接收POST请求').item.json.body.issue_description }}\n客户信息：{{ $('接收POST请求').item.json.body.customer_name }}\n\n请以JSON格式返回分析结果：\n1. 情感分析：positive, neutral, negative, angry\n2. 真实紧急程度：critical, high, medium, low（基于问题内容而非用户自评）\n3. 问题分类：billing, technical, feature_request, bug, general\n4. 关键问题摘要：用一句话总结核心问题\n\n返回的分析结果示例\n{\n  \"sentiment\": \"angry\",\n  \"true_urgency\": \"critical\", \n  \"category\": \"billing\",\n  \"summary\": \"客户支付成功但订单状态未更新，导致重复付款\",\n  \"requires_immediate_human_intervention\": true\n}",
+          "hasOutputParser": true,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          -848,
+          384
+        ],
+        "id": "48f8801f-749e-4d43-aaee-21675fc86b49",
+        "name": "AI情感分析"
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n  \"sentiment\": \"angry\",\n  \"true_urgency\": \"critical\", \n  \"category\": \"billing\",\n  \"summary\": \"客户支付成功但订单状态未更新，导致重复付款\",\n  \"requires_immediate_human_intervention\": true\n}"
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          -688,
+          592
+        ],
+        "id": "804d79e5-46bf-44e7-b816-2b691207e523",
+        "name": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.action_required }}",
+                      "rightValue": "urgent",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "c4103d18-50ad-4545-82eb-515c939aa0bb"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "紧急分支"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "a62dfac5-37fe-4fab-8ec1-a2a520fe95d9",
+                      "leftValue": "={{ $json.action_required }}",
+                      "rightValue": "normal",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "常规处理"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "f02f13af-50bf-4694-b263-3853d382f560",
+                      "leftValue": "={{ $json.action_required }}",
+                      "rightValue": "auto_reply",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "自动回复"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.3,
+        "position": [
+          -320,
+          368
+        ],
+        "id": "4fc0890e-4e4e-45a5-9713-2e3e592fcc05",
+        "name": "条件分支"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=作为技术支持专家，请为这个紧急问题提供立即行动方案：\n\n  问题：{{ $json.originalData.issue_title }}\n  详细描述：{{ $json.originalData.issue_description }}\n  问题类型：{{ $json.aiAnalysis.category }}\n  客户情绪：{{ $json.aiAnalysis.sentiment }}\n\n  请提供：\n  1. 立即检查项（3个最重要的系统检查点）\n  2. 临时解决方案（如果可以立即实施）\n  3. 与客户沟通的关键话术\n  4. 需要通知的团队或人员\n\n用清晰的markdown格式回复。",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          0,
+          0
+        ],
+        "id": "36f52da4-685c-414f-a0f7-0505acddc51a",
+        "name": "AI解决方案生成"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.0-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.0-flash"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          -32,
+          176
+        ],
+        "id": "27daf792-b12b-4062-bd83-808e2228b172",
+        "name": "OpenAI Chat Model1",
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+          "sendHeaders": true,
+          "specifyHeaders": "json",
+          "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n    \"app_id\": \"cli_aac4c96597b85bcd\",\n    \"app_secret\": \"0CCdv8CG5aB4mjaVLGkupgDeemcvMdSM\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1040,
+          384
+        ],
+        "id": "05784df2-f768-49df-a181-664cf96933bf",
+        "name": "获取飞书Token",
+        "notesInFlow": true,
+        "notes": "获取飞书token"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=你是一个友好的客户支持代表。请为这个咨询问题生成温暖专业的回复。\n\n  客户信息：\n  姓名：{{ $json.originalData.customer_name }}\n  问题：{{ $json.originalData.issue_title }}\n  详细描述：{{ $json.originalData.issue_description }}\n\n  要求：\n  - 首先表达理解和感谢\n  - 提供清晰的解决方案或下一步\n  - 告知大致处理时间\n  - 语气友好专业\n  - 在结尾表达继续提供帮助的意愿\n\n  请直接生成回复内容，内容只输出HTML内容，不要添加额外代码说明。",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          -16,
+          656
+        ],
+        "id": "ee8ed582-93da-4d27-9f3d-3bcc08285dd2",
+        "name": "AI自动回复生成"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.0-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.0-flash"
+          },
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          -48,
+          848
+        ],
+        "id": "ff442e58-50d8-4675-bb0f-81ff6ccda7fc",
+        "name": "OpenAI Chat Model2",
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "e0d95449-c9e7-4635-97ac-3700d4a5fb04",
+                "name": "auto_replied",
+                "value": "待处理",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          784,
+          384
+        ],
+        "id": "53d162c3-f9b4-4025-8c49-c2df0dc53ba8",
+        "name": "处理状态:待处理"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "e0d95449-c9e7-4635-97ac-3700d4a5fb04",
+                "name": "auto_replied",
+                "value": "已自动回复",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          608,
+          656
+        ],
+        "id": "c231b9ce-5363-41b0-9ab4-3f32b8bd325a",
+        "name": "处理状态:已自动回复"
+      },
+      {
+        "parameters": {
+          "amount": 2
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          48,
+          384
+        ],
+        "id": "bc3b421a-4b5d-47e6-90df-113b494bcff6",
+        "name": "等待2小时",
+        "webhookId": "2f518e86-df14-4104-afe9-4652cbbd1818"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $json.app_token }}/tables/{{ $json.table_id }}/records",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fields\": {\n    \"工单ID\": {{ $json.ticket_id.toJsonString() }},\n    \"接收时间\": {{ $json.received_at.toJsonString() }},\n    \"客户姓名\": {{ $json.customer_name.toJsonString() }},\n    \"客户邮箱\": {{ $json.customer_email.toJsonString() }},\n    \"问题标题\": {{ $json.issue_title.toJsonString() }},\n    \"问题分类\": {{ $json.category.toJsonString() }},\n    \"AI问题摘要\": {{ $json.summary.toJsonString() }},\n    \"问题描述\": {{ $json.issue_description.toJsonString() }},\n    \"紧急程度\": {{ $json.true_urgency.toJsonString() }},\n    \"处理状态\": {{ $json.auto_replied.toJsonString() }},\n    \"情感分析\": {{ $json.sentiment.toJsonString() }},\n    \"工单来源\": {{ $json.source.toJsonString() }}\n  }\n} ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1248,
+          384
+        ],
+        "id": "754da312-f869-4435-9296-a3f040108c08",
+        "name": "新增记录到表格"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 假设输入数据为 items[0].json.content\nconst content = $input.first().json.output;\n\n// 1. 去除首尾空白\n// 2. 替换所有换行符为 \\\\n\n// 3. 替换所有制表符为一个空格（可选，根据需要）\nconst compressed = content.trim().replace(/\\n/g, '\\\\n').replace(/\\t/g, ' ');\n\nreturn [\n  {\n    json: {\n      compressedContent: compressed\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          336,
+          0
+        ],
+        "id": "abbea0e9-2a9d-4768-b615-24e19cc98d43",
+        "name": "压缩并转义"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "receive_id_type",
+                "value": "chat_id"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"receive_id\":\"oc_1faf20cbac5dddf8e9e7aa75253a411b\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"紧急工单\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**工单ID**:{{ $('条件分支').item.json.ticket_id }}\\\\\\n **接收时间**:{{ DateTime.fromISO($('条件分支').item.json.received_at).toFormat(\"yyyy-MM-dd HH:mm:ss\") }}\\\\\\n **工单来源**:{{ $('条件分支').item.json.originalData.source }}\\\\\\n **客户姓名**:{{ $('条件分支').item.json.originalData.customer_name }}\\\\\\n **客户邮箱**:{{ $('条件分支').item.json.originalData.customer_email }}\\\\\\n **问题分类**:{{ $('条件分支').item.json.originalData.issue_title }}\\\\\\n **问题描述**:{{ $('条件分支').item.json.originalData.issue_description }}\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**AI提供的解决方案(仅供参考)**\\\\\\n {{ $('压缩并转义').item.json.compressedContent.toJsonString().slice(1, -1) }}\\\"},{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://nangeai.top\\\",\\\"text\\\":\\\"nangeai.top\\\"}]]}}\"\n} ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          528,
+          0
+        ],
+        "id": "4ade6fb7-44ac-4451-9781-180f0b1b1367",
+        "name": "向群组发送紧急工单信息"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c5d06deb-33dc-471e-8892-bbf2bb8c94f5",
+                "name": "app_token",
+                "value": "UTP6bOwx1aScPEsZwjAcUrCZn9f",
+                "type": "string"
+              },
+              {
+                "id": "1817ab91-0b11-40ed-b13e-2d8367d99638",
+                "name": "table_id",
+                "value": "tbltCfmMxOCA3gFq",
+                "type": "string"
+              },
+              {
+                "id": "d69d6ef0-89ad-4ee9-805e-81f49d759414",
+                "name": "source",
+                "value": "={{ $('条件分支').item.json.originalData.source }}",
+                "type": "string"
+              },
+              {
+                "id": "f1fcbcbf-15c8-4a86-ad0e-22fb36709a9c",
+                "name": "customer_name",
+                "value": "={{ $('条件分支').item.json.originalData.customer_name }}",
+                "type": "string"
+              },
+              {
+                "id": "d232f160-5d6f-4447-ad2e-25094f16707c",
+                "name": "customer_email",
+                "value": "={{ $('条件分支').item.json.originalData.customer_email }}",
+                "type": "string"
+              },
+              {
+                "id": "d4ebf2cc-82ce-4018-94fd-d007011b1724",
+                "name": "issue_title",
+                "value": "={{ $('条件分支').item.json.originalData.issue_title }}",
+                "type": "string"
+              },
+              {
+                "id": "5e6ecc5f-9190-4c1a-9a02-c2099dd2c1f9",
+                "name": "issue_description",
+                "value": "={{ $('条件分支').item.json.originalData.issue_description }}",
+                "type": "string"
+              },
+              {
+                "id": "327ebedf-2783-4f36-8c6f-af478e02fcd8",
+                "name": "sentiment",
+                "value": "={{ $('条件分支').item.json.aiAnalysis.sentiment }}",
+                "type": "string"
+              },
+              {
+                "id": "4619f12a-a8f7-4265-86f6-e8b96b19016b",
+                "name": "true_urgency",
+                "value": "={{ $('条件分支').item.json.aiAnalysis.true_urgency }}",
+                "type": "string"
+              },
+              {
+                "id": "19919cf2-ea11-42e4-af00-981fbec5c423",
+                "name": "category",
+                "value": "={{ $('条件分支').item.json.aiAnalysis.category }}",
+                "type": "string"
+              },
+              {
+                "id": "7c0b8fd3-0aae-44b9-97c2-b7e7923300b9",
+                "name": "summary",
+                "value": "={{ $('条件分支').item.json.aiAnalysis.summary }}",
+                "type": "string"
+              },
+              {
+                "id": "cc15c70a-ed9a-47f2-8e8e-4d6fd8cca3b7",
+                "name": "received_at",
+                "value": "={{ DateTime.fromISO($('条件分支').item.json.received_at).toFormat(\"yyyy-MM-dd HH:mm:ss\") }}",
+                "type": "string"
+              },
+              {
+                "id": "3ffadd44-bd7b-4b18-8941-fbae00d88b00",
+                "name": "ticket_id",
+                "value": "={{ $('条件分支').item.json.ticket_id }}",
+                "type": "string"
+              },
+              {
+                "id": "4cbbbe6e-8679-461d-b4ae-1b3a004f5242",
+                "name": "action_required",
+                "value": "={{ $('条件分支').item.json.action_required }}",
+                "type": "string"
+              },
+              {
+                "id": "8933d27c-bcab-4d67-a305-e5708b9252a4",
+                "name": "auto_replied",
+                "value": "={{ $json.auto_replied }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1024,
+          384
+        ],
+        "id": "ad12dd8b-f0d9-493b-be15-d53a6274010c",
+        "name": "配置多维表格ID"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "receive_id_type",
+                "value": "chat_id"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"receive_id\":\"oc_1faf20cbac5dddf8e9e7aa75253a411b\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"常规工单\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**工单ID**:{{ $('条件分支').item.json.ticket_id }}\\\\\\n **接收时间**:{{ DateTime.fromISO($('条件分支').item.json.received_at).toFormat(\"yyyy-MM-dd HH:mm:ss\") }}\\\\\\n **工单来源**:{{ $('条件分支').item.json.originalData.source }}\\\\\\n **客户姓名**:{{ $('条件分支').item.json.originalData.customer_name }}\\\\\\n **客户邮箱**:{{ $('条件分支').item.json.originalData.customer_email }}\\\\\\n **问题分类**:{{ $('条件分支').item.json.originalData.issue_title }}\\\\\\n **问题描述**:{{ $('条件分支').item.json.originalData.issue_description }}\\\"}]]}}\"\n} ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          400,
+          384
+        ],
+        "id": "d355d91e-b1b5-46fa-b299-8ff5142bbbac",
+        "name": "向群组发送常规工单信息"
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-2.5-flash",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -880,
+          592
+        ],
+        "id": "2c23d14b-5ee7-4736-8c36-09961c0145d3",
+        "name": "Google Gemini Chat Model",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "LgM5dRO1oUqcxm6i",
+            "name": "Google Gemini(PaLM) Api"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "lijixin0616@163.com",
+          "toEmail": "lijixin0623@gmail.com",
+          "subject": "工单回复",
+          "html": "={{ $json.output }}",
+          "options": {
+            "appendAttribution": false
+          }
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          352,
+          880
+        ],
+        "id": "ccd6b0c0-7a9d-45a2-bb39-3f79c0b34e31",
+        "name": "自动给客户发送邮件163",
+        "webhookId": "9e2edde1-ecfc-4f62-89ea-6de7474104fd",
+        "credentials": {
+          "smtp": {
+            "id": "w6ECJ03sDlP3u5xl",
+            "name": "163 Email SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "lijixin0616@163.com",
+          "subject": "Hello World !",
+          "message": "={{ $json.output }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          336,
+          656
+        ],
+        "id": "40dab9f1-984d-42e9-a943-cb48c4d18846",
+        "name": "自动给客户发送邮件Gmail",
+        "webhookId": "554026fa-6b6d-44b2-99a9-8b728b3e10ff",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "5DALUOY8bTM5ftAX",
+            "name": "Gmail OAuth2"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "接收POST请求": {
+        "main": [
+          [
+            {
+              "node": "获取飞书Token",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "综合决策处理": {
+        "main": [
+          [
+            {
+              "node": "条件分支",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI情感分析": {
+        "main": [
+          [
+            {
+              "node": "综合决策处理",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Structured Output Parser": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "AI情感分析",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "条件分支": {
+        "main": [
+          [
+            {
+              "node": "AI解决方案生成",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "等待2小时",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "AI自动回复生成",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI解决方案生成",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI解决方案生成": {
+        "main": [
+          [
+            {
+              "node": "压缩并转义",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取飞书Token": {
+        "main": [
+          [
+            {
+              "node": "AI情感分析",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenAI Chat Model2": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI自动回复生成",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI自动回复生成": {
+        "main": [
+          [
+            {
+              "node": "自动给客户发送邮件Gmail",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "等待2小时": {
+        "main": [
+          [
+            {
+              "node": "向群组发送常规工单信息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "处理状态:待处理": {
+        "main": [
+          [
+            {
+              "node": "配置多维表格ID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "处理状态:已自动回复": {
+        "main": [
+          [
+            {
+              "node": "配置多维表格ID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "压缩并转义": {
+        "main": [
+          [
+            {
+              "node": "向群组发送紧急工单信息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "向群组发送紧急工单信息": {
+        "main": [
+          [
+            {
+              "node": "处理状态:待处理",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "配置多维表格ID": {
+        "main": [
+          [
+            {
+              "node": "新增记录到表格",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "向群组发送常规工单信息": {
+        "main": [
+          [
+            {
+              "node": "处理状态:待处理",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI情感分析",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "自动给客户发送邮件163": {
+        "main": [
+          []
+        ]
+      },
+      "自动给客户发送邮件Gmail": {
+        "main": [
+          [
+            {
+              "node": "处理状态:已自动回复",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Vincent Li",
+    "name": "Version 0da32eec",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

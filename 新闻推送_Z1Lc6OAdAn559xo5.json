@@ -1,0 +1,620 @@
+{
+  "updatedAt": "2026-08-08T22:19:19.168Z",
+  "createdAt": "2026-08-08T22:12:59.623Z",
+  "id": "Z1Lc6OAdAn559xo5",
+  "name": "新闻推送",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "id": "eb07a1fd-b17d-47c9-9a34-e012221ba9ab",
+      "name": "Schedule Trigger1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        384,
+        208
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "amount": "=4"
+      },
+      "id": "f4b584b6-e7b5-4068-b15a-d93e7cdbeaee",
+      "name": "Wait1",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        1968,
+        688
+      ],
+      "webhookId": "77f708eb-1077-47ff-97f1-64b395e6a44d",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "url": "={{ $('过滤日期').item.json.url }}",
+        "options": {}
+      },
+      "id": "34f08749-a6f2-4748-a5ab-c65ebc4d0c4c",
+      "name": "URL_Content",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        2224,
+        688
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "message:send",
+        "receive_id_type": "chat_id",
+        "receive_id": "oc_b8c300605b48ea0ac6616473d4eccc06",
+        "content": "={\"text\":\"新闻摘要📰日期:{{ $json.data.record.fields['发布日期'] }}\\n标题📣:{{ $json.data.record.fields['标题'] }}\\n摘要💬:{{ $json.data.record.fields['简介'] }}\\n分数⭐:{{ $json.data.record.fields['分数'] }}\\n分类📁:{{ $json.data.record.fields['类别'] }}\\nurl🔗: {{ $json.data.record.fields.url.link }}\"}"
+      },
+      "type": "n8n-nodes-feishu-common.feishuNode",
+      "typeVersion": 1,
+      "position": [
+        2416,
+        512
+      ],
+      "id": "462392a2-57a2-416d-83dc-d992f16b60ae",
+      "name": "Message:send message",
+      "executeOnce": false,
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "resource": "bitable",
+        "operation": "bitable:table:record:add",
+        "app_toke": "NO9rbxd9taMeVnszKuYc7ZXPnfg",
+        "table_id": "tblst0YmoNcs2v8N",
+        "body": "={\"fields\":{\n  \"标题\":\"{{ $json.headline }}\",\n  \"简介\":\"{{ $json.summary }}\",\n  \"类别\":\"{{ $json.category }}\",\n  \"url\":{\n      \"link\":\"{{ $json.url }}\",\n      \"text\":\"阅读原文\"},\n  \"发布日期\":\"{{ $json.DatePublished }}\",\n  \"分数\":\"{{ $json.score }}\"\n}}"
+      },
+      "type": "n8n-nodes-feishu-common.feishuNode",
+      "typeVersion": 1,
+      "position": [
+        2224,
+        512
+      ],
+      "id": "010fb168-cf49-4864-985a-08b3e85b0199",
+      "name": "Bitable:table:record:add bitable",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "alwaysOutputData": false,
+      "credentials": {},
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        2544,
+        928
+      ],
+      "id": "938fd04d-fcc4-4e77-8626-d312adcce78c",
+      "name": "DeepSeek Chat Model"
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/category/artificial-intelligence/",
+        "options": {}
+      },
+      "id": "c47a3fd1-e165-470b-811e-7af2abd9ccfc",
+      "name": "获取资讯",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        608,
+        208
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "DatePublished",
+              "cssSelector": ".loop-card__meta > time",
+              "returnValue": "attribute",
+              "attribute": "datetime",
+              "returnArray": true
+            },
+            {
+              "key": "url",
+              "cssSelector": ".loop-card__title > a",
+              "returnValue": "attribute",
+              "attribute": "data-destinationlink",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "58492f09-bf6d-4b16-9f12-c02d7deb0d9f",
+      "name": "获取日期",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        832,
+        208
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "DatePublished, url",
+        "options": {}
+      },
+      "id": "b3751f53-d720-4a49-832d-2259056ed368",
+      "name": "拆分字段",
+      "type": "n8n-nodes-base.splitOut",
+      "position": [
+        1056,
+        208
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a058f371-80be-4b4b-a275-f453cd061664",
+              "name": "DatePublished",
+              "type": "string",
+              "value": "={{ $json.DatePublished.toDateTime().format('yyyy/MM/dd') }}"
+            },
+            {
+              "id": "042a5c23-a1e8-425b-81eb-20e406caf4d3",
+              "name": "url",
+              "type": "string",
+              "value": "={{ $json.url }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6c33c62b-2168-4a90-b792-400025fc2590",
+      "name": "编辑字段",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1280,
+        208
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "fa0fc720-5e18-4c64-b799-beba5832b2f2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "={{ $json.DatePublished }}",
+                    "rightValue": "={{ $now.minus(1,'days').format('yyyy/MM/dd') }}"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "YesterdayOnly"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "51c43c73-59be-43da-893b-0d82600e735e",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "leftValue": "",
+                    "rightValue": "="
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "OtherDate"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "3ab9e9bf-914c-41a3-99bb-5adf69cef46d",
+      "name": "过滤日期",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        1504,
+        208
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9de1688d-9b13-4dba-b5e4-8a2be34c4d34",
+      "name": "循环",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        1312,
+        560
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "body",
+              "cssSelector": "div[class*=\"entry-content\"]",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa0d10fa-8c8d-4bc8-8107-d2b5fcc664e0",
+      "name": "获取主体",
+      "type": "n8n-nodes-base.html",
+      "position": [
+        2416,
+        688
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=您是一位优秀的新闻工作者，能够以批判性的眼光总结、分析和分类新闻，并使用通俗易懂的中文回复。 \n\n请根据下方的新闻文章做三件事：\n\n1. **新闻摘要**  \n   清晰、简洁地总结内容，在3-4句话内吸引读者。\n\n2. **新闻评分（1-100）-重要**  \n   严格评估新闻，不考虑类别，但根据以下标准：\n\n   - **重要性和影响（最高30分）**  \n     对公众有影响或具有长期政策影响的新闻\n   - **新内容和信息（最高25分）**  \n     提供新信息、新观点或深入背景的新闻\n   - **报道质量（最高25分）**  \n     写作清晰、有引用、有结构，不仅仅是报道新闻\n   - **报道的吸引力（最高20分）**  \n     生动有趣，有细节或与当前事件相关\n\n   **立即扣分** 如果发现以下情况：\n   - 广告/宣传新闻（-20至-30分）\n   - 内容陈旧、重复的新闻（-10至-20分）\n   - 缺乏来源或使用模糊语言的新闻（-10分）\n\n3. **新闻分类**  \n   从以下列表中选择**仅一个**类别：\n   - 政治\n   - 经济\n   - 社会\n   - 娱乐\n   - 体育\n   - 技术\n   - 国际\n   - 环境\n   - 生活方式\n\n   如果文章不符合任何类别，请选择“最接近的”类别，但不要创建新的标题：\n   - 政治\n   - 经济\n   - 社会\n   - 娱乐\n   - 体育\n   - 技术\n   - 国际\n   - 环境\n   - 生活方式\n\n---\n新闻内容：\n{{ $json.body }}\n\n---\n输出格式：\n请严格以JSON格式回答，需包含以下key：\n{\n     \n  \"headline\": \"xxxx\"\n  \"summary\": \"这篇新闻..\" \n  \"score\": \"75\"\n  \"category\": \"政治\"\n}\n\n\n",
+        "options": {}
+      },
+      "id": "f0b356c6-0bd1-462b-b3b3-44c5cad3f97e",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        2608,
+        688
+      ],
+      "retryOnFail": true,
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0be8d0c0-55c7-4bcb-8d33-6201a0dbca15",
+              "name": "score",
+              "type": "number",
+              "value": "={{ $json.score }}"
+            },
+            {
+              "id": "5e1e4b20-9846-4d95-aea5-76695177cf19",
+              "name": "headline",
+              "type": "string",
+              "value": "={{ $json.headline }}"
+            },
+            {
+              "id": "14a4eba5-ee9d-4bd3-9e78-19acdd4a9ec9",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.summary }}"
+            },
+            {
+              "id": "0952111c-4c09-4808-a6bc-a3d5a72e5498",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $json.category }}"
+            },
+            {
+              "id": "f405e7a5-a470-448a-9a86-69f77577d444",
+              "name": "url",
+              "type": "string",
+              "value": "={{ $('拆分字段').item.json.url }}"
+            },
+            {
+              "id": "fe74ca8b-84d8-4180-a536-d0a606c66439",
+              "name": "DatePublished",
+              "type": "string",
+              "value": "={{ $('过滤日期').item.json.DatePublished }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4e477d22-3ddf-4fa1-8e3c-27ad16b063df",
+      "name": "设置数据",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1968,
+        512
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "const outputStr = $input.first().json.output;\n// Remove the code block markers and parse the JSON\nconst jsonStr = outputStr.replace(/^```json\\n|```$/g, '').trim();\nconst data = JSON.parse(jsonStr);\n\nreturn [{\n  json: {\n    headline: data.headline,\n    summary: data.summary,\n    score: data.score,\n    category: data.category\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2928,
+        688
+      ],
+      "id": "ee2172cc-6749-45b1-88e3-bd5353066bd2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "maxItems": 8
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        352
+      ],
+      "id": "ca463534-c162-48b4-94fd-85326c8b5373",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "content": "需要增加社区节点，搜索feishu。\n具体如何添加可以看视频",
+        "height": 80
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2144,
+        400
+      ],
+      "typeVersion": 1,
+      "id": "ae03b8ae-6773-412f-a735-ea1a3811aed3",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "获取资讯",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "URL_Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "URL_Content": {
+      "main": [
+        [
+          {
+            "node": "获取主体",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bitable:table:record:add bitable": {
+      "main": [
+        [
+          {
+            "node": "Message:send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取资讯": {
+      "main": [
+        [
+          {
+            "node": "获取日期",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取日期": {
+      "main": [
+        [
+          {
+            "node": "拆分字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分字段": {
+      "main": [
+        [
+          {
+            "node": "编辑字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "编辑字段": {
+      "main": [
+        [
+          {
+            "node": "过滤日期",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "过滤日期": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "循环": {
+      "main": [
+        [
+          {
+            "node": "设置数据",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取主体": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "设置数据": {
+      "main": [
+        [
+          {
+            "node": "Bitable:table:record:add bitable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "循环",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "循环",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "bb3a59d4-1159-499a-96f6-fef6ef31c4a1",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-08-08T22:12:59.630Z",
+      "createdAt": "2026-08-08T22:12:59.630Z",
+      "role": "workflow:owner",
+      "workflowId": "Z1Lc6OAdAn559xo5",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

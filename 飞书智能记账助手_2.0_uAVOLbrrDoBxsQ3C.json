@@ -1,0 +1,4899 @@
+{
+  "updatedAt": "2026-08-06T12:09:47.890Z",
+  "createdAt": "2026-07-27T15:02:12.986Z",
+  "id": "uAVOLbrrDoBxsQ3C",
+  "name": "飞书智能记账助手_2.0",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// 作者: @新哥AGI研习社\n// 代码功能：解析飞书消息事件，提取文本或图片信息（支持 message_type 为 text / image）\n\n// 获取第一个输入项的json.body作为事件数据\nconst event = $input.first().json.body;\n\n// 检查是否为消息事件（event_type必须是'im.message.receive_v1'）\nif (!event.header || event.header.event_type !== 'im.message.receive_v1') {\n  // 如果不是消息事件，返回对应的错误码和错误描述\n  return [\n    {\n      json: {\n        code: 40001,\n        error: '非消息事件',\n      },\n    },\n  ];\n}\n\n// 获取消息内容对象\nconst message = event.event.message;\n// 获取发送者信息对象\nconst sender = event.event.sender;\n// 当前消息类型（text 文本 / image 图片等）\nconst messageType = message.message_type;\n\n// 解析消息中的 content 字段：飞书多为 JSON 字符串，亦可能已是对象；解析失败则返回错误\nfunction parseMessageContent(raw) {\n  if (raw == null || raw === '') {\n    return null;\n  }\n  if (typeof raw === 'object') {\n    return raw;\n  }\n  try {\n    return JSON.parse(raw);\n  } catch {\n    return null;\n  }\n}\n\nconst content = parseMessageContent(message.content);\nif (!content) {\n  // 如果 content 无法解析，返回对应的错误码和错误描述\n  return [\n    {\n      json: {\n        code: 40003,\n        error: '消息 content 无法解析为 JSON',\n        message_type: messageType,\n        message_id: message.message_id\n      },\n    },\n  ];\n}\n\n// 从sender对象中提取用户open_id\nconst userOpenId = sender.sender_id.open_id;\n\n// 提取消息所属的群组ID\nconst chatId = event.event.message.chat_id;\n// 提取聊天类型（如单聊group或群聊p2p等）\nconst chatType = event.event.message.chat_type;\n\n// 各类型共用的成功返回骨架\nconst baseOk = {\n  code: 200,\n  message_type: messageType,\n  user_open_id: userOpenId,\n  chat_id: chatId,\n  chat_type: chatType,\n  message_id: message.message_id,\n  create_time: message.create_time,\n};\n\n// 文本消息：从 content 中取 text\nif (messageType === 'text') {\n  const text = typeof content.text === 'string' ? content.text : '';\n  if (!text) {\n    // 如果文本消息缺少有效 text，返回对应的错误码和错误描述\n    return [\n      {\n        json: {\n          code: 40004,\n          error: '文本消息缺少 text 字段',\n          message_type: messageType,\n          message_id: message.message_id\n        },\n      },\n    ];\n  }\n  // 返回文本记账所需字段；has_image 为 false 表示非图片链路\n  return [\n    {\n      json: {\n        ...baseOk,\n        text,\n        image_key: null,\n        has_image: false,\n      },\n    },\n  ];\n}\n\n// 图片消息：从 content 中取 image_key\nif (messageType === 'image') {\n  const imageKey = content.image_key;\n  if (!imageKey || typeof imageKey !== 'string') {\n    // 如果图片消息缺少 image_key，返回对应的错误码和错误描述\n    return [\n      {\n        json: {\n          code: 40005,\n          error: '图片消息缺少 image_key',\n          message_type: messageType,\n          message_id: message.message_id\n        },\n      },\n    ];\n  }\n  // 返回提取的关键信息，结构化输出，has_image 表明已抓取到图片消息\n  return [\n    {\n      json: {\n        ...baseOk,\n        text: null,\n        image_key: imageKey,\n        has_image: true,\n      },\n    },\n  ];\n}\n\n// 如果不是支持的 text / image 类型，返回对应的错误码和错误描述，并带上消息类型\nreturn [\n  {\n    json: {\n      code: 40002,\n      error: '不支持的消息类型',\n      message_type: messageType,\n      message_id: message.message_id\n    },\n  },\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -992,
+        432
+      ],
+      "id": "26b39d27-4c3b-4b7c-b35e-99254ef6d97e",
+      "name": "解析飞书消息",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ad0fb75f-4bf4-4157-8641-07b6d87aa235",
+              "name": "app_id",
+              "value": "cli_aafedd43a8f85be5",
+              "type": "string"
+            },
+            {
+              "id": "8211841d-8df6-413c-9518-6bd69380d327",
+              "name": "app_secret",
+              "value": "gPV9ktujgwgLv7pBPIGyye07fINPo8EN",
+              "type": "string"
+            },
+            {
+              "id": "b0297ecd-9fe3-4b60-a59b-e60ad1fe88a8",
+              "name": "app_token",
+              "value": "GAzeboE8KanvvSsFJ2NcFZI7n4g",
+              "type": "string"
+            },
+            {
+              "id": "2fed898c-50a1-4431-ad24-06583f23ef66",
+              "name": "table_id",
+              "value": "tblpKAmVzeZnZiuP",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -768,
+        432
+      ],
+      "id": "60b0ef38-a8dd-4135-905c-56cdcecdc21a",
+      "name": "设置应用凭证",
+      "notesInFlow": true,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5b829413-02e2-4107-b855-ee8b8e983281",
+              "leftValue": "={{ $('解析飞书消息').item.json.has_image }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        448
+      ],
+      "id": "1707c592-f019-4a97-8eeb-1de705b44f88",
+      "name": "收到图片",
+      "notesInFlow": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 2,
+        "output": "={{ \n  $('解析飞书消息').item.json.code === 200 && \n  ($('解析飞书消息').item.json.message_type === 'image' || $('解析飞书消息').item.json.message_type === 'text') \n  ? 0 : 1 \n}}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -368,
+        432
+      ],
+      "id": "8770b02d-3e3e-4d2c-8ede-71544aff81e0",
+      "name": "收到正确事件消息",
+      "retryOnFail": true,
+      "notesInFlow": true,
+      "notes": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "01c3b209-3dee-43d3-a117-dad4fc1229ff",
+              "name": "录入者",
+              "value": "={{ $('解析飞书消息').item.json.user_open_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3622637e-d4ad-4bc7-be46-c6a91cf51fbb",
+              "name": "金额",
+              "value": "={{ $json.output.amount }}",
+              "type": "string"
+            },
+            {
+              "id": "47d22339-b636-46a0-9922-732a61e52c09",
+              "name": "货币代码",
+              "value": "={{ $ifEmpty($json.output.currency, \"CNY\") }}",
+              "type": "string"
+            },
+            {
+              "id": "4fa82663-db72-4075-b1c6-8853ccd48133",
+              "name": "商户名称",
+              "value": "={{ $ifEmpty($json.output.merchant, \"未知商户\") }}",
+              "type": "string"
+            },
+            {
+              "id": "41fa8064-19bb-47e0-9159-21d4ae28fc86",
+              "name": "交易日期",
+              "value": "={{ $json.output.date ? DateTime.fromFormat($json.output.date, 'yyyy-MM-dd').toMillis() : $now.toMillis() }}",
+              "type": "string"
+            },
+            {
+              "id": "3d2f4748-ff14-4477-867c-2d8ae1baddee",
+              "name": "交易时间",
+              "value": "={{ $ifEmpty($json.output.time, \"暂无\") }}",
+              "type": "string"
+            },
+            {
+              "id": "6214c88c-d906-406f-8104-053db9b850c1",
+              "name": "交易类型",
+              "value": "={{ $ifEmpty($json.output.transaction_type, \"其他\") }}",
+              "type": "string"
+            },
+            {
+              "id": "07378bda-e40e-4e0b-81dc-8b1614ae7740",
+              "name": "分类",
+              "value": "={{ $ifEmpty($json.output.category, \"其他\") }}",
+              "type": "string"
+            },
+            {
+              "id": "084b8150-91de-4349-ad3e-b5b4ac6f1533",
+              "name": "支付方式",
+              "value": "={{ $ifEmpty($json.output.payment_method, \"其他\") }}",
+              "type": "string"
+            },
+            {
+              "id": "2cf0e20e-8879-40d9-80a2-d0ff8bd3c9b6",
+              "name": "交易备注",
+              "value": "={{ $ifEmpty($json.output.description, \"暂无\") }}",
+              "type": "string"
+            },
+            {
+              "id": "bc1cda5b-8057-424a-9853-e2294cef20da",
+              "name": "原始OCR文本",
+              "value": "={{ $ifEmpty($json.output.raw_text, \"暂无\") }}",
+              "type": "string"
+            },
+            {
+              "id": "5db47c5c-6d10-4ab0-bb97-44798bad84d2",
+              "name": "置信度",
+              "value": "={{ $ifEmpty($json.output.confidence, \"低\") }}",
+              "type": "string"
+            },
+            {
+              "id": "331ecec2-69b9-4517-aadf-dff759f500ad",
+              "name": "状态",
+              "value": "待核实",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1264,
+        -64
+      ],
+      "id": "0890e224-0f41-43c1-b019-2779ccac6b8f",
+      "name": "固定字段",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1824,
+        -144
+      ],
+      "id": "044abaae-9c1e-4194-b5b3-11fda514e9d8",
+      "name": "生成唯一字符串序列",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Crypto"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1824,
+        32
+      ],
+      "id": "d347f781-2361-4f83-8c97-78debd06fe3f",
+      "name": "生成唯一字符串序列 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Crypto"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "8a9e82d4-93b3-4ca5-8240-4ca6ead2a382",
+              "leftValue": "={{ $json.msg }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1616,
+        -64
+      ],
+      "id": "14e6972f-9702-4171-8126-96059e492e0f",
+      "name": "录入成功",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        352
+      ],
+      "id": "b847e663-ec09-421b-94a6-6d21a5c88065",
+      "name": "生成唯一字符串序列  ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Crypto"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        528
+      ],
+      "id": "5f13d6a7-cc91-48c0-ac41-4507586d5f32",
+      "name": "生成唯一字符串序列   ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Crypto"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+              "leftValue": "={{ $json.output.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "8a9e82d4-93b3-4ca5-8240-4ca6ead2a382",
+              "leftValue": "={{ $json.output.amount }}",
+              "rightValue": {},
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1072,
+        96
+      ],
+      "id": "b65e04a0-a421-4f5a-9a52-d6dfffd83995",
+      "name": "识别成功",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        144
+      ],
+      "id": "012aeb4b-20b6-4a49-9fa9-0923ffedd87a",
+      "name": " 生成唯一字符串序列",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Crypto"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+              "leftValue": "={{ $json.output.code }}",
+              "rightValue": 400,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1264,
+        240
+      ],
+      "id": "1c41bb41-9c8b-4ae3-982b-aa928e8a442b",
+      "name": "图片不符",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        336
+      ],
+      "id": "7f4dd22b-a46a-456a-8d9e-6e4be24fe7ee",
+      "name": " 生成唯一字符串序列 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Crypto"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3632,
+        16
+      ],
+      "id": "48abcd34-959a-44fa-b12e-d28083f6a9eb",
+      "name": "等待3秒",
+      "webhookId": "40d27b7c-932e-4817-bf17-ec0331e6b60c",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Wait"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3072,
+        -144
+      ],
+      "id": "affb3a17-4750-43f8-a867-82e1c1abd92c",
+      "name": "Loop Over Items",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3280,
+        -160
+      ],
+      "id": "06458683-8c1f-4e6a-a0c1-481dc568e66c",
+      "name": "合并数据统一处理",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：把某个上游节点的 json 和 binary 重新挂到当前输出上\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nreturn {\n  json: $('获取文件二进制流').item.json,\n  binary: $('获取文件二进制流').item.binary\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        -144
+      ],
+      "id": "8594d6dd-28aa-452f-b04f-edfaafd964f7",
+      "name": "重新挂载图片",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：获取当前传递过来二进制文件的大小和重新挂载文件传递给下一个节点\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\n// 读取二进制 buffer，返回字节数\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst sizeInBytes = buffer.length;\n\n// 同时把原来的 binary.data 一起传出去\nreturn [\n  {\n    json: {\n      size_in_bytes: sizeInBytes,\n    },\n    binary: {\n      // 直接复用上一个节点的 binary.data\n      data: $input.first().binary.data,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        -144
+      ],
+      "id": "184847d1-330a-4d91-8328-3a38660b5f42",
+      "name": "获取图片文件大小",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：把某个上游节点的 json 和 binary 重新挂到当前输出上\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nreturn {\n  json: $('获取图片文件大小').item.json,\n  binary: $('获取图片文件大小').item.binary,\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2720,
+        -144
+      ],
+      "id": "6f04f4e8-426a-479d-baf9-27cee87be7e7",
+      "name": "重新挂载图片 ",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：对获取到的图片进行分片处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nconst CHUNK_SIZE = 4 * 1024 * 1024; // 4MB in bytes\n\n// 获取输入的图片二进制数据\nconst binaryData = items[0].binary.data;\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\n// 计算需要分成多少块\nconst totalChunks = Math.ceil(buffer.length / CHUNK_SIZE);\nconst chunks = [];\n\n// 分割二进制数据\nfor (let i = 0; i < totalChunks; i++) {\n  const start = i * CHUNK_SIZE;\n  const end = Math.min(start + CHUNK_SIZE, buffer.length);\n  const chunkBuffer = buffer.slice(start, end);\n  \n  // 为每个块创建新的二进制数据对象\n  chunks.push({\n    json: {\n      chunkIndex: i,\n      totalChunks: totalChunks,\n      chunkSize: chunkBuffer.length,\n      originalFileName: binaryData.fileName || 'video'\n    },\n    binary: {\n      data: await this.helpers.prepareBinaryData(\n        chunkBuffer,\n        `${binaryData.fileName || 'video'}_chunk_${i}.bin`\n      )\n    }\n  });\n}\n\nreturn chunks;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2896,
+        -144
+      ],
+      "id": "7ede910d-dc5a-4cba-a670-f098c2108462",
+      "name": "图片分片",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+              "leftValue": "={{ $json.output.code }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "8a9e82d4-93b3-4ca5-8240-4ca6ead2a382",
+              "leftValue": "={{ $json.output.amount }}",
+              "rightValue": {},
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        832
+      ],
+      "id": "da702a30-fca3-4c45-a9e2-579cc0f53619",
+      "name": "识别成功 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "01c3b209-3dee-43d3-a117-dad4fc1229ff",
+              "name": "录入者",
+              "value": "={{ $('解析飞书消息').item.json.user_open_id }}",
+              "type": "string"
+            },
+            {
+              "id": "3622637e-d4ad-4bc7-be46-c6a91cf51fbb",
+              "name": "金额",
+              "value": "={{ $json.output.amount }}",
+              "type": "string"
+            },
+            {
+              "id": "47d22339-b636-46a0-9922-732a61e52c09",
+              "name": "货币代码",
+              "value": "={{ $ifEmpty($json.output.currency, \"CNY\") }}",
+              "type": "string"
+            },
+            {
+              "id": "4fa82663-db72-4075-b1c6-8853ccd48133",
+              "name": "商户名称",
+              "value": "={{ $ifEmpty($json.output.merchant, \"未知商户\") }}",
+              "type": "string"
+            },
+            {
+              "id": "41fa8064-19bb-47e0-9159-21d4ae28fc86",
+              "name": "交易日期",
+              "value": "={{ $json.output.date ? DateTime.fromFormat($json.output.date, 'yyyy-MM-dd').toMillis() : $now.toMillis() }}",
+              "type": "string"
+            },
+            {
+              "id": "3d2f4748-ff14-4477-867c-2d8ae1baddee",
+              "name": "交易时间",
+              "value": "={{ $ifEmpty($json.output.time, \"暂无\") }}",
+              "type": "string"
+            },
+            {
+              "id": "6214c88c-d906-406f-8104-053db9b850c1",
+              "name": "交易类型",
+              "value": "={{ $ifEmpty($json.output.transaction_type, \"其他\") }}",
+              "type": "string"
+            },
+            {
+              "id": "07378bda-e40e-4e0b-81dc-8b1614ae7740",
+              "name": "分类",
+              "value": "={{ $ifEmpty($json.output.category, \"其他\") }}",
+              "type": "string"
+            },
+            {
+              "id": "084b8150-91de-4349-ad3e-b5b4ac6f1533",
+              "name": "支付方式",
+              "value": "={{ $ifEmpty($json.output.payment_method, \"其他\") }}",
+              "type": "string"
+            },
+            {
+              "id": "2cf0e20e-8879-40d9-80a2-d0ff8bd3c9b6",
+              "name": "交易备注",
+              "value": "={{ $ifEmpty($json.output.description, \"暂无\") }}",
+              "type": "string"
+            },
+            {
+              "id": "bc1cda5b-8057-424a-9853-e2294cef20da",
+              "name": "原始OCR文本",
+              "value": "={{ $ifEmpty($json.output.raw_text, \"暂无\") }}",
+              "type": "string"
+            },
+            {
+              "id": "5db47c5c-6d10-4ab0-bb97-44798bad84d2",
+              "name": "置信度",
+              "value": "={{ $ifEmpty($json.output.confidence, \"低\") }}",
+              "type": "string"
+            },
+            {
+              "id": "331ecec2-69b9-4517-aadf-dff759f500ad",
+              "name": "状态",
+              "value": "待核实",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        704
+      ],
+      "id": "38fd8a9e-ffce-4e3c-9c2d-7bed6cca82d7",
+      "name": "固定字段 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+              "leftValue": "={{ $json.code }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "8a9e82d4-93b3-4ca5-8240-4ca6ead2a382",
+              "leftValue": "={{ $json.msg }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1456,
+        704
+      ],
+      "id": "afa1cce4-d4a7-428b-a0aa-29eb02a2e87a",
+      "name": "录入成功 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        624
+      ],
+      "id": "52d5777d-2e80-4068-81bd-0aa38aaac429",
+      "name": "   生成唯一字符串序列    ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Crypto"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        800
+      ],
+      "id": "57dad50f-0590-4d56-826a-deac1da1f06f",
+      "name": "    生成唯一字符串序列    ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Crypto"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+              "leftValue": "={{ $json.output.code }}",
+              "rightValue": 400,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1104,
+        1024
+      ],
+      "id": "b758be82-79dc-473d-8c41-bc575d9660fb",
+      "name": "文本不符",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        912
+      ],
+      "id": "1e04f036-e628-4d99-a2fe-c4535341154f",
+      "name": "  生成唯一字符串序列     ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Crypto"
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "uuid"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        1120
+      ],
+      "id": "641cb2d1-cda0-4653-b721-9ba3530163f1",
+      "name": "   生成唯一字符串序列  ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Crypto"
+    },
+    {
+      "parameters": {
+        "content": "## 事件监听飞书机器人事件推送\n1、用户与机器人单聊，发送账单图片或文本\n2、飞书服务器推送 im.message.receive_v1 事件\n3、n8n Webhook 接收事件（解析飞书消息）\n4、获取飞书 tenant_access_token\n5、消息类型判断（图片或文本）",
+        "height": 448,
+        "width": 1588,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1280,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "fca66df0-7082-44e3-89c8-72b740ae995a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 处理图片消息\n下载图片二进制流->账单图片结构化识别助手->强制json格式化输出->识别判断->新增记录到飞书表格->回复机器人消息->将账单原图分片上传并保存到表格",
+        "height": 720,
+        "width": 3440,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        -192
+      ],
+      "typeVersion": 1,
+      "id": "1e4ac0ed-bb17-48f3-8a09-d8c49dd37bfe",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 处理文本消息\n直接读取文本内容->账单文本结构化识别助手->强制json格式化输出->识别判断->新增记录到飞书表格->回复机器人消息",
+        "height": 720,
+        "width": 1744,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        576
+      ],
+      "typeVersion": 1,
+      "id": "fecdddd4-6f31-48e9-8905-2a954d7339cb",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "feishu-smart-bookkeeping",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1200,
+        432
+      ],
+      "id": "1cb446c3-70cf-455d-9e7d-1897cac1bbda",
+      "name": "接收飞书机器人消息推送",
+      "webhookId": "bd797917-4b0d-449f-b4ce-17a0d0a6dc5c",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"app_id\": {{ $json.app_id.toJsonString() }},\n    \"app_secret\": {{ $json.app_secret.toJsonString() }}\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -560,
+        432
+      ],
+      "id": "845e5c20-ccfe-422f-9fb3-3e0b8cacdb62",
+      "name": "获取飞书Token",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"已收到，正在为您智能识别账单内容，请稍候，处理完成后将自动回复结果。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        352
+      ],
+      "id": "db8e5c0f-6166-4d43-94f4-b2ce712395e1",
+      "name": "机器人回复用户:处理中",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"抱歉，当前仅支持与账单相关的文本或图片类型，请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        0,
+        528
+      ],
+      "id": "33e3754b-29cc-4fcb-90ba-660c67b64364",
+      "name": "机器人回复用户:事件异常",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').item.json.message_id }}/resources/{{ $('解析飞书消息').item.json.image_key }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "type",
+              "value": "={{ $('解析飞书消息').item.json.message_type }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        480,
+        96
+      ],
+      "id": "5cb02abb-6f3c-4421-95da-1db8efece122",
+      "name": "获取文件二进制流",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "【账单图片】\n请识别这张支付截图、收据拍照或账单图片",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "# 角色 : 账单图片结构化识别助手\n\n- 专注于从用户上传的**账单/收据/支付截图**中，精准提取关键财务信息，并以**合法 JSON** 格式返回结构化数据。\n- 只基于图片中可见的真实内容进行提取，**不编造**图片中不存在的金额、商户、时间等任何信息。\n- 目标是产出：**准确识别金额与交易方向**（收入/支出）、**规范化日期与时间格式**、**智能归类消费类别**、**标注识别置信度**的结构化记账数据。\n\n## 背景 :\n\n- 账单图片来源多样：微信支付截图、支付宝截图、银行App交易记录、纸质收据拍照、电商订单截图等；不同来源的版式与信息密度差异显著。\n- 用户使用场景：个人记账、财务归档、消费统计、报销凭证整理；核心诉求是**信息准确可溯、格式统一可用**。\n- 模型易出现的错误：金额符号残留、收支方向判断错误、日期格式不统一、分类靠猜而非依据；需通过明确规则约束输出质量。\n\n## 简介 :\n\n- author: 南哥\n- version: 2.0\n- language: 中文\n- description: 针对用户上传的「账单/支付截图/收据图片」，以**合法 JSON** 输出字段：`code`、`amount`、`currency`、`merchant`、`date`、`time`、`transaction_type`、`payment_method`、`category`、`description`、`confidence`、`raw_text`；其中 `code` 用于区分识别结果状态（`200` 成功 / `400` 失败），**所有无法从图片中明确识别的字段一律返回 `null`**。\n\n## 任务 :\n\n- 识别图片中的**金额、货币类型、收支方向**，金额统一为纯数字，支出为负数，收入为正数。\n- 提取**商户/收款方名称**、**交易日期与时间**，并规范化为统一格式。\n- 根据商户名称与交易描述，从枚举值中**智能判断消费分类**，不得自造分类；无法判断时返回 `null`。\n- 识别**支付方式**，结合界面视觉特征（颜色、Logo、关键词）与文字内容综合判断；无法确认时返回 `null`。\n- 评估本次识别的**整体置信度**，根据图片清晰度与信息完整度三级评定；无法评定时返回 `null`。\n- 将图片中可读取的主要文字原样保留到 `raw_text` 字段，供人工校对；无可读文字时返回 `null`。\n- 最终以**合法 JSON 对象**输出，不附加任何说明文字。\n\n## 约束条件（重要）:\n\n- **输出必须为合法 JSON**：输出一个 JSON 对象；**不得**在 JSON 外输出任何字符，不要 markdown 代码块（如 ```json）、说明文字、前后缀。\n- **金额硬约束**：`amount` 字段只允许返回数字类型（不加引号），**不得包含** ¥、￥、元、RMB 等任何符号；支出为负数（如 `-38.50`），收入为正数（如 `200.00`），保留两位小数；无法识别时返回 `null`。\n- **日期硬约束**：`date` 统一转换为 `YYYY-MM-DD` 格式；遇 `04/23`、`4月23日`、`23-04` 等格式均转换；年份信息缺失时返回 `null`，不得填入当前年份或猜测。\n- **分类约束**：`category` 必须从以下枚举值中选取，**不得**使用枚举以外的值：`餐饮`、`交通`、`购物`、`娱乐`、`医疗`、`教育`、`住房`、`通讯`、`旅游`、`投资`、`其他`；无法判断时返回 `null`。\n- **缺失信息处理**：任何无法从图片中明确识别的字段，**一律返回 `null`**，不得使用任何兜底默认值，不得猜测或编造无法确认的内容。\n- **非账单图片处理**：若上传图片明显不是账单类图片，需输出与主数据结构相同的 JSON 对象，`code` 字段为 `400`，其余所有字段全部为 `null`，不额外输出任何说明或字段。\n- **JSON 字符串转义**：字符串内如出现双引号须写作 `\\\"`，反斜杠为 `\\\\`，换行为 `\\n`。\n\n## 技能 :\n\n- 多来源账单版式识别：微信支付、支付宝、各大银行App、纸质收据、电商订单，均可解析关键字段。\n- 金额与收支方向判断：根据「-¥」「付款成功」「支出」「到账」「退款」「转账给你」等关键词综合判断交易类型。\n- 日期格式归一化：处理中文日期、斜线格式、纯数字格式等多种日期表达，统一输出标准格式。\n- 消费分类智能匹配：依据商户名称、商品描述、平台类型，从枚举值中选取最匹配的分类。\n- 支付方式视觉识别：结合界面颜色（绿/蓝）、Logo特征、平台特有文字（花呗/零钱/余额宝）综合判断。\n- 置信度自评：对图片清晰度、关键字段可识别性、推断成分多少做综合评估，给出 `高`/`中`/`低` 三级结论。\n\n## 工作流：\n\n- 第一步：判断图片是否为有效账单类图片；若不是，所有字段返回 null，`code` 字段为 400。\n- 第二步：OCR 读取图片全文，提取 `raw_text`；无可读文字则置为 `null`。\n- 第三步：识别金额与交易方向，确定 `amount`（含正负）和 `transaction_type`；无法确认则置为 `null`。\n- 第四步：提取日期与时间，执行格式归一化，填写 `date` 和 `time`；信息缺失则置为 `null`。\n- 第五步：识别商户/收款方名称，填写 `merchant`；提取交易备注，填写 `description`；无法识别则置为 `null`。\n- 第六步：根据商户与描述从枚举值中选定 `category`；识别货币类型填写 `currency`；识别支付方式填写 `payment_method`；无法判断的字段均置为 `null`。\n- 第七步：综合图片质量与字段完整度，评定 `confidence`；无法评定则置为 `null`；组装 JSON，校验合法性后输出。\n\n## 输出格式（必遵）:\n\n- 仅输出一个 JSON 对象，且只包含以下键（建议顺序）：\n\n```\n{\n  \"code\": 数字，识别成功返回 200，识别失败/非账单图片返回 400,\n  \"amount\": 数字或 null，支出为负数，收入为正数，保留两位小数（如 -38.50）；无法识别时为 null,\n  \"currency\": 字符串或 null，货币代码（如 \"CNY\"）；图片中无明确货币信息时为 null,\n  \"merchant\": 字符串或 null，商户/收款方名称；无法识别时为 null,\n  \"date\": 字符串或 null，YYYY-MM-DD 格式；日期或年份信息缺失时为 null,\n  \"time\": 字符串或 null，HH:MM 格式；无法识别时为 null,\n  \"transaction_type\": 字符串或 null，\"收入\" 或 \"支出\"；无法判断收支方向时为 null,\n  \"payment_method\": 字符串或 null，\"微信支付\"/\"支付宝\"/\"银行卡\"/\"现金\"/\"其他\"；无法确认时为 null,\n  \"category\": 字符串或 null，从枚举值中选取；无法判断分类时为 null,\n  \"description\": 字符串或 null，交易备注/商品说明；无相关信息时为 null,\n  \"confidence\": 字符串或 null，\"高\"/\"中\"/\"低\"；无法评定时为 null,\n  \"raw_text\": 字符串或 null，图片中识别到的主要原始文字；无可读文字时为 null\n}\n```\n\n- **置信度评定标准**：\n  - `高`：图片清晰，金额、日期、商户三项关键字段均可明确识别，无需推断\n  - `中`：图片基本清晰，但有部分字段需结合上下文推断，或存在轻微模糊\n  - `低`：图片模糊、截图不完整，或多个关键字段无法确认\n- **支付方式判断依据**：\n  - `微信支付`：绿色主题界面、微信 Logo、「微信支付」「零钱」「微信零钱」等字样\n  - `支付宝`：蓝色主题界面、支付宝 Logo、「花呗」「余额宝」「支付宝余额」等字样\n  - `银行卡`：银行名称、「储蓄卡」「信用卡」「尾号XXXX」等字样\n  - `现金`：收据/发票等实物票据照片，包含\"现金\"\"现金支付\"\"现金收款\"\"收讫\"\"现金找零\"等字样\n  - `其他`：有明确支付行为但无法归入上述类型时\n  - `null`：完全无法确认支付方式时\n- **特殊交易类型处理**：\n  - 退款：`transaction_type` 为 `收入`，`amount` 为正数，`description` 注明「退款」\n  - 收到红包/转账：`transaction_type` 为 `收入`，`amount` 为正数\n  - 发出红包/转账：`transaction_type` 为 `支出`，`amount` 为负数\n- **禁止**：JSON 外的任何字符；额外 JSON 键；金额字段含货币符号；`category` 使用枚举外的值；用任何非 `null` 的默认值填充无法识别的字段。\n\n## 输入模板（给用户填写，可简可详）\n\n【账单图片】\n（请识别这张支付截图、收据拍照或账单图片）\n\n## 输出样例（仅供参考）\n\n（以下为合法 JSON；实际输出时不要包 markdown 代码块。）\n\n**样例一：信息完整，识别成功**\n\n```json\n{\n  \"code\": 200,\n  \"amount\": -38.50,\n  \"currency\": \"CNY\",\n  \"merchant\": \"瑞幸咖啡（中国）有限公司\",\n  \"date\": \"2026-04-23\",\n  \"time\": \"09:32\",\n  \"transaction_type\": \"支出\",\n  \"payment_method\": \"微信支付\",\n  \"category\": \"餐饮\",\n  \"description\": \"生椰拿铁x1\",\n  \"confidence\": \"高\",\n  \"raw_text\": \"瑞幸咖啡 交易成功 -¥38.50 2026年4月23日 09:32 微信支付 生椰拿铁x1\"\n}\n```\n\n**样例二：部分字段无法识别，返回 null**\n\n```json\n{\n  \"code\": 200,\n  \"amount\": -120.00,\n  \"currency\": null,\n  \"merchant\": null,\n  \"date\": null,\n  \"time\": \"14:05\",\n  \"transaction_type\": \"支出\",\n  \"payment_method\": null,\n  \"category\": null,\n  \"description\": null,\n  \"confidence\": \"低\",\n  \"raw_text\": \"交易成功 -120.00 14:05\"\n}\n```\n\n**样例三：非账单图片**\n\n```json\n{\n  \"code\": 400,\n  \"amount\": null,\n  \"currency\": null,\n  \"merchant\": null,\n  \"date\": null,\n  \"time\": null,\n  \"transaction_type\": null,\n  \"payment_method\": null,\n  \"category\": null,\n  \"description\": null,\n  \"confidence\": null,\n  \"raw_text\": null\n}\n```\n\n## 初始化\n\n作为账单图片结构化识别助手，我将根据你上传的**账单/支付截图/收据图片**，输出一个**合法 JSON 对象**，包含 `code`、`amount`、`currency`、`merchant`、`date`、`time`、`transaction_type`、`payment_method`、`category`、`description`、`confidence`、`raw_text` 共 12 个字段；其中 `code` 为 `200` 表示识别成功，`400` 表示图片无效，**所有无法从图片中明确识别的字段均返回 `null`**。请按「输入模板」提供图片。",
+          "maxIterations": 10,
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        96
+      ],
+      "id": "7b392622-ea29-4951-baf2-c3c394e17f8c",
+      "name": "账单图片结构化识别助手",
+      "retryOnFail": true,
+      "notesInFlow": true,
+      "notes": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "temperature": 0.7,
+          "timeout": 300000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        304
+      ],
+      "id": "5f52455c-d17f-4f0b-8dad-713f0c579421",
+      "name": "gpt-5.4-mini",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "temperature": 0.7,
+          "timeout": 300000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        736,
+        304
+      ],
+      "id": "ef23d38c-4243-49b8-99bf-04a8e474ab6e",
+      "name": "gpt-5.4",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"number\"\n    },\n    \"amount\": {\n      \"type\": [\"number\", \"null\"]\n    },\n    \"currency\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"merchant\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"date\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"time\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"transaction_type\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"收入\", \"支出\", null]\n    },\n    \"payment_method\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"微信支付\", \"支付宝\", \"银行卡\", \"现金\", \"其他\", null]\n    },\n    \"category\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"餐饮\", \"交通\", \"购物\", \"娱乐\", \"医疗\", \"教育\", \"住房\", \"通讯\", \"旅游\", \"投资\", \"其他\", null]\n    },\n    \"description\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"confidence\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"高\", \"中\", \"低\", null]\n    },\n    \"raw_text\": {\n      \"type\": [\"string\", \"null\"]\n    }\n  },\n  \"required\": [\"code\"]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        848,
+        304
+      ],
+      "id": "3bb49069-74f2-4b14-968b-5e30bad08dda",
+      "name": "强制格式化输出",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('设置应用凭证').item.json.app_token }}/tables/{{ $('设置应用凭证').item.json.table_id }}/records",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"录入者\": [\n      {\n        \"id\": {{ $('固定字段').item.json['录入者'].toJsonString() }}\n      }\n    ],\n    \"金额\": {{ $('固定字段').item.json['金额'] }},\n    \"货币代码\": {{ $('固定字段').item.json['货币代码'].toJsonString() }},\n    \"商户名称\": {{ $('固定字段').item.json['商户名称'].toJsonString() }},\n    \"交易日期\": {{ $('固定字段').item.json['交易日期'] }},\n    \"交易时间\": {{ $('固定字段').item.json['交易时间'].toJsonString() }},\n    \"交易类型\": {{ $('固定字段').item.json['交易类型'].toJsonString() }},\n    \"分类\": {{ $('固定字段').item.json['分类'].toJsonString() }},\n    \"支付方式\": {{ $('固定字段').item.json['支付方式'].toJsonString() }},\n    \"交易备注\": {{ $('固定字段').item.json['交易备注'].toJsonString() }},\n    \"原始OCR文本\": {{ $('固定字段').item.json['原始OCR文本'].toJsonString() }},\n    \"置信度\": {{ $('固定字段').item.json['置信度'].toJsonString() }},\n    \"状态\": {{ $('固定字段').item.json['状态'].toJsonString() }}\n  }\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1440,
+        -64
+      ],
+      "id": "b54bacb1-6bbc-4d49-8d3c-eca8115974fa",
+      "name": "新增记录到表格",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"账单信息已成功录入！明细如下：【金额：{{ $json.data.record.fields['金额'] }}  货币代码：{{ $json.data.record.fields['货币代码'] }}  商户名称：{{ $json.data.record.fields['商户名称'] }}  交易日期：{{ $json.data.record.fields['交易日期'].toDateTime('ms').format('yyyy-MM-dd') }}  交易类型：{{ $json.data.record.fields['交易类型'] }}  分类：{{ $json.data.record.fields['分类'] }}  支付方式：{{ $json.data.record.fields['支付方式'] }}  交易备注：{{ $json.data.record.fields['交易备注'] }}】。请前往账本表格核查记录。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2016,
+        -144
+      ],
+      "id": "d42aed06-f558-4843-865a-e9029d3cbda8",
+      "name": "机器人回复用户消息:录入成功",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"抱歉，当前账单信息录入失败！请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2016,
+        32
+      ],
+      "id": "2e767bf9-53f1-4a00-a68d-8fbf9c39aafa",
+      "name": "机器人回复用户消息:录入失败",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_prepare",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"file_name\": \"原始票根.png\",\n  \"parent_type\": \"bitable_file\",\n  \"parent_node\": {{ $('设置应用凭证').item.json.app_token.toJsonString() }},\n  \"size\": {{ $json.size_in_bytes }}\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2544,
+        -144
+      ],
+      "id": "8f285452-b911-4149-8ea9-cccc64c902c2",
+      "name": "分片上传素材-预上传",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_part",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "upload_id",
+              "value": "={{ $('分片上传素材-预上传').item.json.data.upload_id }}"
+            },
+            {
+              "name": "seq",
+              "value": "={{ $json.chunkIndex }}"
+            },
+            {
+              "name": "size",
+              "value": "={{ $json.chunkSize }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3280,
+        16
+      ],
+      "id": "ce62a033-76a0-4497-898e-617b9785926a",
+      "name": "分片上传素材-上传分片",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_finish",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"upload_id\": \"{{ $('分片上传素材-预上传').item.json.data.upload_id }}\",\n  \"block_num\": {{ $('分片上传素材-预上传').item.json.data.block_num }}\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3456,
+        -160
+      ],
+      "id": "5b12e2b0-9310-4612-a775-1cec15bee35c",
+      "name": "分片上传素材-完成上传",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('设置应用凭证').item.json.app_token }}/tables/{{ $('设置应用凭证').item.json.table_id }}/records/{{ $('新增记录到表格').item.json.data.record.record_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"票根\": [\n        {\n            \"file_token\": {{ $json.data.file_token.toJsonString() }}\n        }\n    ]\n  }\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3632,
+        -160
+      ],
+      "id": "f2c0288f-d307-4f82-9083-12f2c5f2d781",
+      "name": "更新记录 保存票根",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"上传的图片不是有效的账单图片，请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1616,
+        144
+      ],
+      "id": "39fb79e1-cca3-4436-88ff-3f15c89d0b09",
+      "name": "机器人回复用户:图片不符",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"账单信息获取异常！当前获取到的信息不足（未识别到有效金额），请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1616,
+        336
+      ],
+      "id": "f3f31837-f8c3-4344-bbc5-26611e4ec371",
+      "name": "机器人回复用户:信息不足",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=【账单文本】\n{{ $('解析飞书消息').item.json.text }}",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "# 角色 : 账单文本结构化识别助手\n\n- 专注于从用户输入的**账单/收据/支付记录文本**中，精准提取关键财务信息，并以**合法 JSON** 格式返回结构化数据。\n- 只基于输入文本中可见的真实内容进行提取，**不编造**文本中不存在的金额、商户、时间等任何信息。\n- 目标是产出：**准确识别金额与交易方向**（收入/支出）、**规范化日期与时间格式**、**智能归类消费类别**、**标注识别置信度**的结构化记账数据。\n\n## 背景 :\n\n- 账单文本来源多样：微信支付通知文字、支付宝通知文字、银行短信、手动输入的消费记录、电商订单文字描述等；不同来源的格式与信息密度差异显著。\n- 用户使用场景：个人记账、财务归档、消费统计、报销凭证整理；核心诉求是**信息准确可溯、格式统一可用**。\n- 模型易出现的错误：金额符号残留、收支方向判断错误、日期格式不统一、分类靠猜而非依据；需通过明确规则约束输出质量。\n\n## 简介 :\n\n- author: 南哥\n- version: 1.0\n- language: 中文\n- description: 针对用户输入的「账单/支付记录/收据文本」，以**合法 JSON** 输出字段：`code`、`amount`、`currency`、`merchant`、`date`、`time`、`transaction_type`、`payment_method`、`category`、`description`、`confidence`、`raw_text`；其中 `code` 用于区分识别结果状态（`200` 成功 / `400` 失败），**所有无法从文本中明确识别的字段一律返回 `null`**。\n\n## 任务 :\n\n- 识别文本中的**金额、货币类型、收支方向**，金额统一为纯数字，支出为负数，收入为正数。\n- 提取**商户/收款方名称**、**交易日期与时间**，并规范化为统一格式。\n- 根据商户名称与交易描述，从枚举值中**智能判断消费分类**，不得自造分类；无法判断时返回 `null`。\n- 识别**支付方式**，结合文本中的关键词与平台特征综合判断；无法确认时返回 `null`。\n- 评估本次识别的**整体置信度**，根据文本信息完整度与歧义程度三级评定；无法评定时返回 `null`。\n- 将用户输入的原始文本原样保留到 `raw_text` 字段，供人工校对；无有效内容时返回 `null`。\n- 最终以**合法 JSON 对象**输出，不附加任何说明文字。\n\n## 约束条件（重要）:\n\n- **输出必须为合法 JSON**：输出一个 JSON 对象；**不得**在 JSON 外输出任何字符，不要 markdown 代码块（如 ```json）、说明文字、前后缀。\n- **金额硬约束**：`amount` 字段只允许返回数字类型（不加引号），**不得包含** ¥、￥、元、RMB 等任何符号；支出为负数（如 `-38.50`），收入为正数（如 `200.00`），保留两位小数；无法识别时返回 `null`。\n- **日期硬约束**：`date` 统一转换为 `YYYY-MM-DD` 格式；遇 `04/23`、`4月23日`、`23-04` 等格式均转换；年份信息缺失时返回 `null`，不得填入当前年份或猜测。\n- **分类约束**：`category` 必须从以下枚举值中选取，**不得**使用枚举以外的值：`餐饮`、`交通`、`购物`、`娱乐`、`医疗`、`教育`、`住房`、`通讯`、`旅游`、`投资`、`其他`；无法判断时返回 `null`。\n- **缺失信息处理**：任何无法从文本中明确识别的字段，**一律返回 `null`**，不得使用任何兜底默认值，不得猜测或编造无法确认的内容。\n- **非账单文本处理**：若输入文本明显不是账单类内容，需输出与主数据结构相同的 JSON 对象，`code` 字段为 `400`，其余所有字段全部为 `null`，不额外输出任何说明或字段。\n- **JSON 字符串转义**：字符串内如出现双引号须写作 `\\\"`，反斜杠为 `\\\\`，换行为 `\\n`。\n\n## 技能 :\n\n- 多来源账单文本解析：微信支付通知、支付宝通知、银行短信、手动输入记录、电商订单文字，均可解析关键字段。\n- 金额与收支方向判断：根据「-¥」「付款成功」「支出」「到账」「退款」「转账给你」等关键词综合判断交易类型。\n- 日期格式归一化：处理中文日期、斜线格式、纯数字格式等多种日期表达，统一输出标准格式。\n- 消费分类智能匹配：依据商户名称、商品描述、平台类型，从枚举值中选取最匹配的分类。\n- 支付方式关键词识别：根据文本中的平台名称、账户类型（花呗/零钱/余额宝/储蓄卡/信用卡）等关键词综合判断。\n- 置信度自评：对文本信息完整度、关键字段可识别性、推断成分多少做综合评估，给出 `高`/`中`/`低` 三级结论。\n\n## 工作流：\n\n- 第一步：判断输入文本是否为有效账单类内容；若不是，所有字段返回 null，`code` 字段为 400。\n- 第二步：读取输入文本全文，原样填入 `raw_text`；无有效内容则置为 `null`。\n- 第三步：识别金额与交易方向，确定 `amount`（含正负）和 `transaction_type`；无法确认则置为 `null`。\n- 第四步：提取日期与时间，执行格式归一化，填写 `date` 和 `time`；信息缺失则置为 `null`。\n- 第五步：识别商户/收款方名称，填写 `merchant`；提取交易备注，填写 `description`；无法识别则置为 `null`。\n- 第六步：根据商户与描述从枚举值中选定 `category`；识别货币类型填写 `currency`；识别支付方式填写 `payment_method`；无法判断的字段均置为 `null`。\n- 第七步：综合文本信息完整度与字段确认度，评定 `confidence`；无法评定则置为 `null`；组装 JSON，校验合法性后输出。\n\n## 输出格式（必遵）:\n\n- 仅输出一个 JSON 对象，且只包含以下键（建议顺序）：\n\n```\n{\n  \"code\": 数字，识别成功返回 200，识别失败/非账单文本返回 400,\n  \"amount\": 数字或 null，支出为负数，收入为正数，保留两位小数（如 -38.50）；无法识别时为 null,\n  \"currency\": 字符串或 null，货币代码（如 \"CNY\"）；文本中无明确货币信息时为 null,\n  \"merchant\": 字符串或 null，商户/收款方名称；无法识别时为 null,\n  \"date\": 字符串或 null，YYYY-MM-DD 格式；日期或年份信息缺失时为 null,\n  \"time\": 字符串或 null，HH:MM 格式；无法识别时为 null,\n  \"transaction_type\": 字符串或 null，\"收入\" 或 \"支出\"；无法判断收支方向时为 null,\n  \"payment_method\": 字符串或 null，\"微信支付\"/\"支付宝\"/\"银行卡\"/\"现金\"/\"其他\"；无法确认时为 null,\n  \"category\": 字符串或 null，从枚举值中选取；无法判断分类时为 null,\n  \"description\": 字符串或 null，交易备注/商品说明；无相关信息时为 null,\n  \"confidence\": 字符串或 null，\"高\"/\"中\"/\"低\"；无法评定时为 null,\n  \"raw_text\": 字符串或 null，用户输入的原始文本；无有效内容时为 null\n}\n```\n\n- **置信度评定标准**：\n  - `高`：文本信息完整，金额、日期、商户三项关键字段均可明确识别，无需推断\n  - `中`：文本基本清晰，但有部分字段需结合上下文推断，或存在一定歧义\n  - `低`：文本信息残缺、表述模糊，或多个关键字段无法确认\n- **支付方式判断依据**：\n  - `微信支付`：文本含「微信支付」「零钱」「微信零钱」等字样\n  - `支付宝`：文本含「支付宝」「花呗」「余额宝」「支付宝余额」等字样\n  - `银行卡`：文本含银行名称、「储蓄卡」「信用卡」「尾号XXXX」等字样\n  - `现金`：文本含「现金」「现金支付」「现金收款」「收讫」「现金找零」等字样\n  - `其他`：有明确支付行为但无法归入上述类型时\n  - `null`：完全无法确认支付方式时\n- **特殊交易类型处理**：\n  - 退款：`transaction_type` 为 `收入`，`amount` 为正数，`description` 注明「退款」\n  - 收到红包/转账：`transaction_type` 为 `收入`，`amount` 为正数\n  - 发出红包/转账：`transaction_type` 为 `支出`，`amount` 为负数\n- **禁止**：JSON 外的任何字符；额外 JSON 键；金额字段含货币符号；`category` 使用枚举外的值；用任何非 `null` 的默认值填充无法识别的字段。\n\n## 输入模板（给用户填写，可简可详）\n\n【账单文本】\n（请粘贴或输入支付通知、银行短信、消费记录等文字内容）\n\n## 输出样例（仅供参考）\n\n（以下为合法 JSON；实际输出时不要包 markdown 代码块。）\n\n**样例一：信息完整，识别成功**\n\n```json\n{\n  \"code\": 200,\n  \"amount\": -38.50,\n  \"currency\": \"CNY\",\n  \"merchant\": \"瑞幸咖啡（中国）有限公司\",\n  \"date\": \"2026-04-23\",\n  \"time\": \"09:32\",\n  \"transaction_type\": \"支出\",\n  \"payment_method\": \"微信支付\",\n  \"category\": \"餐饮\",\n  \"description\": \"生椰拿铁x1\",\n  \"confidence\": \"高\",\n  \"raw_text\": \"瑞幸咖啡 交易成功 -¥38.50 2026年4月23日 09:32 微信支付 生椰拿铁x1\"\n}\n```\n\n**样例二：部分字段无法识别，返回 null**\n\n```json\n{\n  \"code\": 200,\n  \"amount\": -120.00,\n  \"currency\": null,\n  \"merchant\": null,\n  \"date\": null,\n  \"time\": \"14:05\",\n  \"transaction_type\": \"支出\",\n  \"payment_method\": null,\n  \"category\": null,\n  \"description\": null,\n  \"confidence\": \"低\",\n  \"raw_text\": \"交易成功 -120.00 14:05\"\n}\n```\n\n**样例三：非账单文本**\n\n```json\n{\n  \"code\": 400,\n  \"amount\": null,\n  \"currency\": null,\n  \"merchant\": null,\n  \"date\": null,\n  \"time\": null,\n  \"transaction_type\": null,\n  \"payment_method\": null,\n  \"category\": null,\n  \"description\": null,\n  \"confidence\": null,\n  \"raw_text\": null\n}\n```\n\n## 初始化\n\n作为账单文本结构化识别助手，我将根据你输入的**账单/支付通知/消费记录文本**，输出一个**合法 JSON 对象**，包含 `code`、`amount`、`currency`、`merchant`、`date`、`time`、`transaction_type`、`payment_method`、`category`、`description`、`confidence`、`raw_text` 共 12 个字段；其中 `code` 为 `200` 表示识别成功，`400` 表示文本无效，**所有无法从文本中明确识别的字段均返回 `null`**。请按「输入模板」提供文本内容。\n",
+          "maxIterations": 10,
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        496,
+        832
+      ],
+      "id": "a5515387-90d4-4fae-9d1e-e55511756110",
+      "name": "账单文本结构化识别助手",
+      "retryOnFail": true,
+      "notesInFlow": true,
+      "notes": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "temperature": 0.7,
+          "timeout": 300000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        1040
+      ],
+      "id": "e9ba0000-f41e-4704-873b-f3b326834308",
+      "name": "gpt-5.4-mini ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "temperature": 0.7,
+          "timeout": 300000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        1040
+      ],
+      "id": "463dad88-31bf-4dc6-aafa-3368de59757b",
+      "name": "gpt-5.4 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"number\"\n    },\n    \"amount\": {\n      \"type\": [\"number\", \"null\"]\n    },\n    \"currency\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"merchant\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"date\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"time\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"transaction_type\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"收入\", \"支出\", null]\n    },\n    \"payment_method\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"微信支付\", \"支付宝\", \"银行卡\", \"现金\", \"其他\", null]\n    },\n    \"category\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"餐饮\", \"交通\", \"购物\", \"娱乐\", \"医疗\", \"教育\", \"住房\", \"通讯\", \"旅游\", \"投资\", \"其他\", null]\n    },\n    \"description\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"confidence\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"高\", \"中\", \"低\", null]\n    },\n    \"raw_text\": {\n      \"type\": [\"string\", \"null\"]\n    }\n  },\n  \"required\": [\"code\"]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        1040
+      ],
+      "id": "d9f48e7d-4d8b-45d6-bc64-27515d2acb3a",
+      "name": "强制格式化输出 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('设置应用凭证').item.json.app_token }}/tables/{{ $('设置应用凭证').item.json.table_id }}/records",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"录入者\": [\n      {\n        \"id\": {{ $('固定字段 ').item.json['录入者'].toJsonString() }}\n      }\n    ],\n    \"金额\": {{ $('固定字段 ').item.json['金额'] }},\n    \"货币代码\": {{ $('固定字段 ').item.json['货币代码'].toJsonString() }},\n    \"商户名称\": {{ $('固定字段 ').item.json['商户名称'].toJsonString() }},\n    \"交易日期\": {{ $('固定字段 ').item.json['交易日期'] }},\n    \"交易时间\": {{ $('固定字段 ').item.json['交易时间'].toJsonString() }},\n    \"交易类型\": {{ $('固定字段 ').item.json['交易类型'].toJsonString() }},\n    \"分类\": {{ $('固定字段 ').item.json['分类'].toJsonString() }},\n    \"支付方式\": {{ $('固定字段 ').item.json['支付方式'].toJsonString() }},\n    \"交易备注\": {{ $('固定字段 ').item.json['交易备注'].toJsonString() }},\n    \"原始OCR文本\": {{ $('固定字段 ').item.json['原始OCR文本'].toJsonString() }},\n    \"置信度\": {{ $('固定字段 ').item.json['置信度'].toJsonString() }},\n    \"状态\": {{ $('固定字段 ').item.json['状态'].toJsonString() }}\n  }\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1280,
+        704
+      ],
+      "id": "378c1fa5-97a6-4600-9620-44488c944cd3",
+      "name": "新增记录到表格 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"账单信息已成功录入！明细如下：【金额：{{ $json.data.record.fields['金额'] }}  货币代码：{{ $json.data.record.fields['货币代码'] }}  商户名称：{{ $json.data.record.fields['商户名称'] }}  交易日期：{{ $json.data.record.fields['交易日期'].toDateTime('ms').format('yyyy-MM-dd') }}  交易类型：{{ $json.data.record.fields['交易类型'] }}  分类：{{ $json.data.record.fields['分类'] }}  支付方式：{{ $json.data.record.fields['支付方式'] }}  交易备注：{{ $json.data.record.fields['交易备注'] }}】。请前往账本表格核查记录。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1872,
+        624
+      ],
+      "id": "88d0f747-817e-4d56-923c-0a366fd3e7cf",
+      "name": "机器人回复用户消息:录入成功 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"抱歉，当前账单信息录入失败！请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1872,
+        800
+      ],
+      "id": "c956af92-062c-44d6-a16a-e75099437383",
+      "name": "机器人回复用户消息:录入失败 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"发送的文本不是有效的账单内容，请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1456,
+        912
+      ],
+      "id": "ba1a16f5-62ca-4d62-89b0-deb61d8273d9",
+      "name": "机器人回复用户:文本不符",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"账单信息获取异常！当前获取到的信息不足（未识别到有效金额），请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1456,
+        1120
+      ],
+      "id": "2c446962-cedc-4256-8891-3a8cb8e20b12",
+      "name": "机器人回复用户:信息不足 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "解析飞书消息": {
+      "main": [
+        [
+          {
+            "node": "设置应用凭证",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "设置应用凭证": {
+      "main": [
+        [
+          {
+            "node": "获取飞书Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "收到图片": {
+      "main": [
+        [
+          {
+            "node": "获取文件二进制流",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "账单文本结构化识别助手",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "收到正确事件消息": {
+      "main": [
+        [
+          {
+            "node": "生成唯一字符串序列  ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "生成唯一字符串序列   ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "固定字段": {
+      "main": [
+        [
+          {
+            "node": "新增记录到表格",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成唯一字符串序列": {
+      "main": [
+        [
+          {
+            "node": "机器人回复用户消息:录入成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成唯一字符串序列 ": {
+      "main": [
+        [
+          {
+            "node": "机器人回复用户消息:录入失败",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "录入成功": {
+      "main": [
+        [
+          {
+            "node": "生成唯一字符串序列",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "生成唯一字符串序列 ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成唯一字符串序列  ": {
+      "main": [
+        [
+          {
+            "node": "机器人回复用户:处理中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成唯一字符串序列   ": {
+      "main": [
+        [
+          {
+            "node": "机器人回复用户:事件异常",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "识别成功": {
+      "main": [
+        [
+          {
+            "node": "固定字段",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "图片不符",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " 生成唯一字符串序列": {
+      "main": [
+        [
+          {
+            "node": "机器人回复用户:图片不符",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "图片不符": {
+      "main": [
+        [
+          {
+            "node": " 生成唯一字符串序列",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": " 生成唯一字符串序列 ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    " 生成唯一字符串序列 ": {
+      "main": [
+        [
+          {
+            "node": "机器人回复用户:信息不足",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待3秒": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "合并数据统一处理",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "分片上传素材-上传分片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "合并数据统一处理": {
+      "main": [
+        [
+          {
+            "node": "分片上传素材-完成上传",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重新挂载图片": {
+      "main": [
+        [
+          {
+            "node": "获取图片文件大小",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取图片文件大小": {
+      "main": [
+        [
+          {
+            "node": "分片上传素材-预上传",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重新挂载图片 ": {
+      "main": [
+        [
+          {
+            "node": "图片分片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "图片分片": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "识别成功 ": {
+      "main": [
+        [
+          {
+            "node": "固定字段 ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "文本不符",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "固定字段 ": {
+      "main": [
+        [
+          {
+            "node": "新增记录到表格 ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "录入成功 ": {
+      "main": [
+        [
+          {
+            "node": "   生成唯一字符串序列    ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "    生成唯一字符串序列    ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "   生成唯一字符串序列    ": {
+      "main": [
+        [
+          {
+            "node": "机器人回复用户消息:录入成功 ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "    生成唯一字符串序列    ": {
+      "main": [
+        [
+          {
+            "node": "机器人回复用户消息:录入失败 ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "文本不符": {
+      "main": [
+        [
+          {
+            "node": "  生成唯一字符串序列     ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "   生成唯一字符串序列  ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "  生成唯一字符串序列     ": {
+      "main": [
+        [
+          {
+            "node": "机器人回复用户:文本不符",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "   生成唯一字符串序列  ": {
+      "main": [
+        [
+          {
+            "node": "机器人回复用户:信息不足 ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "接收飞书机器人消息推送": {
+      "main": [
+        [
+          {
+            "node": "解析飞书消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取飞书Token": {
+      "main": [
+        [
+          {
+            "node": "收到正确事件消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "机器人回复用户:处理中": {
+      "main": [
+        [
+          {
+            "node": "收到图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取文件二进制流": {
+      "main": [
+        [
+          {
+            "node": "账单图片结构化识别助手",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "账单图片结构化识别助手": {
+      "main": [
+        [
+          {
+            "node": "识别成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-5.4-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "账单图片结构化识别助手",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-5.4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "账单图片结构化识别助手",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "强制格式化输出",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "强制格式化输出": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "账单图片结构化识别助手",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "新增记录到表格": {
+      "main": [
+        [
+          {
+            "node": "录入成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "机器人回复用户消息:录入成功": {
+      "main": [
+        [
+          {
+            "node": "重新挂载图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分片上传素材-预上传": {
+      "main": [
+        [
+          {
+            "node": "重新挂载图片 ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分片上传素材-上传分片": {
+      "main": [
+        [
+          {
+            "node": "等待3秒",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分片上传素材-完成上传": {
+      "main": [
+        [
+          {
+            "node": "更新记录 保存票根",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "账单文本结构化识别助手": {
+      "main": [
+        [
+          {
+            "node": "识别成功 ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-5.4-mini ": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "账单文本结构化识别助手",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-5.4 ": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "账单文本结构化识别助手",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "强制格式化输出 ",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "强制格式化输出 ": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "账单文本结构化识别助手",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "新增记录到表格 ": {
+      "main": [
+        [
+          {
+            "node": "录入成功 ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "52b18ad4-bf78-4d36-8092-84c9fa7d2684",
+  "activeVersionId": "4de8f9cf-64fe-45f0-9be0-aae69c9ca0dc",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-27T15:02:12.989Z",
+      "createdAt": "2026-07-27T15:02:12.989Z",
+      "role": "workflow:owner",
+      "workflowId": "uAVOLbrrDoBxsQ3C",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-06T11:43:12.000Z",
+    "createdAt": "2026-08-06T11:41:49.284Z",
+    "versionId": "4de8f9cf-64fe-45f0-9be0-aae69c9ca0dc",
+    "workflowId": "uAVOLbrrDoBxsQ3C",
+    "nodes": [
+      {
+        "parameters": {
+          "jsCode": "// 作者: @新哥AGI研习社\n// 代码功能：解析飞书消息事件，提取文本或图片信息（支持 message_type 为 text / image）\n\n// 获取第一个输入项的json.body作为事件数据\nconst event = $input.first().json.body;\n\n// 检查是否为消息事件（event_type必须是'im.message.receive_v1'）\nif (!event.header || event.header.event_type !== 'im.message.receive_v1') {\n  // 如果不是消息事件，返回对应的错误码和错误描述\n  return [\n    {\n      json: {\n        code: 40001,\n        error: '非消息事件',\n      },\n    },\n  ];\n}\n\n// 获取消息内容对象\nconst message = event.event.message;\n// 获取发送者信息对象\nconst sender = event.event.sender;\n// 当前消息类型（text 文本 / image 图片等）\nconst messageType = message.message_type;\n\n// 解析消息中的 content 字段：飞书多为 JSON 字符串，亦可能已是对象；解析失败则返回错误\nfunction parseMessageContent(raw) {\n  if (raw == null || raw === '') {\n    return null;\n  }\n  if (typeof raw === 'object') {\n    return raw;\n  }\n  try {\n    return JSON.parse(raw);\n  } catch {\n    return null;\n  }\n}\n\nconst content = parseMessageContent(message.content);\nif (!content) {\n  // 如果 content 无法解析，返回对应的错误码和错误描述\n  return [\n    {\n      json: {\n        code: 40003,\n        error: '消息 content 无法解析为 JSON',\n        message_type: messageType,\n        message_id: message.message_id\n      },\n    },\n  ];\n}\n\n// 从sender对象中提取用户open_id\nconst userOpenId = sender.sender_id.open_id;\n\n// 提取消息所属的群组ID\nconst chatId = event.event.message.chat_id;\n// 提取聊天类型（如单聊group或群聊p2p等）\nconst chatType = event.event.message.chat_type;\n\n// 各类型共用的成功返回骨架\nconst baseOk = {\n  code: 200,\n  message_type: messageType,\n  user_open_id: userOpenId,\n  chat_id: chatId,\n  chat_type: chatType,\n  message_id: message.message_id,\n  create_time: message.create_time,\n};\n\n// 文本消息：从 content 中取 text\nif (messageType === 'text') {\n  const text = typeof content.text === 'string' ? content.text : '';\n  if (!text) {\n    // 如果文本消息缺少有效 text，返回对应的错误码和错误描述\n    return [\n      {\n        json: {\n          code: 40004,\n          error: '文本消息缺少 text 字段',\n          message_type: messageType,\n          message_id: message.message_id\n        },\n      },\n    ];\n  }\n  // 返回文本记账所需字段；has_image 为 false 表示非图片链路\n  return [\n    {\n      json: {\n        ...baseOk,\n        text,\n        image_key: null,\n        has_image: false,\n      },\n    },\n  ];\n}\n\n// 图片消息：从 content 中取 image_key\nif (messageType === 'image') {\n  const imageKey = content.image_key;\n  if (!imageKey || typeof imageKey !== 'string') {\n    // 如果图片消息缺少 image_key，返回对应的错误码和错误描述\n    return [\n      {\n        json: {\n          code: 40005,\n          error: '图片消息缺少 image_key',\n          message_type: messageType,\n          message_id: message.message_id\n        },\n      },\n    ];\n  }\n  // 返回提取的关键信息，结构化输出，has_image 表明已抓取到图片消息\n  return [\n    {\n      json: {\n        ...baseOk,\n        text: null,\n        image_key: imageKey,\n        has_image: true,\n      },\n    },\n  ];\n}\n\n// 如果不是支持的 text / image 类型，返回对应的错误码和错误描述，并带上消息类型\nreturn [\n  {\n    json: {\n      code: 40002,\n      error: '不支持的消息类型',\n      message_type: messageType,\n      message_id: message.message_id\n    },\n  },\n];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -992,
+          432
+        ],
+        "id": "26b39d27-4c3b-4b7c-b35e-99254ef6d97e",
+        "name": "解析飞书消息",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "ad0fb75f-4bf4-4157-8641-07b6d87aa235",
+                "name": "app_id",
+                "value": "cli_aafedd43a8f85be5",
+                "type": "string"
+              },
+              {
+                "id": "8211841d-8df6-413c-9518-6bd69380d327",
+                "name": "app_secret",
+                "value": "gPV9ktujgwgLv7pBPIGyye07fINPo8EN",
+                "type": "string"
+              },
+              {
+                "id": "b0297ecd-9fe3-4b60-a59b-e60ad1fe88a8",
+                "name": "app_token",
+                "value": "GAzeboE8KanvvSsFJ2NcFZI7n4g",
+                "type": "string"
+              },
+              {
+                "id": "2fed898c-50a1-4431-ad24-06583f23ef66",
+                "name": "table_id",
+                "value": "tblpKAmVzeZnZiuP",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -768,
+          432
+        ],
+        "id": "60b0ef38-a8dd-4135-905c-56cdcecdc21a",
+        "name": "设置应用凭证",
+        "notesInFlow": true,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "5b829413-02e2-4107-b855-ee8b8e983281",
+                "leftValue": "={{ $('解析飞书消息').item.json.has_image }}",
+                "rightValue": 200,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          192,
+          448
+        ],
+        "id": "1707c592-f019-4a97-8eeb-1de705b44f88",
+        "name": "收到图片",
+        "notesInFlow": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "mode": "expression",
+          "numberOutputs": 2,
+          "output": "={{ \n  $('解析飞书消息').item.json.code === 200 && \n  ($('解析飞书消息').item.json.message_type === 'image' || $('解析飞书消息').item.json.message_type === 'text') \n  ? 0 : 1 \n}}"
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          -368,
+          432
+        ],
+        "id": "8770b02d-3e3e-4d2c-8ede-71544aff81e0",
+        "name": "收到正确事件消息",
+        "retryOnFail": true,
+        "notesInFlow": true,
+        "notes": "Switch"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "01c3b209-3dee-43d3-a117-dad4fc1229ff",
+                "name": "录入者",
+                "value": "={{ $('解析飞书消息').item.json.user_open_id }}",
+                "type": "string"
+              },
+              {
+                "id": "3622637e-d4ad-4bc7-be46-c6a91cf51fbb",
+                "name": "金额",
+                "value": "={{ $json.output.amount }}",
+                "type": "string"
+              },
+              {
+                "id": "47d22339-b636-46a0-9922-732a61e52c09",
+                "name": "货币代码",
+                "value": "={{ $ifEmpty($json.output.currency, \"CNY\") }}",
+                "type": "string"
+              },
+              {
+                "id": "4fa82663-db72-4075-b1c6-8853ccd48133",
+                "name": "商户名称",
+                "value": "={{ $ifEmpty($json.output.merchant, \"未知商户\") }}",
+                "type": "string"
+              },
+              {
+                "id": "41fa8064-19bb-47e0-9159-21d4ae28fc86",
+                "name": "交易日期",
+                "value": "={{ $json.output.date ? DateTime.fromFormat($json.output.date, 'yyyy-MM-dd').toMillis() : $now.toMillis() }}",
+                "type": "string"
+              },
+              {
+                "id": "3d2f4748-ff14-4477-867c-2d8ae1baddee",
+                "name": "交易时间",
+                "value": "={{ $ifEmpty($json.output.time, \"暂无\") }}",
+                "type": "string"
+              },
+              {
+                "id": "6214c88c-d906-406f-8104-053db9b850c1",
+                "name": "交易类型",
+                "value": "={{ $ifEmpty($json.output.transaction_type, \"其他\") }}",
+                "type": "string"
+              },
+              {
+                "id": "07378bda-e40e-4e0b-81dc-8b1614ae7740",
+                "name": "分类",
+                "value": "={{ $ifEmpty($json.output.category, \"其他\") }}",
+                "type": "string"
+              },
+              {
+                "id": "084b8150-91de-4349-ad3e-b5b4ac6f1533",
+                "name": "支付方式",
+                "value": "={{ $ifEmpty($json.output.payment_method, \"其他\") }}",
+                "type": "string"
+              },
+              {
+                "id": "2cf0e20e-8879-40d9-80a2-d0ff8bd3c9b6",
+                "name": "交易备注",
+                "value": "={{ $ifEmpty($json.output.description, \"暂无\") }}",
+                "type": "string"
+              },
+              {
+                "id": "bc1cda5b-8057-424a-9853-e2294cef20da",
+                "name": "原始OCR文本",
+                "value": "={{ $ifEmpty($json.output.raw_text, \"暂无\") }}",
+                "type": "string"
+              },
+              {
+                "id": "5db47c5c-6d10-4ab0-bb97-44798bad84d2",
+                "name": "置信度",
+                "value": "={{ $ifEmpty($json.output.confidence, \"低\") }}",
+                "type": "string"
+              },
+              {
+                "id": "331ecec2-69b9-4517-aadf-dff759f500ad",
+                "name": "状态",
+                "value": "待核实",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1264,
+          -64
+        ],
+        "id": "0890e224-0f41-43c1-b019-2779ccac6b8f",
+        "name": "固定字段",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput",
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "action": "generate",
+          "dataPropertyName": "uuid"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          1824,
+          -144
+        ],
+        "id": "044abaae-9c1e-4194-b5b3-11fda514e9d8",
+        "name": "生成唯一字符串序列",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Crypto"
+      },
+      {
+        "parameters": {
+          "action": "generate",
+          "dataPropertyName": "uuid"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          1824,
+          32
+        ],
+        "id": "d347f781-2361-4f83-8c97-78debd06fe3f",
+        "name": "生成唯一字符串序列 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Crypto"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+                "leftValue": "={{ $json.code }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "8a9e82d4-93b3-4ca5-8240-4ca6ead2a382",
+                "leftValue": "={{ $json.msg }}",
+                "rightValue": "success",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1616,
+          -64
+        ],
+        "id": "14e6972f-9702-4171-8126-96059e492e0f",
+        "name": "录入成功",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "action": "generate",
+          "dataPropertyName": "uuid"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          -176,
+          352
+        ],
+        "id": "b847e663-ec09-421b-94a6-6d21a5c88065",
+        "name": "生成唯一字符串序列  ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Crypto"
+      },
+      {
+        "parameters": {
+          "action": "generate",
+          "dataPropertyName": "uuid"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          -176,
+          528
+        ],
+        "id": "5f13d6a7-cc91-48c0-ac41-4507586d5f32",
+        "name": "生成唯一字符串序列   ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Crypto"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+                "leftValue": "={{ $json.output.code }}",
+                "rightValue": 200,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "8a9e82d4-93b3-4ca5-8240-4ca6ead2a382",
+                "leftValue": "={{ $json.output.amount }}",
+                "rightValue": {},
+                "operator": {
+                  "type": "number",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1072,
+          96
+        ],
+        "id": "b65e04a0-a421-4f5a-9a52-d6dfffd83995",
+        "name": "识别成功",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "action": "generate",
+          "dataPropertyName": "uuid"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          1440,
+          144
+        ],
+        "id": "012aeb4b-20b6-4a49-9fa9-0923ffedd87a",
+        "name": " 生成唯一字符串序列",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Crypto"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+                "leftValue": "={{ $json.output.code }}",
+                "rightValue": 400,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1264,
+          240
+        ],
+        "id": "1c41bb41-9c8b-4ae3-982b-aa928e8a442b",
+        "name": "图片不符",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "action": "generate",
+          "dataPropertyName": "uuid"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          1440,
+          336
+        ],
+        "id": "7f4dd22b-a46a-456a-8d9e-6e4be24fe7ee",
+        "name": " 生成唯一字符串序列 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Crypto"
+      },
+      {
+        "parameters": {
+          "amount": 3
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3632,
+          16
+        ],
+        "id": "48abcd34-959a-44fa-b12e-d28083f6a9eb",
+        "name": "等待3秒",
+        "webhookId": "40d27b7c-932e-4817-bf17-ec0331e6b60c",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Wait"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          3072,
+          -144
+        ],
+        "id": "affb3a17-4750-43f8-a867-82e1c1abd92c",
+        "name": "Loop Over Items",
+        "retryOnFail": true
+      },
+      {
+        "parameters": {
+          "fieldsToAggregate": {
+            "fieldToAggregate": [
+              {}
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          3280,
+          -160
+        ],
+        "id": "06458683-8c1f-4e6a-a0c1-481dc568e66c",
+        "name": "合并数据统一处理",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Aggregate"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：把某个上游节点的 json 和 binary 重新挂到当前输出上\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nreturn {\n  json: $('获取文件二进制流').item.json,\n  binary: $('获取文件二进制流').item.binary\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2192,
+          -144
+        ],
+        "id": "8594d6dd-28aa-452f-b04f-edfaafd964f7",
+        "name": "重新挂载图片",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：获取当前传递过来二进制文件的大小和重新挂载文件传递给下一个节点\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\n// 读取二进制 buffer，返回字节数\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst sizeInBytes = buffer.length;\n\n// 同时把原来的 binary.data 一起传出去\nreturn [\n  {\n    json: {\n      size_in_bytes: sizeInBytes,\n    },\n    binary: {\n      // 直接复用上一个节点的 binary.data\n      data: $input.first().binary.data,\n    },\n  },\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2368,
+          -144
+        ],
+        "id": "184847d1-330a-4d91-8328-3a38660b5f42",
+        "name": "获取图片文件大小",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：把某个上游节点的 json 和 binary 重新挂到当前输出上\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nreturn {\n  json: $('获取图片文件大小').item.json,\n  binary: $('获取图片文件大小').item.binary,\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2720,
+          -144
+        ],
+        "id": "6f04f4e8-426a-479d-baf9-27cee87be7e7",
+        "name": "重新挂载图片 ",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：对获取到的图片进行分片处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nconst CHUNK_SIZE = 4 * 1024 * 1024; // 4MB in bytes\n\n// 获取输入的图片二进制数据\nconst binaryData = items[0].binary.data;\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\n// 计算需要分成多少块\nconst totalChunks = Math.ceil(buffer.length / CHUNK_SIZE);\nconst chunks = [];\n\n// 分割二进制数据\nfor (let i = 0; i < totalChunks; i++) {\n  const start = i * CHUNK_SIZE;\n  const end = Math.min(start + CHUNK_SIZE, buffer.length);\n  const chunkBuffer = buffer.slice(start, end);\n  \n  // 为每个块创建新的二进制数据对象\n  chunks.push({\n    json: {\n      chunkIndex: i,\n      totalChunks: totalChunks,\n      chunkSize: chunkBuffer.length,\n      originalFileName: binaryData.fileName || 'video'\n    },\n    binary: {\n      data: await this.helpers.prepareBinaryData(\n        chunkBuffer,\n        `${binaryData.fileName || 'video'}_chunk_${i}.bin`\n      )\n    }\n  });\n}\n\nreturn chunks;\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2896,
+          -144
+        ],
+        "id": "7ede910d-dc5a-4cba-a670-f098c2108462",
+        "name": "图片分片",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+                "leftValue": "={{ $json.output.code }}",
+                "rightValue": 200,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "8a9e82d4-93b3-4ca5-8240-4ca6ead2a382",
+                "leftValue": "={{ $json.output.amount }}",
+                "rightValue": {},
+                "operator": {
+                  "type": "number",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          880,
+          832
+        ],
+        "id": "da702a30-fca3-4c45-a9e2-579cc0f53619",
+        "name": "识别成功 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "01c3b209-3dee-43d3-a117-dad4fc1229ff",
+                "name": "录入者",
+                "value": "={{ $('解析飞书消息').item.json.user_open_id }}",
+                "type": "string"
+              },
+              {
+                "id": "3622637e-d4ad-4bc7-be46-c6a91cf51fbb",
+                "name": "金额",
+                "value": "={{ $json.output.amount }}",
+                "type": "string"
+              },
+              {
+                "id": "47d22339-b636-46a0-9922-732a61e52c09",
+                "name": "货币代码",
+                "value": "={{ $ifEmpty($json.output.currency, \"CNY\") }}",
+                "type": "string"
+              },
+              {
+                "id": "4fa82663-db72-4075-b1c6-8853ccd48133",
+                "name": "商户名称",
+                "value": "={{ $ifEmpty($json.output.merchant, \"未知商户\") }}",
+                "type": "string"
+              },
+              {
+                "id": "41fa8064-19bb-47e0-9159-21d4ae28fc86",
+                "name": "交易日期",
+                "value": "={{ $json.output.date ? DateTime.fromFormat($json.output.date, 'yyyy-MM-dd').toMillis() : $now.toMillis() }}",
+                "type": "string"
+              },
+              {
+                "id": "3d2f4748-ff14-4477-867c-2d8ae1baddee",
+                "name": "交易时间",
+                "value": "={{ $ifEmpty($json.output.time, \"暂无\") }}",
+                "type": "string"
+              },
+              {
+                "id": "6214c88c-d906-406f-8104-053db9b850c1",
+                "name": "交易类型",
+                "value": "={{ $ifEmpty($json.output.transaction_type, \"其他\") }}",
+                "type": "string"
+              },
+              {
+                "id": "07378bda-e40e-4e0b-81dc-8b1614ae7740",
+                "name": "分类",
+                "value": "={{ $ifEmpty($json.output.category, \"其他\") }}",
+                "type": "string"
+              },
+              {
+                "id": "084b8150-91de-4349-ad3e-b5b4ac6f1533",
+                "name": "支付方式",
+                "value": "={{ $ifEmpty($json.output.payment_method, \"其他\") }}",
+                "type": "string"
+              },
+              {
+                "id": "2cf0e20e-8879-40d9-80a2-d0ff8bd3c9b6",
+                "name": "交易备注",
+                "value": "={{ $ifEmpty($json.output.description, \"暂无\") }}",
+                "type": "string"
+              },
+              {
+                "id": "bc1cda5b-8057-424a-9853-e2294cef20da",
+                "name": "原始OCR文本",
+                "value": "={{ $ifEmpty($json.output.raw_text, \"暂无\") }}",
+                "type": "string"
+              },
+              {
+                "id": "5db47c5c-6d10-4ab0-bb97-44798bad84d2",
+                "name": "置信度",
+                "value": "={{ $ifEmpty($json.output.confidence, \"低\") }}",
+                "type": "string"
+              },
+              {
+                "id": "331ecec2-69b9-4517-aadf-dff759f500ad",
+                "name": "状态",
+                "value": "待核实",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1104,
+          704
+        ],
+        "id": "38fd8a9e-ffce-4e3c-9c2d-7bed6cca82d7",
+        "name": "固定字段 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "onError": "continueRegularOutput",
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+                "leftValue": "={{ $json.code }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "8a9e82d4-93b3-4ca5-8240-4ca6ead2a382",
+                "leftValue": "={{ $json.msg }}",
+                "rightValue": "success",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1456,
+          704
+        ],
+        "id": "afa1cce4-d4a7-428b-a0aa-29eb02a2e87a",
+        "name": "录入成功 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "action": "generate",
+          "dataPropertyName": "uuid"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          1680,
+          624
+        ],
+        "id": "52d5777d-2e80-4068-81bd-0aa38aaac429",
+        "name": "   生成唯一字符串序列    ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Crypto"
+      },
+      {
+        "parameters": {
+          "action": "generate",
+          "dataPropertyName": "uuid"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          1680,
+          800
+        ],
+        "id": "57dad50f-0590-4d56-826a-deac1da1f06f",
+        "name": "    生成唯一字符串序列    ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Crypto"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "4e6088ba-9ef3-4631-a423-76b68bae3f27",
+                "leftValue": "={{ $json.output.code }}",
+                "rightValue": 400,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1104,
+          1024
+        ],
+        "id": "b758be82-79dc-473d-8c41-bc575d9660fb",
+        "name": "文本不符",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "action": "generate",
+          "dataPropertyName": "uuid"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          1280,
+          912
+        ],
+        "id": "1e04f036-e628-4d99-a2fe-c4535341154f",
+        "name": "  生成唯一字符串序列     ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Crypto"
+      },
+      {
+        "parameters": {
+          "action": "generate",
+          "dataPropertyName": "uuid"
+        },
+        "type": "n8n-nodes-base.crypto",
+        "typeVersion": 1,
+        "position": [
+          1280,
+          1120
+        ],
+        "id": "641cb2d1-cda0-4653-b721-9ba3530163f1",
+        "name": "   生成唯一字符串序列  ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Crypto"
+      },
+      {
+        "parameters": {
+          "content": "## 事件监听飞书机器人事件推送\n1、用户与机器人单聊，发送账单图片或文本\n2、飞书服务器推送 im.message.receive_v1 事件\n3、n8n Webhook 接收事件（解析飞书消息）\n4、获取飞书 tenant_access_token\n5、消息类型判断（图片或文本）",
+          "height": 448,
+          "width": 1588,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1280,
+          272
+        ],
+        "typeVersion": 1,
+        "id": "fca66df0-7082-44e3-89c8-72b740ae995a",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "## 处理图片消息\n下载图片二进制流->账单图片结构化识别助手->强制json格式化输出->识别判断->新增记录到飞书表格->回复机器人消息->将账单原图分片上传并保存到表格",
+          "height": 720,
+          "width": 3440,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          416,
+          -192
+        ],
+        "typeVersion": 1,
+        "id": "1e4ac0ed-bb17-48f3-8a09-d8c49dd37bfe",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "content": "## 处理文本消息\n直接读取文本内容->账单文本结构化识别助手->强制json格式化输出->识别判断->新增记录到飞书表格->回复机器人消息",
+          "height": 720,
+          "width": 1744,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          416,
+          576
+        ],
+        "typeVersion": 1,
+        "id": "fecdddd4-6f31-48e9-8905-2a954d7339cb",
+        "name": "Sticky Note2"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "feishu-smart-bookkeeping",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1200,
+          432
+        ],
+        "id": "1cb446c3-70cf-455d-9e7d-1897cac1bbda",
+        "name": "接收飞书机器人消息推送",
+        "webhookId": "bd797917-4b0d-449f-b4ce-17a0d0a6dc5c",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Webhook"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+          "sendHeaders": true,
+          "specifyHeaders": "json",
+          "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"app_id\": {{ $json.app_id.toJsonString() }},\n    \"app_secret\": {{ $json.app_secret.toJsonString() }}\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          -560,
+          432
+        ],
+        "id": "845e5c20-ccfe-422f-9fb3-3e0b8cacdb62",
+        "name": "获取飞书Token",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"已收到，正在为您智能识别账单内容，请稍候，处理完成后将自动回复结果。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          0,
+          352
+        ],
+        "id": "db8e5c0f-6166-4d43-94f4-b2ce712395e1",
+        "name": "机器人回复用户:处理中",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"抱歉，当前仅支持与账单相关的文本或图片类型，请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          0,
+          528
+        ],
+        "id": "33e3754b-29cc-4fcb-90ba-660c67b64364",
+        "name": "机器人回复用户:事件异常",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').item.json.message_id }}/resources/{{ $('解析飞书消息').item.json.image_key }}",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "type",
+                "value": "={{ $('解析飞书消息').item.json.message_type }}"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          480,
+          96
+        ],
+        "id": "5cb02abb-6f3c-4421-95da-1db8efece122",
+        "name": "获取文件二进制流",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "【账单图片】\n请识别这张支付截图、收据拍照或账单图片",
+          "hasOutputParser": true,
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "# 角色 : 账单图片结构化识别助手\n\n- 专注于从用户上传的**账单/收据/支付截图**中，精准提取关键财务信息，并以**合法 JSON** 格式返回结构化数据。\n- 只基于图片中可见的真实内容进行提取，**不编造**图片中不存在的金额、商户、时间等任何信息。\n- 目标是产出：**准确识别金额与交易方向**（收入/支出）、**规范化日期与时间格式**、**智能归类消费类别**、**标注识别置信度**的结构化记账数据。\n\n## 背景 :\n\n- 账单图片来源多样：微信支付截图、支付宝截图、银行App交易记录、纸质收据拍照、电商订单截图等；不同来源的版式与信息密度差异显著。\n- 用户使用场景：个人记账、财务归档、消费统计、报销凭证整理；核心诉求是**信息准确可溯、格式统一可用**。\n- 模型易出现的错误：金额符号残留、收支方向判断错误、日期格式不统一、分类靠猜而非依据；需通过明确规则约束输出质量。\n\n## 简介 :\n\n- author: 南哥\n- version: 2.0\n- language: 中文\n- description: 针对用户上传的「账单/支付截图/收据图片」，以**合法 JSON** 输出字段：`code`、`amount`、`currency`、`merchant`、`date`、`time`、`transaction_type`、`payment_method`、`category`、`description`、`confidence`、`raw_text`；其中 `code` 用于区分识别结果状态（`200` 成功 / `400` 失败），**所有无法从图片中明确识别的字段一律返回 `null`**。\n\n## 任务 :\n\n- 识别图片中的**金额、货币类型、收支方向**，金额统一为纯数字，支出为负数，收入为正数。\n- 提取**商户/收款方名称**、**交易日期与时间**，并规范化为统一格式。\n- 根据商户名称与交易描述，从枚举值中**智能判断消费分类**，不得自造分类；无法判断时返回 `null`。\n- 识别**支付方式**，结合界面视觉特征（颜色、Logo、关键词）与文字内容综合判断；无法确认时返回 `null`。\n- 评估本次识别的**整体置信度**，根据图片清晰度与信息完整度三级评定；无法评定时返回 `null`。\n- 将图片中可读取的主要文字原样保留到 `raw_text` 字段，供人工校对；无可读文字时返回 `null`。\n- 最终以**合法 JSON 对象**输出，不附加任何说明文字。\n\n## 约束条件（重要）:\n\n- **输出必须为合法 JSON**：输出一个 JSON 对象；**不得**在 JSON 外输出任何字符，不要 markdown 代码块（如 ```json）、说明文字、前后缀。\n- **金额硬约束**：`amount` 字段只允许返回数字类型（不加引号），**不得包含** ¥、￥、元、RMB 等任何符号；支出为负数（如 `-38.50`），收入为正数（如 `200.00`），保留两位小数；无法识别时返回 `null`。\n- **日期硬约束**：`date` 统一转换为 `YYYY-MM-DD` 格式；遇 `04/23`、`4月23日`、`23-04` 等格式均转换；年份信息缺失时返回 `null`，不得填入当前年份或猜测。\n- **分类约束**：`category` 必须从以下枚举值中选取，**不得**使用枚举以外的值：`餐饮`、`交通`、`购物`、`娱乐`、`医疗`、`教育`、`住房`、`通讯`、`旅游`、`投资`、`其他`；无法判断时返回 `null`。\n- **缺失信息处理**：任何无法从图片中明确识别的字段，**一律返回 `null`**，不得使用任何兜底默认值，不得猜测或编造无法确认的内容。\n- **非账单图片处理**：若上传图片明显不是账单类图片，需输出与主数据结构相同的 JSON 对象，`code` 字段为 `400`，其余所有字段全部为 `null`，不额外输出任何说明或字段。\n- **JSON 字符串转义**：字符串内如出现双引号须写作 `\\\"`，反斜杠为 `\\\\`，换行为 `\\n`。\n\n## 技能 :\n\n- 多来源账单版式识别：微信支付、支付宝、各大银行App、纸质收据、电商订单，均可解析关键字段。\n- 金额与收支方向判断：根据「-¥」「付款成功」「支出」「到账」「退款」「转账给你」等关键词综合判断交易类型。\n- 日期格式归一化：处理中文日期、斜线格式、纯数字格式等多种日期表达，统一输出标准格式。\n- 消费分类智能匹配：依据商户名称、商品描述、平台类型，从枚举值中选取最匹配的分类。\n- 支付方式视觉识别：结合界面颜色（绿/蓝）、Logo特征、平台特有文字（花呗/零钱/余额宝）综合判断。\n- 置信度自评：对图片清晰度、关键字段可识别性、推断成分多少做综合评估，给出 `高`/`中`/`低` 三级结论。\n\n## 工作流：\n\n- 第一步：判断图片是否为有效账单类图片；若不是，所有字段返回 null，`code` 字段为 400。\n- 第二步：OCR 读取图片全文，提取 `raw_text`；无可读文字则置为 `null`。\n- 第三步：识别金额与交易方向，确定 `amount`（含正负）和 `transaction_type`；无法确认则置为 `null`。\n- 第四步：提取日期与时间，执行格式归一化，填写 `date` 和 `time`；信息缺失则置为 `null`。\n- 第五步：识别商户/收款方名称，填写 `merchant`；提取交易备注，填写 `description`；无法识别则置为 `null`。\n- 第六步：根据商户与描述从枚举值中选定 `category`；识别货币类型填写 `currency`；识别支付方式填写 `payment_method`；无法判断的字段均置为 `null`。\n- 第七步：综合图片质量与字段完整度，评定 `confidence`；无法评定则置为 `null`；组装 JSON，校验合法性后输出。\n\n## 输出格式（必遵）:\n\n- 仅输出一个 JSON 对象，且只包含以下键（建议顺序）：\n\n```\n{\n  \"code\": 数字，识别成功返回 200，识别失败/非账单图片返回 400,\n  \"amount\": 数字或 null，支出为负数，收入为正数，保留两位小数（如 -38.50）；无法识别时为 null,\n  \"currency\": 字符串或 null，货币代码（如 \"CNY\"）；图片中无明确货币信息时为 null,\n  \"merchant\": 字符串或 null，商户/收款方名称；无法识别时为 null,\n  \"date\": 字符串或 null，YYYY-MM-DD 格式；日期或年份信息缺失时为 null,\n  \"time\": 字符串或 null，HH:MM 格式；无法识别时为 null,\n  \"transaction_type\": 字符串或 null，\"收入\" 或 \"支出\"；无法判断收支方向时为 null,\n  \"payment_method\": 字符串或 null，\"微信支付\"/\"支付宝\"/\"银行卡\"/\"现金\"/\"其他\"；无法确认时为 null,\n  \"category\": 字符串或 null，从枚举值中选取；无法判断分类时为 null,\n  \"description\": 字符串或 null，交易备注/商品说明；无相关信息时为 null,\n  \"confidence\": 字符串或 null，\"高\"/\"中\"/\"低\"；无法评定时为 null,\n  \"raw_text\": 字符串或 null，图片中识别到的主要原始文字；无可读文字时为 null\n}\n```\n\n- **置信度评定标准**：\n  - `高`：图片清晰，金额、日期、商户三项关键字段均可明确识别，无需推断\n  - `中`：图片基本清晰，但有部分字段需结合上下文推断，或存在轻微模糊\n  - `低`：图片模糊、截图不完整，或多个关键字段无法确认\n- **支付方式判断依据**：\n  - `微信支付`：绿色主题界面、微信 Logo、「微信支付」「零钱」「微信零钱」等字样\n  - `支付宝`：蓝色主题界面、支付宝 Logo、「花呗」「余额宝」「支付宝余额」等字样\n  - `银行卡`：银行名称、「储蓄卡」「信用卡」「尾号XXXX」等字样\n  - `现金`：收据/发票等实物票据照片，包含\"现金\"\"现金支付\"\"现金收款\"\"收讫\"\"现金找零\"等字样\n  - `其他`：有明确支付行为但无法归入上述类型时\n  - `null`：完全无法确认支付方式时\n- **特殊交易类型处理**：\n  - 退款：`transaction_type` 为 `收入`，`amount` 为正数，`description` 注明「退款」\n  - 收到红包/转账：`transaction_type` 为 `收入`，`amount` 为正数\n  - 发出红包/转账：`transaction_type` 为 `支出`，`amount` 为负数\n- **禁止**：JSON 外的任何字符；额外 JSON 键；金额字段含货币符号；`category` 使用枚举外的值；用任何非 `null` 的默认值填充无法识别的字段。\n\n## 输入模板（给用户填写，可简可详）\n\n【账单图片】\n（请识别这张支付截图、收据拍照或账单图片）\n\n## 输出样例（仅供参考）\n\n（以下为合法 JSON；实际输出时不要包 markdown 代码块。）\n\n**样例一：信息完整，识别成功**\n\n```json\n{\n  \"code\": 200,\n  \"amount\": -38.50,\n  \"currency\": \"CNY\",\n  \"merchant\": \"瑞幸咖啡（中国）有限公司\",\n  \"date\": \"2026-04-23\",\n  \"time\": \"09:32\",\n  \"transaction_type\": \"支出\",\n  \"payment_method\": \"微信支付\",\n  \"category\": \"餐饮\",\n  \"description\": \"生椰拿铁x1\",\n  \"confidence\": \"高\",\n  \"raw_text\": \"瑞幸咖啡 交易成功 -¥38.50 2026年4月23日 09:32 微信支付 生椰拿铁x1\"\n}\n```\n\n**样例二：部分字段无法识别，返回 null**\n\n```json\n{\n  \"code\": 200,\n  \"amount\": -120.00,\n  \"currency\": null,\n  \"merchant\": null,\n  \"date\": null,\n  \"time\": \"14:05\",\n  \"transaction_type\": \"支出\",\n  \"payment_method\": null,\n  \"category\": null,\n  \"description\": null,\n  \"confidence\": \"低\",\n  \"raw_text\": \"交易成功 -120.00 14:05\"\n}\n```\n\n**样例三：非账单图片**\n\n```json\n{\n  \"code\": 400,\n  \"amount\": null,\n  \"currency\": null,\n  \"merchant\": null,\n  \"date\": null,\n  \"time\": null,\n  \"transaction_type\": null,\n  \"payment_method\": null,\n  \"category\": null,\n  \"description\": null,\n  \"confidence\": null,\n  \"raw_text\": null\n}\n```\n\n## 初始化\n\n作为账单图片结构化识别助手，我将根据你上传的**账单/支付截图/收据图片**，输出一个**合法 JSON 对象**，包含 `code`、`amount`、`currency`、`merchant`、`date`、`time`、`transaction_type`、`payment_method`、`category`、`description`、`confidence`、`raw_text` 共 12 个字段；其中 `code` 为 `200` 表示识别成功，`400` 表示图片无效，**所有无法从图片中明确识别的字段均返回 `null`**。请按「输入模板」提供图片。",
+            "maxIterations": 10,
+            "passthroughBinaryImages": true
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          672,
+          96
+        ],
+        "id": "7b392622-ea29-4951-baf2-c3c394e17f8c",
+        "name": "账单图片结构化识别助手",
+        "retryOnFail": true,
+        "notesInFlow": true,
+        "notes": "AI Agent"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "responsesApiEnabled": false,
+          "options": {
+            "frequencyPenalty": 0,
+            "responseFormat": "json_object",
+            "temperature": 0.7,
+            "timeout": 300000,
+            "maxRetries": 2,
+            "topP": 1
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          608,
+          304
+        ],
+        "id": "5f52455c-d17f-4f0b-8dad-713f0c579421",
+        "name": "gpt-5.4-mini",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "responsesApiEnabled": false,
+          "options": {
+            "frequencyPenalty": 0,
+            "responseFormat": "json_object",
+            "temperature": 0.7,
+            "timeout": 300000,
+            "maxRetries": 2,
+            "topP": 1
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          736,
+          304
+        ],
+        "id": "ef23d38c-4243-49b8-99bf-04a8e474ab6e",
+        "name": "gpt-5.4",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "schemaType": "manual",
+          "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"number\"\n    },\n    \"amount\": {\n      \"type\": [\"number\", \"null\"]\n    },\n    \"currency\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"merchant\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"date\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"time\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"transaction_type\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"收入\", \"支出\", null]\n    },\n    \"payment_method\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"微信支付\", \"支付宝\", \"银行卡\", \"现金\", \"其他\", null]\n    },\n    \"category\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"餐饮\", \"交通\", \"购物\", \"娱乐\", \"医疗\", \"教育\", \"住房\", \"通讯\", \"旅游\", \"投资\", \"其他\", null]\n    },\n    \"description\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"confidence\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"高\", \"中\", \"低\", null]\n    },\n    \"raw_text\": {\n      \"type\": [\"string\", \"null\"]\n    }\n  },\n  \"required\": [\"code\"]\n}",
+          "autoFix": true
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          848,
+          304
+        ],
+        "id": "3bb49069-74f2-4b14-968b-5e30bad08dda",
+        "name": "强制格式化输出",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('设置应用凭证').item.json.app_token }}/tables/{{ $('设置应用凭证').item.json.table_id }}/records",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fields\": {\n    \"录入者\": [\n      {\n        \"id\": {{ $('固定字段').item.json['录入者'].toJsonString() }}\n      }\n    ],\n    \"金额\": {{ $('固定字段').item.json['金额'] }},\n    \"货币代码\": {{ $('固定字段').item.json['货币代码'].toJsonString() }},\n    \"商户名称\": {{ $('固定字段').item.json['商户名称'].toJsonString() }},\n    \"交易日期\": {{ $('固定字段').item.json['交易日期'] }},\n    \"交易时间\": {{ $('固定字段').item.json['交易时间'].toJsonString() }},\n    \"交易类型\": {{ $('固定字段').item.json['交易类型'].toJsonString() }},\n    \"分类\": {{ $('固定字段').item.json['分类'].toJsonString() }},\n    \"支付方式\": {{ $('固定字段').item.json['支付方式'].toJsonString() }},\n    \"交易备注\": {{ $('固定字段').item.json['交易备注'].toJsonString() }},\n    \"原始OCR文本\": {{ $('固定字段').item.json['原始OCR文本'].toJsonString() }},\n    \"置信度\": {{ $('固定字段').item.json['置信度'].toJsonString() }},\n    \"状态\": {{ $('固定字段').item.json['状态'].toJsonString() }}\n  }\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1440,
+          -64
+        ],
+        "id": "b54bacb1-6bbc-4d49-8d3c-eca8115974fa",
+        "name": "新增记录到表格",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"账单信息已成功录入！明细如下：【金额：{{ $json.data.record.fields['金额'] }}  货币代码：{{ $json.data.record.fields['货币代码'] }}  商户名称：{{ $json.data.record.fields['商户名称'] }}  交易日期：{{ $json.data.record.fields['交易日期'].toDateTime('ms').format('yyyy-MM-dd') }}  交易类型：{{ $json.data.record.fields['交易类型'] }}  分类：{{ $json.data.record.fields['分类'] }}  支付方式：{{ $json.data.record.fields['支付方式'] }}  交易备注：{{ $json.data.record.fields['交易备注'] }}】。请前往账本表格核查记录。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2016,
+          -144
+        ],
+        "id": "d42aed06-f558-4843-865a-e9029d3cbda8",
+        "name": "机器人回复用户消息:录入成功",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"抱歉，当前账单信息录入失败！请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2016,
+          32
+        ],
+        "id": "2e767bf9-53f1-4a00-a68d-8fbf9c39aafa",
+        "name": "机器人回复用户消息:录入失败",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_prepare",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"file_name\": \"原始票根.png\",\n  \"parent_type\": \"bitable_file\",\n  \"parent_node\": {{ $('设置应用凭证').item.json.app_token.toJsonString() }},\n  \"size\": {{ $json.size_in_bytes }}\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          2544,
+          -144
+        ],
+        "id": "8f285452-b911-4149-8ea9-cccc64c902c2",
+        "name": "分片上传素材-预上传",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_part",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "upload_id",
+                "value": "={{ $('分片上传素材-预上传').item.json.data.upload_id }}"
+              },
+              {
+                "name": "seq",
+                "value": "={{ $json.chunkIndex }}"
+              },
+              {
+                "name": "size",
+                "value": "={{ $json.chunkSize }}"
+              },
+              {
+                "parameterType": "formBinaryData",
+                "name": "file",
+                "inputDataFieldName": "data"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          3280,
+          16
+        ],
+        "id": "ce62a033-76a0-4497-898e-617b9785926a",
+        "name": "分片上传素材-上传分片",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_finish",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"upload_id\": \"{{ $('分片上传素材-预上传').item.json.data.upload_id }}\",\n  \"block_num\": {{ $('分片上传素材-预上传').item.json.data.block_num }}\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          3456,
+          -160
+        ],
+        "id": "5b12e2b0-9310-4612-a775-1cec15bee35c",
+        "name": "分片上传素材-完成上传",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('设置应用凭证').item.json.app_token }}/tables/{{ $('设置应用凭证').item.json.table_id }}/records/{{ $('新增记录到表格').item.json.data.record.record_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fields\": {\n    \"票根\": [\n        {\n            \"file_token\": {{ $json.data.file_token.toJsonString() }}\n        }\n    ]\n  }\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          3632,
+          -160
+        ],
+        "id": "f2c0288f-d307-4f82-9083-12f2c5f2d781",
+        "name": "更新记录 保存票根",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"上传的图片不是有效的账单图片，请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1616,
+          144
+        ],
+        "id": "39fb79e1-cca3-4436-88ff-3f15c89d0b09",
+        "name": "机器人回复用户:图片不符",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"账单信息获取异常！当前获取到的信息不足（未识别到有效金额），请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1616,
+          336
+        ],
+        "id": "f3f31837-f8c3-4344-bbc5-26611e4ec371",
+        "name": "机器人回复用户:信息不足",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=【账单文本】\n{{ $('解析飞书消息').item.json.text }}",
+          "hasOutputParser": true,
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "# 角色 : 账单文本结构化识别助手\n\n- 专注于从用户输入的**账单/收据/支付记录文本**中，精准提取关键财务信息，并以**合法 JSON** 格式返回结构化数据。\n- 只基于输入文本中可见的真实内容进行提取，**不编造**文本中不存在的金额、商户、时间等任何信息。\n- 目标是产出：**准确识别金额与交易方向**（收入/支出）、**规范化日期与时间格式**、**智能归类消费类别**、**标注识别置信度**的结构化记账数据。\n\n## 背景 :\n\n- 账单文本来源多样：微信支付通知文字、支付宝通知文字、银行短信、手动输入的消费记录、电商订单文字描述等；不同来源的格式与信息密度差异显著。\n- 用户使用场景：个人记账、财务归档、消费统计、报销凭证整理；核心诉求是**信息准确可溯、格式统一可用**。\n- 模型易出现的错误：金额符号残留、收支方向判断错误、日期格式不统一、分类靠猜而非依据；需通过明确规则约束输出质量。\n\n## 简介 :\n\n- author: 南哥\n- version: 1.0\n- language: 中文\n- description: 针对用户输入的「账单/支付记录/收据文本」，以**合法 JSON** 输出字段：`code`、`amount`、`currency`、`merchant`、`date`、`time`、`transaction_type`、`payment_method`、`category`、`description`、`confidence`、`raw_text`；其中 `code` 用于区分识别结果状态（`200` 成功 / `400` 失败），**所有无法从文本中明确识别的字段一律返回 `null`**。\n\n## 任务 :\n\n- 识别文本中的**金额、货币类型、收支方向**，金额统一为纯数字，支出为负数，收入为正数。\n- 提取**商户/收款方名称**、**交易日期与时间**，并规范化为统一格式。\n- 根据商户名称与交易描述，从枚举值中**智能判断消费分类**，不得自造分类；无法判断时返回 `null`。\n- 识别**支付方式**，结合文本中的关键词与平台特征综合判断；无法确认时返回 `null`。\n- 评估本次识别的**整体置信度**，根据文本信息完整度与歧义程度三级评定；无法评定时返回 `null`。\n- 将用户输入的原始文本原样保留到 `raw_text` 字段，供人工校对；无有效内容时返回 `null`。\n- 最终以**合法 JSON 对象**输出，不附加任何说明文字。\n\n## 约束条件（重要）:\n\n- **输出必须为合法 JSON**：输出一个 JSON 对象；**不得**在 JSON 外输出任何字符，不要 markdown 代码块（如 ```json）、说明文字、前后缀。\n- **金额硬约束**：`amount` 字段只允许返回数字类型（不加引号），**不得包含** ¥、￥、元、RMB 等任何符号；支出为负数（如 `-38.50`），收入为正数（如 `200.00`），保留两位小数；无法识别时返回 `null`。\n- **日期硬约束**：`date` 统一转换为 `YYYY-MM-DD` 格式；遇 `04/23`、`4月23日`、`23-04` 等格式均转换；年份信息缺失时返回 `null`，不得填入当前年份或猜测。\n- **分类约束**：`category` 必须从以下枚举值中选取，**不得**使用枚举以外的值：`餐饮`、`交通`、`购物`、`娱乐`、`医疗`、`教育`、`住房`、`通讯`、`旅游`、`投资`、`其他`；无法判断时返回 `null`。\n- **缺失信息处理**：任何无法从文本中明确识别的字段，**一律返回 `null`**，不得使用任何兜底默认值，不得猜测或编造无法确认的内容。\n- **非账单文本处理**：若输入文本明显不是账单类内容，需输出与主数据结构相同的 JSON 对象，`code` 字段为 `400`，其余所有字段全部为 `null`，不额外输出任何说明或字段。\n- **JSON 字符串转义**：字符串内如出现双引号须写作 `\\\"`，反斜杠为 `\\\\`，换行为 `\\n`。\n\n## 技能 :\n\n- 多来源账单文本解析：微信支付通知、支付宝通知、银行短信、手动输入记录、电商订单文字，均可解析关键字段。\n- 金额与收支方向判断：根据「-¥」「付款成功」「支出」「到账」「退款」「转账给你」等关键词综合判断交易类型。\n- 日期格式归一化：处理中文日期、斜线格式、纯数字格式等多种日期表达，统一输出标准格式。\n- 消费分类智能匹配：依据商户名称、商品描述、平台类型，从枚举值中选取最匹配的分类。\n- 支付方式关键词识别：根据文本中的平台名称、账户类型（花呗/零钱/余额宝/储蓄卡/信用卡）等关键词综合判断。\n- 置信度自评：对文本信息完整度、关键字段可识别性、推断成分多少做综合评估，给出 `高`/`中`/`低` 三级结论。\n\n## 工作流：\n\n- 第一步：判断输入文本是否为有效账单类内容；若不是，所有字段返回 null，`code` 字段为 400。\n- 第二步：读取输入文本全文，原样填入 `raw_text`；无有效内容则置为 `null`。\n- 第三步：识别金额与交易方向，确定 `amount`（含正负）和 `transaction_type`；无法确认则置为 `null`。\n- 第四步：提取日期与时间，执行格式归一化，填写 `date` 和 `time`；信息缺失则置为 `null`。\n- 第五步：识别商户/收款方名称，填写 `merchant`；提取交易备注，填写 `description`；无法识别则置为 `null`。\n- 第六步：根据商户与描述从枚举值中选定 `category`；识别货币类型填写 `currency`；识别支付方式填写 `payment_method`；无法判断的字段均置为 `null`。\n- 第七步：综合文本信息完整度与字段确认度，评定 `confidence`；无法评定则置为 `null`；组装 JSON，校验合法性后输出。\n\n## 输出格式（必遵）:\n\n- 仅输出一个 JSON 对象，且只包含以下键（建议顺序）：\n\n```\n{\n  \"code\": 数字，识别成功返回 200，识别失败/非账单文本返回 400,\n  \"amount\": 数字或 null，支出为负数，收入为正数，保留两位小数（如 -38.50）；无法识别时为 null,\n  \"currency\": 字符串或 null，货币代码（如 \"CNY\"）；文本中无明确货币信息时为 null,\n  \"merchant\": 字符串或 null，商户/收款方名称；无法识别时为 null,\n  \"date\": 字符串或 null，YYYY-MM-DD 格式；日期或年份信息缺失时为 null,\n  \"time\": 字符串或 null，HH:MM 格式；无法识别时为 null,\n  \"transaction_type\": 字符串或 null，\"收入\" 或 \"支出\"；无法判断收支方向时为 null,\n  \"payment_method\": 字符串或 null，\"微信支付\"/\"支付宝\"/\"银行卡\"/\"现金\"/\"其他\"；无法确认时为 null,\n  \"category\": 字符串或 null，从枚举值中选取；无法判断分类时为 null,\n  \"description\": 字符串或 null，交易备注/商品说明；无相关信息时为 null,\n  \"confidence\": 字符串或 null，\"高\"/\"中\"/\"低\"；无法评定时为 null,\n  \"raw_text\": 字符串或 null，用户输入的原始文本；无有效内容时为 null\n}\n```\n\n- **置信度评定标准**：\n  - `高`：文本信息完整，金额、日期、商户三项关键字段均可明确识别，无需推断\n  - `中`：文本基本清晰，但有部分字段需结合上下文推断，或存在一定歧义\n  - `低`：文本信息残缺、表述模糊，或多个关键字段无法确认\n- **支付方式判断依据**：\n  - `微信支付`：文本含「微信支付」「零钱」「微信零钱」等字样\n  - `支付宝`：文本含「支付宝」「花呗」「余额宝」「支付宝余额」等字样\n  - `银行卡`：文本含银行名称、「储蓄卡」「信用卡」「尾号XXXX」等字样\n  - `现金`：文本含「现金」「现金支付」「现金收款」「收讫」「现金找零」等字样\n  - `其他`：有明确支付行为但无法归入上述类型时\n  - `null`：完全无法确认支付方式时\n- **特殊交易类型处理**：\n  - 退款：`transaction_type` 为 `收入`，`amount` 为正数，`description` 注明「退款」\n  - 收到红包/转账：`transaction_type` 为 `收入`，`amount` 为正数\n  - 发出红包/转账：`transaction_type` 为 `支出`，`amount` 为负数\n- **禁止**：JSON 外的任何字符；额外 JSON 键；金额字段含货币符号；`category` 使用枚举外的值；用任何非 `null` 的默认值填充无法识别的字段。\n\n## 输入模板（给用户填写，可简可详）\n\n【账单文本】\n（请粘贴或输入支付通知、银行短信、消费记录等文字内容）\n\n## 输出样例（仅供参考）\n\n（以下为合法 JSON；实际输出时不要包 markdown 代码块。）\n\n**样例一：信息完整，识别成功**\n\n```json\n{\n  \"code\": 200,\n  \"amount\": -38.50,\n  \"currency\": \"CNY\",\n  \"merchant\": \"瑞幸咖啡（中国）有限公司\",\n  \"date\": \"2026-04-23\",\n  \"time\": \"09:32\",\n  \"transaction_type\": \"支出\",\n  \"payment_method\": \"微信支付\",\n  \"category\": \"餐饮\",\n  \"description\": \"生椰拿铁x1\",\n  \"confidence\": \"高\",\n  \"raw_text\": \"瑞幸咖啡 交易成功 -¥38.50 2026年4月23日 09:32 微信支付 生椰拿铁x1\"\n}\n```\n\n**样例二：部分字段无法识别，返回 null**\n\n```json\n{\n  \"code\": 200,\n  \"amount\": -120.00,\n  \"currency\": null,\n  \"merchant\": null,\n  \"date\": null,\n  \"time\": \"14:05\",\n  \"transaction_type\": \"支出\",\n  \"payment_method\": null,\n  \"category\": null,\n  \"description\": null,\n  \"confidence\": \"低\",\n  \"raw_text\": \"交易成功 -120.00 14:05\"\n}\n```\n\n**样例三：非账单文本**\n\n```json\n{\n  \"code\": 400,\n  \"amount\": null,\n  \"currency\": null,\n  \"merchant\": null,\n  \"date\": null,\n  \"time\": null,\n  \"transaction_type\": null,\n  \"payment_method\": null,\n  \"category\": null,\n  \"description\": null,\n  \"confidence\": null,\n  \"raw_text\": null\n}\n```\n\n## 初始化\n\n作为账单文本结构化识别助手，我将根据你输入的**账单/支付通知/消费记录文本**，输出一个**合法 JSON 对象**，包含 `code`、`amount`、`currency`、`merchant`、`date`、`time`、`transaction_type`、`payment_method`、`category`、`description`、`confidence`、`raw_text` 共 12 个字段；其中 `code` 为 `200` 表示识别成功，`400` 表示文本无效，**所有无法从文本中明确识别的字段均返回 `null`**。请按「输入模板」提供文本内容。\n",
+            "maxIterations": 10,
+            "passthroughBinaryImages": true
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          496,
+          832
+        ],
+        "id": "a5515387-90d4-4fae-9d1e-e55511756110",
+        "name": "账单文本结构化识别助手",
+        "retryOnFail": true,
+        "notesInFlow": true,
+        "notes": "AI Agent"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "responsesApiEnabled": false,
+          "options": {
+            "frequencyPenalty": 0,
+            "responseFormat": "json_object",
+            "temperature": 0.7,
+            "timeout": 300000,
+            "maxRetries": 2,
+            "topP": 1
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          448,
+          1040
+        ],
+        "id": "e9ba0000-f41e-4704-873b-f3b326834308",
+        "name": "gpt-5.4-mini ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "responsesApiEnabled": false,
+          "options": {
+            "frequencyPenalty": 0,
+            "responseFormat": "json_object",
+            "temperature": 0.7,
+            "timeout": 300000,
+            "maxRetries": 2,
+            "topP": 1
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          576,
+          1040
+        ],
+        "id": "463dad88-31bf-4dc6-aafa-3368de59757b",
+        "name": "gpt-5.4 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "schemaType": "manual",
+          "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"code\": {\n      \"type\": \"number\"\n    },\n    \"amount\": {\n      \"type\": [\"number\", \"null\"]\n    },\n    \"currency\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"merchant\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"date\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"time\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"transaction_type\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"收入\", \"支出\", null]\n    },\n    \"payment_method\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"微信支付\", \"支付宝\", \"银行卡\", \"现金\", \"其他\", null]\n    },\n    \"category\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"餐饮\", \"交通\", \"购物\", \"娱乐\", \"医疗\", \"教育\", \"住房\", \"通讯\", \"旅游\", \"投资\", \"其他\", null]\n    },\n    \"description\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"confidence\": {\n      \"type\": [\"string\", \"null\"],\n      \"enum\": [\"高\", \"中\", \"低\", null]\n    },\n    \"raw_text\": {\n      \"type\": [\"string\", \"null\"]\n    }\n  },\n  \"required\": [\"code\"]\n}",
+          "autoFix": true
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          688,
+          1040
+        ],
+        "id": "d9f48e7d-4d8b-45d6-bc64-27515d2acb3a",
+        "name": "强制格式化输出 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('设置应用凭证').item.json.app_token }}/tables/{{ $('设置应用凭证').item.json.table_id }}/records",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fields\": {\n    \"录入者\": [\n      {\n        \"id\": {{ $('固定字段 ').item.json['录入者'].toJsonString() }}\n      }\n    ],\n    \"金额\": {{ $('固定字段 ').item.json['金额'] }},\n    \"货币代码\": {{ $('固定字段 ').item.json['货币代码'].toJsonString() }},\n    \"商户名称\": {{ $('固定字段 ').item.json['商户名称'].toJsonString() }},\n    \"交易日期\": {{ $('固定字段 ').item.json['交易日期'] }},\n    \"交易时间\": {{ $('固定字段 ').item.json['交易时间'].toJsonString() }},\n    \"交易类型\": {{ $('固定字段 ').item.json['交易类型'].toJsonString() }},\n    \"分类\": {{ $('固定字段 ').item.json['分类'].toJsonString() }},\n    \"支付方式\": {{ $('固定字段 ').item.json['支付方式'].toJsonString() }},\n    \"交易备注\": {{ $('固定字段 ').item.json['交易备注'].toJsonString() }},\n    \"原始OCR文本\": {{ $('固定字段 ').item.json['原始OCR文本'].toJsonString() }},\n    \"置信度\": {{ $('固定字段 ').item.json['置信度'].toJsonString() }},\n    \"状态\": {{ $('固定字段 ').item.json['状态'].toJsonString() }}\n  }\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1280,
+          704
+        ],
+        "id": "378c1fa5-97a6-4600-9620-44488c944cd3",
+        "name": "新增记录到表格 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"账单信息已成功录入！明细如下：【金额：{{ $json.data.record.fields['金额'] }}  货币代码：{{ $json.data.record.fields['货币代码'] }}  商户名称：{{ $json.data.record.fields['商户名称'] }}  交易日期：{{ $json.data.record.fields['交易日期'].toDateTime('ms').format('yyyy-MM-dd') }}  交易类型：{{ $json.data.record.fields['交易类型'] }}  分类：{{ $json.data.record.fields['分类'] }}  支付方式：{{ $json.data.record.fields['支付方式'] }}  交易备注：{{ $json.data.record.fields['交易备注'] }}】。请前往账本表格核查记录。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1872,
+          624
+        ],
+        "id": "88d0f747-817e-4d56-923c-0a366fd3e7cf",
+        "name": "机器人回复用户消息:录入成功 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"抱歉，当前账单信息录入失败！请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1872,
+          800
+        ],
+        "id": "c956af92-062c-44d6-a16a-e75099437383",
+        "name": "机器人回复用户消息:录入失败 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"发送的文本不是有效的账单内容，请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1456,
+          912
+        ],
+        "id": "ba1a16f5-62ca-4d62-89b0-deb61d8273d9",
+        "name": "机器人回复用户:文本不符",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/im/v1/messages/{{ $('解析飞书消息').first().json.message_id }}/reply",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书Token').first().json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"content\": \"{\\\"text\\\":\\\"账单信息获取异常！当前获取到的信息不足（未识别到有效金额），请重新发送账单内容的文本或图片进行记账。\\\"}\",\n  \"msg_type\": \"text\",\n  \"reply_in_thread\": false,\n  \"uuid\": {{ $json.uuid.toJsonString() }}\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1456,
+          1120
+        ],
+        "id": "2c446962-cedc-4256-8891-3a8cb8e20b12",
+        "name": "机器人回复用户:信息不足 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"challenge\": \"{{ $json.body.challenge }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          -1024,
+          -192
+        ],
+        "id": "b04f92e2-ff57-4a75-b1e0-f4601b3dd8eb",
+        "name": "Respond to Webhook"
+      }
+    ],
+    "connections": {
+      "解析飞书消息": {
+        "main": [
+          [
+            {
+              "node": "设置应用凭证",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "设置应用凭证": {
+        "main": [
+          [
+            {
+              "node": "获取飞书Token",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "收到图片": {
+        "main": [
+          [
+            {
+              "node": "获取文件二进制流",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "账单文本结构化识别助手",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "收到正确事件消息": {
+        "main": [
+          [
+            {
+              "node": "生成唯一字符串序列  ",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "生成唯一字符串序列   ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "固定字段": {
+        "main": [
+          [
+            {
+              "node": "新增记录到表格",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "生成唯一字符串序列": {
+        "main": [
+          [
+            {
+              "node": "机器人回复用户消息:录入成功",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "生成唯一字符串序列 ": {
+        "main": [
+          [
+            {
+              "node": "机器人回复用户消息:录入失败",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "录入成功": {
+        "main": [
+          [
+            {
+              "node": "生成唯一字符串序列",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "生成唯一字符串序列 ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "生成唯一字符串序列  ": {
+        "main": [
+          [
+            {
+              "node": "机器人回复用户:处理中",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "生成唯一字符串序列   ": {
+        "main": [
+          [
+            {
+              "node": "机器人回复用户:事件异常",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "识别成功": {
+        "main": [
+          [
+            {
+              "node": "固定字段",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "图片不符",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      " 生成唯一字符串序列": {
+        "main": [
+          [
+            {
+              "node": "机器人回复用户:图片不符",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "图片不符": {
+        "main": [
+          [
+            {
+              "node": " 生成唯一字符串序列",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": " 生成唯一字符串序列 ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      " 生成唯一字符串序列 ": {
+        "main": [
+          [
+            {
+              "node": "机器人回复用户:信息不足",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "等待3秒": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "合并数据统一处理",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "分片上传素材-上传分片",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "合并数据统一处理": {
+        "main": [
+          [
+            {
+              "node": "分片上传素材-完成上传",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "重新挂载图片": {
+        "main": [
+          [
+            {
+              "node": "获取图片文件大小",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取图片文件大小": {
+        "main": [
+          [
+            {
+              "node": "分片上传素材-预上传",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "重新挂载图片 ": {
+        "main": [
+          [
+            {
+              "node": "图片分片",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "图片分片": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "识别成功 ": {
+        "main": [
+          [
+            {
+              "node": "固定字段 ",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "文本不符",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "固定字段 ": {
+        "main": [
+          [
+            {
+              "node": "新增记录到表格 ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "录入成功 ": {
+        "main": [
+          [
+            {
+              "node": "   生成唯一字符串序列    ",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "    生成唯一字符串序列    ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "   生成唯一字符串序列    ": {
+        "main": [
+          [
+            {
+              "node": "机器人回复用户消息:录入成功 ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "    生成唯一字符串序列    ": {
+        "main": [
+          [
+            {
+              "node": "机器人回复用户消息:录入失败 ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "文本不符": {
+        "main": [
+          [
+            {
+              "node": "  生成唯一字符串序列     ",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "   生成唯一字符串序列  ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "  生成唯一字符串序列     ": {
+        "main": [
+          [
+            {
+              "node": "机器人回复用户:文本不符",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "   生成唯一字符串序列  ": {
+        "main": [
+          [
+            {
+              "node": "机器人回复用户:信息不足 ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "接收飞书机器人消息推送": {
+        "main": [
+          [
+            {
+              "node": "解析飞书消息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取飞书Token": {
+        "main": [
+          [
+            {
+              "node": "收到正确事件消息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "机器人回复用户:处理中": {
+        "main": [
+          [
+            {
+              "node": "收到图片",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取文件二进制流": {
+        "main": [
+          [
+            {
+              "node": "账单图片结构化识别助手",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "账单图片结构化识别助手": {
+        "main": [
+          [
+            {
+              "node": "识别成功",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gpt-5.4-mini": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "账单图片结构化识别助手",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gpt-5.4": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "账单图片结构化识别助手",
+              "type": "ai_languageModel",
+              "index": 1
+            },
+            {
+              "node": "强制格式化输出",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "强制格式化输出": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "账单图片结构化识别助手",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "新增记录到表格": {
+        "main": [
+          [
+            {
+              "node": "录入成功",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "机器人回复用户消息:录入成功": {
+        "main": [
+          [
+            {
+              "node": "重新挂载图片",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "分片上传素材-预上传": {
+        "main": [
+          [
+            {
+              "node": "重新挂载图片 ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "分片上传素材-上传分片": {
+        "main": [
+          [
+            {
+              "node": "等待3秒",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "分片上传素材-完成上传": {
+        "main": [
+          [
+            {
+              "node": "更新记录 保存票根",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "账单文本结构化识别助手": {
+        "main": [
+          [
+            {
+              "node": "识别成功 ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gpt-5.4-mini ": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "账单文本结构化识别助手",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gpt-5.4 ": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "账单文本结构化识别助手",
+              "type": "ai_languageModel",
+              "index": 1
+            },
+            {
+              "node": "强制格式化输出 ",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "强制格式化输出 ": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "账单文本结构化识别助手",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "新增记录到表格 ": {
+        "main": [
+          [
+            {
+              "node": "录入成功 ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond to Webhook": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Vincent Li",
+    "name": "Version 4de8f9cf",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

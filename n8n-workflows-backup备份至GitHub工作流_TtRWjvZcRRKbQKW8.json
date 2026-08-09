@@ -1,0 +1,255 @@
+{
+  "updatedAt": "2026-08-09T22:56:21.038Z",
+  "createdAt": "2026-08-05T13:48:41.104Z",
+  "id": "TtRWjvZcRRKbQKW8",
+  "name": "n8n-workflows-backup备份至GitHub工作流",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        -464
+      ],
+      "id": "243c8f86-122c-43e2-9c9e-22c492a4c09c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5678/api/v1/workflows",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        -464
+      ],
+      "id": "c72f4845-ec94-45b9-b6cf-c83bdc9a56a6",
+      "name": "调用 API 获取所有工作流",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "TsF1r8tip1W70pRT",
+          "name": "X-N8N-API-KEY"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const fs = require('fs');\n\nconst backupDir = '/home/node/n8n-backups';\nif (!fs.existsSync(backupDir)) {\n  fs.mkdirSync(backupDir, { recursive: true });\n}\n\nconst inputJson = $input.first().json;\nconst workflows = Array.isArray(inputJson) ? inputJson : (inputJson.data || []);\n\nreturn workflows.map(wf => {\n  const safeName = (wf.name || 'unnamed_workflow')\n    .replace(/[/\\\\?%*:|\"<>]/g, '_')\n    .trim();\n    \n  const fileName = `${safeName}_${wf.id}.json`;\n  const filePath = `${backupDir}/${fileName}`;\n  \n  fs.writeFileSync(filePath, JSON.stringify(wf, null, 2), 'utf8');\n\n  return {\n    json: {\n      id: wf.id,\n      name: wf.name,\n      fileName: fileName\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -464
+      ],
+      "id": "4775edb2-0595-465e-86d9-aec016d9205a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "command": "=export GIT_TERMINAL_PROMPT=0\ncd /home/node/n8n-backups\n\n# 1. 配置 Git 基础信息\ngit config --global --add safe.directory /home/node/n8n-backups\ngit config --global user.name \"n8n-bot\"\ngit config --global user.email \"n8n@local.com\"\n\n# 2. 绑定远程库\ngit remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/lijixin0623/n8n-workflows-backup.git\n\n# 3. 提交并推送\ngit add .\nif [ -n \"$(git status --porcelain)\" ]; then\n  git commit -m \"Auto backup workflows: $(date '+%Y-%m-%d %H:%M:%S')\"\n  git push origin main\nfi"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -464
+      ],
+      "id": "ed363603-d658-4047-b4b9-55766750ade4",
+      "name": "Execute Command"
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "调用 API 获取所有工作流",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用 API 获取所有工作流": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "54e87992-bfab-4cab-889a-8127d8a015ef",
+  "activeVersionId": "9551dd20-860d-4ccc-9510-191543c6b267",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-08-05T13:48:41.110Z",
+      "createdAt": "2026-08-05T13:48:41.110Z",
+      "role": "workflow:owner",
+      "workflowId": "TtRWjvZcRRKbQKW8",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-09T22:14:07.000Z",
+    "createdAt": "2026-08-09T22:05:43.826Z",
+    "versionId": "9551dd20-860d-4ccc-9510-191543c6b267",
+    "workflowId": "TtRWjvZcRRKbQKW8",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          16,
+          -464
+        ],
+        "id": "243c8f86-122c-43e2-9c9e-22c492a4c09c",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "url": "http://localhost:5678/api/v1/workflows",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          224,
+          -464
+        ],
+        "id": "c72f4845-ec94-45b9-b6cf-c83bdc9a56a6",
+        "name": "调用 API 获取所有工作流",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "TsF1r8tip1W70pRT",
+            "name": "X-N8N-API-KEY"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const workflows = $input.first().json.data;\nconst results = [];\n\nfor (const wf of workflows) {\n  // 过滤文件名中的非法字符\n  const safeName = wf.name.replace(/[^a-zA-Z0-9_\\u4e00-\\u9fa5\\-]/g, '_');\n  const fileName = `${safeName}_${wf.id}.json`;\n  \n  results.push({\n    json: {\n      id: wf.id,\n      name: wf.name,\n      fileName: fileName,\n      // 格式化美化 JSON\n      content: JSON.stringify(wf, null, 2)\n    }\n  });\n}\n\nreturn results;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          432,
+          -464
+        ],
+        "id": "4775edb2-0595-465e-86d9-aec016d9205a",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "executeOnce": false,
+          "command": "=export GIT_TERMINAL_PROMPT=0\ncd /home/node/n8n-backups\n\n# 1. Base64 安全写入文件\necho \"{{ Buffer.from($json.content).toString('base64') }}\" | base64 -d > \"{{ $json.fileName }}\"\n\n# 2. Git 基础配置\ngit config --global --add safe.directory /home/node/n8n-backups\ngit config --global user.name \"n8n-bot\"\ngit config --global user.email \"n8n@local.com\"\n\n# 3. 读取环境变量中的 Token，不再硬编码\ngit remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/lijixin0623/n8n-workflows-backup.git\n\n# 4. 提交并推送\ngit add .\nif [ -n \"$(git status --porcelain)\" ]; then\n  git commit -m \"Auto backup: {{ $json.name }}\"\n  git push origin main\nfi"
+        },
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [
+          640,
+          -464
+        ],
+        "id": "ed363603-d658-4047-b4b9-55766750ade4",
+        "name": "Execute Command"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "调用 API 获取所有工作流",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "调用 API 获取所有工作流": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Execute Command",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Vincent Li",
+    "name": "Version 9551dd20",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

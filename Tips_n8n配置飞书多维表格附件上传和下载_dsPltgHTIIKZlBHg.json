@@ -1,0 +1,820 @@
+{
+  "updatedAt": "2026-08-05T11:52:57.085Z",
+  "createdAt": "2026-07-30T18:27:41.520Z",
+  "id": "dsPltgHTIIKZlBHg",
+  "name": "Tips_n8n配置飞书多维表格附件上传和下载",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        208,
+        80
+      ],
+      "id": "11e342c5-6b0a-4e9f-a72d-0279170af708",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"app_id\": {{ $json.app_id.toJsonString() }},\n    \"app_secret\": {{ $json.app_secret.toJsonString() }}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        592,
+        80
+      ],
+      "id": "6589c58d-7db2-4d21-b30b-0ad61a424e98",
+      "name": "获取飞书Token",
+      "notesInFlow": true,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ad0fb75f-4bf4-4157-8641-07b6d87aa235",
+              "name": "app_id",
+              "value": "cli_a8759c6a213d500e",
+              "type": "string"
+            },
+            {
+              "id": "8211841d-8df6-413c-9518-6bd69380d327",
+              "name": "app_secret",
+              "value": "hLjKsc00B0lCNEM9Vr0qkdjC06mIj6mb",
+              "type": "string"
+            },
+            {
+              "id": "67067775-7b08-4818-b22d-b410f12d6aa4",
+              "name": "folder_token",
+              "value": "OfoZfyXXolntCwdFeWKcEbAun0b",
+              "type": "string"
+            },
+            {
+              "id": "ec0a2fe7-801f-421f-a11e-474e8d111611",
+              "name": "app_token",
+              "value": "GMUUbnoFpanlzPsqwDyctx0xnYg",
+              "type": "string"
+            },
+            {
+              "id": "6fffd4d5-a41a-4808-9761-2a5e61821495",
+              "name": "table_id",
+              "value": "tblzwb83wp6PMkYJ",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        80
+      ],
+      "id": "2ddb5e7e-40ea-415d-b828-0abd8e37fdfc",
+      "name": "设置应用凭证",
+      "notesInFlow": true,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('设置应用凭证').item.json.app_token }}/tables/{{ $('设置应用凭证').item.json.table_id }}/records/search ",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "user_id_type",
+              "value": "open_id"
+            },
+            {
+              "name": "page_token"
+            },
+            {
+              "name": "page_size",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"sort\": [\n    {\n      \"field_name\": \"id\",\n      \"desc\": false\n    }\n  ],\n  \"automatic_fields\": false\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        768,
+        80
+      ],
+      "id": "37898bb6-5d59-4431-a0f4-49acb2c54075",
+      "name": "获取多维表格记录",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        96
+      ],
+      "id": "4fd93e3c-8923-41cc-ad06-58bae719f38c",
+      "name": "等待2秒",
+      "webhookId": "1b4ef572-db69-4abd-92a0-deb899721ab8",
+      "notesInFlow": true,
+      "notes": "Wait"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./.n8n-files/{{ $json.file_token }}_{{ $json.name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1744,
+        96
+      ],
+      "id": "758065aa-a296-46a9-8ff0-1beb405d978c",
+      "name": "保存素材到本地",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/{{ $json.file_token }}/download",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1552,
+        96
+      ],
+      "id": "9823340a-19dc-46c6-b54b-3a16cf3591a8",
+      "name": "获取素材二进制文件",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        80
+      ],
+      "id": "6c1125e3-40a9-45e2-b835-dfe643ede31d",
+      "name": "循环保存素材",
+      "notesInFlow": true,
+      "notes": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "[\"附件1\"]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1152,
+        80
+      ],
+      "id": "b1b50bf8-4ad6-416a-96c7-9bd373b90bde",
+      "name": "拆分数据单独处理",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "88f93589-8d95-43f8-9534-d9cbfc59c4ba",
+              "name": "附件1",
+              "value": "={{ $json.data.items[0].fields['附件1'] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        80
+      ],
+      "id": "c57d9436-2250-4f24-b31a-87d150cc6e60",
+      "name": "获取表格内附件",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('设置应用凭证').item.json.app_token }}/tables/{{ $('设置应用凭证').item.json.table_id }}/records/{{ $('获取多维表格记录').item.json.data.items[0].record_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"附件2\": [\n        {\n            \"file_token\": {{ $json.data.file_token.toJsonString() }}\n        }\n    ]\n  }\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2448,
+        304
+      ],
+      "id": "6dcee9fd-6cb6-4b63-b1c3-5fed674c68bc",
+      "name": "更新记录 等待确认",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：获取当前传递过来视频二进制文件的大小和重新挂载视频文件传递给下一个节点\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\n// 读取二进制 buffer，返回字节数\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst sizeInBytes = buffer.length;\n\n// 同时把原来的 binary.data 一起传出去\nreturn [\n  {\n    json: {\n      size_in_bytes: sizeInBytes,\n    },\n    binary: {\n      // 直接复用上一个节点的 binary.data\n      data: $input.first().binary.data,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        320
+      ],
+      "id": "b6c5c42d-a7c3-4d87-8848-f8b72cd5823d",
+      "name": "获取视频文件大小",
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "fileSelector": "./.n8n-files/videos/test.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        976,
+        320
+      ],
+      "id": "690d0f6c-4d90-4dfd-b34e-ffa96e84a84e",
+      "name": "读取本地视频",
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2448,
+        480
+      ],
+      "id": "99b1dd27-0fa0-44c4-8e66-7cd9f57cacdf",
+      "name": "等待3秒",
+      "webhookId": "023b8328-1a08-4a02-8c8b-932233743d8d",
+      "notesInFlow": true,
+      "notes": "Wait"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_part",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data; boundary=---7MA4YWxkTrZu0gW"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "upload_id",
+              "value": "={{ $('分片上传素材-预上传').item.json.data.upload_id }}"
+            },
+            {
+              "name": "seq",
+              "value": "={{ $json.chunkIndex }}"
+            },
+            {
+              "name": "=size",
+              "value": "={{ $json.chunkSize }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "=data"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2096,
+        480
+      ],
+      "id": "325280bc-c044-41ce-82b8-6b1b3bc6b3cb",
+      "name": "分片上传素材-上传分片",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_finish",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"upload_id\": \"{{ $('分片上传素材-预上传').item.json.data.upload_id }}\",\n  \"block_num\": {{ $('分片上传素材-预上传').item.json.data.block_num }}\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2272,
+        304
+      ],
+      "id": "2c2a3d04-a6f8-43ce-8f45-52a454d31e77",
+      "name": "分片上传素材-完成上传",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：把某个上游节点的 json 和 binary 重新挂到当前输出上\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nreturn {\n  json: $('获取视频文件大小').item.json,\n  binary: $('获取视频文件大小').item.binary,\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        320
+      ],
+      "id": "6cdafe07-cb39-4429-bdd7-39e4cfaa7e7c",
+      "name": "重新挂载二进制文件",
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_prepare",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"file_name\": \"test.mp4\",\n  \"parent_type\": \"bitable_file\",\n  \"parent_node\": {{ $('设置应用凭证').item.json.app_token.toJsonString() }},\n  \"size\": {{ $json.size_in_bytes }}\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1344,
+        320
+      ],
+      "id": "620eb13d-fa7a-4a2c-9b6c-e1b36cad5bfa",
+      "name": "分片上传素材-预上传",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：对获取到的视频进行分片处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nconst CHUNK_SIZE = 4 * 1024 * 1024; // 4MB in bytes\n\n// 获取输入的视频二进制数据\nconst binaryData = items[0].binary.data;\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\n// 计算需要分成多少块\nconst totalChunks = Math.ceil(buffer.length / CHUNK_SIZE);\nconst chunks = [];\n\n// 分割二进制数据\nfor (let i = 0; i < totalChunks; i++) {\n  const start = i * CHUNK_SIZE;\n  const end = Math.min(start + CHUNK_SIZE, buffer.length);\n  const chunkBuffer = buffer.slice(start, end);\n  \n  // 为每个块创建新的二进制数据对象\n  chunks.push({\n    json: {\n      chunkIndex: i,\n      totalChunks: totalChunks,\n      chunkSize: chunkBuffer.length,\n      originalFileName: binaryData.fileName || 'video'\n    },\n    binary: {\n      data: await this.helpers.prepareBinaryData(\n        chunkBuffer,\n        `${binaryData.fileName || 'video'}_chunk_${i}.bin`\n      )\n    }\n  });\n}\n\nreturn chunks;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        320
+      ],
+      "id": "8147e0cc-7158-4926-a462-eda23d7b3619",
+      "name": "视频分片",
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1888,
+        320
+      ],
+      "id": "5c739f11-cc65-4d18-9f7f-8507126fcc42",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        304
+      ],
+      "id": "ff1b12ec-cd49-4c9c-9947-f43e381cc9c2",
+      "name": "合并数据统一处理",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Aggregate"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "设置应用凭证",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取飞书Token": {
+      "main": [
+        [
+          {
+            "node": "获取多维表格记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "设置应用凭证": {
+      "main": [
+        [
+          {
+            "node": "获取飞书Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取多维表格记录": {
+      "main": [
+        [
+          {
+            "node": "读取本地视频",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "获取表格内附件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待2秒": {
+      "main": [
+        [
+          {
+            "node": "循环保存素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "保存素材到本地": {
+      "main": [
+        [
+          {
+            "node": "等待2秒",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取素材二进制文件": {
+      "main": [
+        [
+          {
+            "node": "保存素材到本地",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "循环保存素材": {
+      "main": [
+        [],
+        [
+          {
+            "node": "获取素材二进制文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分数据单独处理": {
+      "main": [
+        [
+          {
+            "node": "循环保存素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取表格内附件": {
+      "main": [
+        [
+          {
+            "node": "拆分数据单独处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取视频文件大小": {
+      "main": [
+        [
+          {
+            "node": "分片上传素材-预上传",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待3秒": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分片上传素材-上传分片": {
+      "main": [
+        [
+          {
+            "node": "等待3秒",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分片上传素材-完成上传": {
+      "main": [
+        [
+          {
+            "node": "更新记录 等待确认",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重新挂载二进制文件": {
+      "main": [
+        [
+          {
+            "node": "视频分片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分片上传素材-预上传": {
+      "main": [
+        [
+          {
+            "node": "重新挂载二进制文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "视频分片": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "合并数据统一处理",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "分片上传素材-上传分片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "读取本地视频": {
+      "main": [
+        [
+          {
+            "node": "获取视频文件大小",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "合并数据统一处理": {
+      "main": [
+        [
+          {
+            "node": "分片上传素材-完成上传",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "323cecc1-5286-450b-9a7e-0528c4ac3189",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-30T18:27:41.528Z",
+      "createdAt": "2026-07-30T18:27:41.528Z",
+      "role": "workflow:owner",
+      "workflowId": "dsPltgHTIIKZlBHg",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

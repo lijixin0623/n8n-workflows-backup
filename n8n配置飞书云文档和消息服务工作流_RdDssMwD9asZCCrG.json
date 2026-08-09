@@ -1,0 +1,1226 @@
+{
+  "updatedAt": "2026-07-23T18:16:11.000Z",
+  "createdAt": "2026-07-23T12:32:12.784Z",
+  "id": "RdDssMwD9asZCCrG",
+  "name": "n8n配置飞书云文档和消息服务工作流",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2224,
+        -560
+      ],
+      "id": "3f71ec58-4318-4af1-b67b-22dee5beb8f6",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"app_id\": \"cli_a8759c6a213d500e\",\n    \"app_secret\": \"w7BjX2yj17rSfiR8oPueef1ktTouGrEH\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1920,
+        -560
+      ],
+      "id": "09788760-ff50-45d3-9d10-e9caa5397746",
+      "name": "获取飞书Token",
+      "notesInFlow": true,
+      "notes": "获取飞书token"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n  \"msg_type\": \"text\",\n  \"content\": \"{\\\"text\\\":\\\"<at user_id=\\\\\\\"all\\\\\\\">南哥</at> 大家好，这里是南哥AGI研习社。[南哥AGI研习社](https://nangeai.top)\\\"}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1232,
+        -848
+      ],
+      "id": "dd1017aa-42c4-4906-bd67-c65e778863be",
+      "name": "向群组发送文本消息"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"南哥AGI研习社\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"text\\\",\\\"text\\\":\\\"大模型代理平台 :\\\"},{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://nangeai.top\\\",\\\"text\\\":\\\"nangeai.top\\\"},{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"img\\\",\\\"image_key\\\":\\\"{{ $json.data.image_key }}\\\"}]]}}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -352,
+        -640
+      ],
+      "id": "e907f95e-83ed-4e66-b9fe-a369cb5a7196",
+      "name": "向群组发送富文本"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n  \"msg_type\": \"image\",\n  \"content\": \"{\\\"image_key\\\": \\\"{{ $json.data.image_key }}\\\"}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -352,
+        -832
+      ],
+      "id": "ea8424f7-bc74-4dd2-882b-31108df37e87",
+      "name": "向群组发送图片"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/images",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "image_type",
+              "value": "message"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -768,
+        -640
+      ],
+      "id": "67fd8c17-2bd0-4ad1-903e-926d46bfa226",
+      "name": "上传图片到飞书"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n  \"msg_type\": \"interactive\",\n  \"content\": \"{\\\"type\\\":\\\"template\\\",\\\"data\\\":{\\\"template_id\\\":\\\"AAqhwSFEnW3pt\\\",\\\"template_version_name\\\":\\\"1.1.5\\\",\\\"template_variable\\\":{\\\"picture\\\":{\\\"img_key\\\":\\\"{{ $json.data.image_key }}\\\"},\\\"link\\\":{\\\"url\\\":\\\"https://nangeai.top\\\"}}}}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -352,
+        -464
+      ],
+      "id": "2ad55a3a-ddd8-4456-9b78-21021e939b99",
+      "name": "向群组发送消息卡片"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n  \"msg_type\": \"share_chat\",\n  \"content\": \"{\\\"chat_id\\\":\\\"oc_9619619c722d54d1b6589f7405855d59\\\"}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1232,
+        -640
+      ],
+      "id": "ce08b628-643d-446d-85fd-3b9a889201fb",
+      "name": "向群组发送群名片"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n  \"msg_type\": \"audio\",\n  \"content\": \"{\\\"file_key\\\":\\\"{{ $json.data.file_key }}\\\"}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -352,
+        -224
+      ],
+      "id": "bd3ef0e7-1998-43aa-8a6f-93522b6a70cf",
+      "name": "向群组发送语音"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/files",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file_type",
+              "value": "opus"
+            },
+            {
+              "name": "file_name",
+              "value": "audio.opus"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        -224
+      ],
+      "id": "2c0f8eaf-567d-447c-9d79-334b1e69d90b",
+      "name": "上传音频到飞书"
+    },
+    {
+      "parameters": {
+        "fileSelector": "./n8ndata/pictures/picture.png",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        -432
+      ],
+      "id": "16761b43-f5aa-4df3-b59a-f3c5faa7b5b5",
+      "name": "读取本地图片"
+    },
+    {
+      "parameters": {
+        "fileSelector": "./n8ndata/audios/audio.opus",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        -224
+      ],
+      "id": "3f736b1c-e9df-4fd3-99d7-a033d7009e88",
+      "name": "读取本地音频"
+    },
+    {
+      "parameters": {
+        "fileSelector": "./n8ndata/videos/video.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        -16
+      ],
+      "id": "0a3bd4ef-949f-4929-add4-063206ca3d12",
+      "name": "读取本地视频"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/files",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file_type",
+              "value": "mp4"
+            },
+            {
+              "name": "file_name",
+              "value": "video.mp4"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1008,
+        -16
+      ],
+      "id": "207fe431-79f4-4fac-8eb2-b05fbadcce94",
+      "name": "上传视频到飞书"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n  \"msg_type\": \"media\",\n  \"content\": \"{\\\"file_key\\\":\\\"{{ $('上传视频到飞书').item.json.data.file_key }}\\\",\\\"image_key\\\":\\\"{{ $json.data.image_key }}\\\"}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -352,
+        -16
+      ],
+      "id": "91704847-1e65-47ca-9d3a-5c57c8091bcf",
+      "name": "向群组发送视频"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/images",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "image_type",
+              "value": "message"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -560,
+        -16
+      ],
+      "id": "f0a6209d-bed7-4e41-927f-658da876a1ef",
+      "name": "上传视频封面图片到飞书"
+    },
+    {
+      "parameters": {
+        "fileSelector": "./n8ndata/pictures/picture.png",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        -16
+      ],
+      "id": "890ab695-4169-40e5-99c8-fb2000d800d2",
+      "name": "读取本地视频封面图片"
+    },
+    {
+      "parameters": {
+        "fileSelector": "./n8ndata/files/file.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        208
+      ],
+      "id": "d69ef844-db7c-44ab-97be-00967d4028d3",
+      "name": "读取本地文件"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/files",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "file_type",
+              "value": "pdf"
+            },
+            {
+              "name": "file_name",
+              "value": "file.pdf"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -784,
+        208
+      ],
+      "id": "b9454cdf-d003-4aab-92b2-7d989884552d",
+      "name": "上传文件到飞书"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n  \"msg_type\": \"file\",\n  \"content\": \"{\\\"file_key\\\":\\\"{{ $json.data.file_key }}\\\"}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -352,
+        208
+      ],
+      "id": "2b7b006c-35a1-492a-8dbb-cfa800ed2ac7",
+      "name": "向群组发送文件"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/bitable/v1/apps",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"HTTP节点创建的多维表格\",\n  \"folder_token\": \"{{ $json.data.token }}\" \n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1104,
+        -1504
+      ],
+      "id": "5f9b2c57-24fd-45fa-a2ad-552bd80600d8",
+      "name": "创建多维表格"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/drive/v1/files/create_folder",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"name\": \"南哥AGI研习社\",\n  \"folder_token\": \"AxRdfiYhZlvfAFdegowcc34Jnrd\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1344,
+        -1504
+      ],
+      "id": "31831ae1-2c12-4790-98c5-4391d41f501d",
+      "name": "创建文件夹"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('创建多维表格').item.json.data.app.app_token }}/tables/{{ $('创建多维表格').item.json.data.app.default_table_id }}/records",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"fields\": {\n    \"文本\": \"南哥AGI研习社\",\n    \"单选\": \"南哥\",\n    \"日期\": 1674206443000,\n    \"超链接\": {\n      \"text\": \"nangeai.top\",\n      \"link\": \"https://nangeai.top\"\n    },\n    \"地理位置\": \"116.397755,39.903179\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -336,
+        -1504
+      ],
+      "id": "6f8cecf3-67ed-4251-8a6b-459a18cd1901",
+      "name": "新增记录到表格"
+    },
+    {
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $json.data.app.app_token }}/tables/{{ $json.data.app.default_table_id }}/fields",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -896,
+        -1504
+      ],
+      "id": "5e231abc-3b77-4c0b-9566-ec7479dff954",
+      "name": "列出数据表字段"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('创建多维表格').item.json.data.app.app_token }}/tables/{{ $('创建多维表格').item.json.data.app.default_table_id }}/fields/{{ $json.data.items[3].field_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"field_name\": \"超链接\",\n  \"type\": 15,\n  \"ui_type\": \"Url\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -704,
+        -1504
+      ],
+      "id": "19d76865-ebaf-4a34-b440-3a3a887c640e",
+      "name": "更新字段"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('创建多维表格').item.json.data.app.app_token }}/tables/{{ $('创建多维表格').item.json.data.app.default_table_id }}/fields",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书Token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"field_name\": \"地理位置\",\n  \"type\": 22\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -512,
+        -1504
+      ],
+      "id": "156f353b-0daf-4135-8636-ddd016502c3e",
+      "name": "新增字段"
+    },
+    {
+      "parameters": {
+        "resource": "bitable",
+        "operation": "bitable:create",
+        "name": "飞书节点创建的多维表格",
+        "folder_toke": "={{ $json.data.token }}",
+        "time_zone": "Asia/Shanghai"
+      },
+      "type": "n8n-nodes-feishu-lite.feishuNode",
+      "typeVersion": 1,
+      "position": [
+        -1104,
+        -1200
+      ],
+      "id": "ae468433-e153-429a-b43e-0d28d56e7e63",
+      "name": "创建多维表格1"
+    },
+    {
+      "parameters": {
+        "resource": "bitable",
+        "operation": "bitable:table:field:list",
+        "app_toke": "={{ $json.data.app.app_token }}",
+        "table_id": "={{ $json.data.app.default_table_id }}"
+      },
+      "type": "n8n-nodes-feishu-lite.feishuNode",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        -1200
+      ],
+      "id": "b8b98d6d-3733-48dd-b0b5-8a56103dc690",
+      "name": "列出数据表字段1"
+    },
+    {
+      "parameters": {
+        "resource": "bitable",
+        "operation": "bitable:table:field:update",
+        "app_toke": "={{ $('创建多维表格1').item.json.data.app.app_token }}",
+        "table_id": "={{ $('创建多维表格1').item.json.data.app.default_table_id }}",
+        "field_id": "={{ $json.data.items[3].field_id }}",
+        "body": "{\n  \"field_name\": \"超链接\",\n  \"type\": 15,\n  \"ui_type\": \"Url\"\n}"
+      },
+      "type": "n8n-nodes-feishu-lite.feishuNode",
+      "typeVersion": 1,
+      "position": [
+        -704,
+        -1200
+      ],
+      "id": "cb9607c9-99c2-45f0-89cb-4da679a0d18a",
+      "name": "更新字段1"
+    },
+    {
+      "parameters": {
+        "resource": "bitable",
+        "operation": "bitable:table:field:add",
+        "app_toke": "={{ $('创建多维表格1').item.json.data.app.app_token }}",
+        "table_id": "={{ $('创建多维表格1').item.json.data.app.default_table_id }}",
+        "body": "{\n  \"field_name\": \"地理位置\",\n  \"type\": 22\n}"
+      },
+      "type": "n8n-nodes-feishu-lite.feishuNode",
+      "typeVersion": 1,
+      "position": [
+        -512,
+        -1200
+      ],
+      "id": "2d57f637-4b13-4308-8ca7-ac77c8ab645e",
+      "name": "新增字段1"
+    },
+    {
+      "parameters": {
+        "resource": "bitable",
+        "operation": "bitable:table:record:add",
+        "app_toke": "={{ $('创建多维表格1').item.json.data.app.app_token }}",
+        "table_id": "={{ $('创建多维表格1').item.json.data.app.default_table_id }}",
+        "body": "{\n  \"fields\": {\n    \"文本\": \"南哥AGI研习社\",\n    \"单选\": \"南哥\",\n    \"日期\": 1674206443000,\n    \"超链接\": {\n      \"text\": \"nangeai.top\",\n      \"link\": \"https://nangeai.top\"\n    },\n    \"地理位置\": \"116.397755,39.903179\"\n  }\n}"
+      },
+      "type": "n8n-nodes-feishu-lite.feishuNode",
+      "typeVersion": 1,
+      "position": [
+        -336,
+        -1200
+      ],
+      "id": "80a519bd-48db-4dbf-b466-725394dc8fbb",
+      "name": "新增记录到表格1"
+    },
+    {
+      "parameters": {
+        "content": "## 使用官方提供的HTTP节点实现飞书云文档服务的调用",
+        "height": 272,
+        "width": 1280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1408,
+        -1584
+      ],
+      "typeVersion": 1,
+      "id": "da08ce3b-30f8-41fd-bb5e-5e343b521f8d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 使用社区提供的飞书节点实现飞书云文档服务的调用",
+        "height": 272,
+        "width": 1280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1408,
+        -1280
+      ],
+      "typeVersion": 1,
+      "id": "7e780d2a-d1d1-444b-b966-19d63600e5ef",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 使用官方提供的HTTP节点实现飞书消息服务的调用",
+        "height": 1344,
+        "width": 1312,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1424,
+        -928
+      ],
+      "typeVersion": 1,
+      "id": "136bf03a-499c-4f2f-948d-24a416218dda",
+      "name": "Sticky Note2"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "获取飞书Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取飞书Token": {
+      "main": [
+        [
+          {
+            "node": "向群组发送文本消息",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "读取本地图片",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "向群组发送群名片",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "读取本地音频",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "读取本地视频",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "读取本地文件",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "创建文件夹",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传图片到飞书": {
+      "main": [
+        [
+          {
+            "node": "向群组发送图片",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "向群组发送富文本",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "向群组发送消息卡片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传音频到飞书": {
+      "main": [
+        [
+          {
+            "node": "向群组发送语音",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "读取本地图片": {
+      "main": [
+        [
+          {
+            "node": "上传图片到飞书",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "读取本地音频": {
+      "main": [
+        [
+          {
+            "node": "上传音频到飞书",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "读取本地视频": {
+      "main": [
+        [
+          {
+            "node": "上传视频到飞书",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传视频到飞书": {
+      "main": [
+        [
+          {
+            "node": "读取本地视频封面图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传视频封面图片到飞书": {
+      "main": [
+        [
+          {
+            "node": "向群组发送视频",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "读取本地视频封面图片": {
+      "main": [
+        [
+          {
+            "node": "上传视频封面图片到飞书",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "读取本地文件": {
+      "main": [
+        [
+          {
+            "node": "上传文件到飞书",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传文件到飞书": {
+      "main": [
+        [
+          {
+            "node": "向群组发送文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "创建多维表格": {
+      "main": [
+        [
+          {
+            "node": "列出数据表字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "创建文件夹": {
+      "main": [
+        [
+          {
+            "node": "创建多维表格1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "创建多维表格",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "列出数据表字段": {
+      "main": [
+        [
+          {
+            "node": "更新字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新字段": {
+      "main": [
+        [
+          {
+            "node": "新增字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "新增字段": {
+      "main": [
+        [
+          {
+            "node": "新增记录到表格",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "创建多维表格1": {
+      "main": [
+        [
+          {
+            "node": "列出数据表字段1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "列出数据表字段1": {
+      "main": [
+        [
+          {
+            "node": "更新字段1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新字段1": {
+      "main": [
+        [
+          {
+            "node": "新增字段1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "新增字段1": {
+      "main": [
+        [
+          {
+            "node": "新增记录到表格1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "d38c9d83-a2f9-4167-9fd4-eec24a78603b",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-23T12:32:12.789Z",
+      "createdAt": "2026-07-23T12:32:12.789Z",
+      "role": "workflow:owner",
+      "workflowId": "RdDssMwD9asZCCrG",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-22T21:49:07.897Z",
+      "createdAt": "2026-07-22T21:49:07.897Z",
+      "id": "d4eYQQSD7AYbi8vK",
+      "name": "飞书"
+    }
+  ]
+}

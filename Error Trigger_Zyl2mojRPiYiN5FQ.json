@@ -1,0 +1,69 @@
+{
+  "updatedAt": "2026-07-16T08:07:55.149Z",
+  "createdAt": "2026-07-16T08:06:32.418Z",
+  "id": "Zyl2mojRPiYiN5FQ",
+  "name": "Error Trigger",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "66b00504-d6c3-479d-bd29-73a8289393ea",
+      "name": "Error Trigger"
+    }
+  ],
+  "connections": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "8e076d70-ad67-47db-9b5b-e1efa53625ca",
+  "activeVersionId": "8e076d70-ad67-47db-9b5b-e1efa53625ca",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-16T08:06:32.423Z",
+      "createdAt": "2026-07-16T08:06:32.423Z",
+      "role": "workflow:owner",
+      "workflowId": "Zyl2mojRPiYiN5FQ",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-16T08:10:31.000Z",
+    "createdAt": "2026-07-16T08:06:32.425Z",
+    "versionId": "8e076d70-ad67-47db-9b5b-e1efa53625ca",
+    "workflowId": "Zyl2mojRPiYiN5FQ",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "66b00504-d6c3-479d-bd29-73a8289393ea",
+        "name": "Error Trigger"
+      }
+    ],
+    "connections": {},
+    "nodeGroups": [],
+    "authors": "Vincent Li",
+    "name": "Version 8e076d70",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

@@ -1,0 +1,457 @@
+{
+  "updatedAt": "2026-07-31T16:01:29.424Z",
+  "createdAt": "2026-07-23T22:14:05.545Z",
+  "id": "WSWtwq6K3XiL9kO1",
+  "name": "【06_重新生成_错误处理】AI短视频生产线运行错误处理工作流",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "df2be9e3-6b8f-45f4-9ee6-3e217bf5e7e0",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "resource": "execution",
+        "operation": "get",
+        "executionId": "={{ $json.execution.id }}",
+        "options": {
+          "activeWorkflows": true
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        160,
+        0
+      ],
+      "id": "ec84460e-ef27-4c37-83d7-e5a0a50abc28",
+      "name": "获取执行记录详情",
+      "notesInFlow": true,
+      "credentials": {
+        "n8nApi": {
+          "id": "bJrmBbqLW7mDdBoQ",
+          "name": "n8n account"
+        }
+      },
+      "notes": "Get an execution"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4d8eae51-228d-4f91-bc5d-d18831c3dc1a",
+              "name": "tenant_access_token",
+              "value": "={{ $json.data.resultData.runData[\"获取飞书token\"][0].data.main[0][0].json.tenant_access_token }}",
+              "type": "string"
+            },
+            {
+              "id": "c5d06deb-33dc-471e-8892-bbf2bb8c94f5",
+              "name": "app_token",
+              "value": "={{ $json.data.resultData.runData[\"指定多维表格和记录\"][0].data.main[0][0].json.app_token }}",
+              "type": "string"
+            },
+            {
+              "id": "1817ab91-0b11-40ed-b13e-2d8367d99638",
+              "name": "table_id",
+              "value": "={{ $json.data.resultData.runData[\"指定多维表格和记录\"][0].data.main[0][0].json.table_id }}",
+              "type": "string"
+            },
+            {
+              "id": "8fda768b-8b08-4ecd-a652-285581034ad7",
+              "name": "record_id",
+              "value": "={{ $json.data.resultData.runData[\"指定多维表格和记录\"][0].data.main[0][0].json.record_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        0
+      ],
+      "id": "20a20d4d-d184-4a4f-a20c-9eb02be07e74",
+      "name": "指定多维表格和记录",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $json.app_token }}/tables/{{ $json.table_id }}/records/{{ $json.record_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"当前状态\": \"生成出错\"\n  }\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "id": "e2d62e28-d549-489f-af37-bc0c51a0798d",
+      "name": "更新记录 生成出错",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('指定多维表格和记录').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_1faf20cbac5dddf8e9e7aa75253a411b\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"AI短视频创作进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**视频主题**:{{ $('获取执行记录详情').item.json.data.resultData.runData[\"获取多维表格记录\"][0].data.main[0][0].json.data.items[0].fields[\"主题\"][0].text }}\\\\\\n **创建时间**:{{ new Date($('获取执行记录详情').item.json.data.resultData.runData[\"获取多维表格记录\"][0].data.main[0][0].json.data.items[0].fields[\"创建时间\"] ).toDateTime().format('yyyy-LL-dd HH:mm:ss') }}\\\\\\n **当前状态**:{{ $json.data.record.fields['当前状态'] }}\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**ID号**: {{ $('获取执行记录详情').item.json.data.resultData.runData[\"获取多维表格记录\"][0].data.main[0][0].json.data.items[0].fields.id }}\\\"},{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://r1l3h3s8hbg.feishu.cn/base/TZqcbwWqeaQrCPsvc7fc2m5nnnd?table=tbl15M0lbST63Ya5&view=vewI3sjaI0\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        0
+      ],
+      "id": "49aea607-fb86-4dbe-8ebc-458333b3571a",
+      "name": "向群组发送即时消息",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "获取执行记录详情",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取执行记录详情": {
+      "main": [
+        [
+          {
+            "node": "指定多维表格和记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "指定多维表格和记录": {
+      "main": [
+        [
+          {
+            "node": "更新记录 生成出错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新记录 生成出错": {
+      "main": [
+        [
+          {
+            "node": "向群组发送即时消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "1ddf4e5e-b7b9-46bd-99d2-4e4940cefd5d",
+  "activeVersionId": "dced1bea-b5fd-4038-b343-525648ada742",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-23T22:14:05.549Z",
+      "createdAt": "2026-07-23T22:14:05.549Z",
+      "role": "workflow:owner",
+      "workflowId": "WSWtwq6K3XiL9kO1",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-07-31T11:12:44.000Z",
+    "createdAt": "2026-07-31T10:40:23.264Z",
+    "versionId": "dced1bea-b5fd-4038-b343-525648ada742",
+    "workflowId": "WSWtwq6K3XiL9kO1",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.errorTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "df2be9e3-6b8f-45f4-9ee6-3e217bf5e7e0",
+        "name": "Error Trigger"
+      },
+      {
+        "parameters": {
+          "resource": "execution",
+          "operation": "get",
+          "executionId": "={{ $json.execution.id }}",
+          "options": {
+            "activeWorkflows": true
+          },
+          "requestOptions": {}
+        },
+        "type": "n8n-nodes-base.n8n",
+        "typeVersion": 1,
+        "position": [
+          160,
+          0
+        ],
+        "id": "ec84460e-ef27-4c37-83d7-e5a0a50abc28",
+        "name": "获取执行记录详情",
+        "notesInFlow": true,
+        "credentials": {
+          "n8nApi": {
+            "id": "bJrmBbqLW7mDdBoQ",
+            "name": "n8n account"
+          }
+        },
+        "notes": "Get an execution"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "4d8eae51-228d-4f91-bc5d-d18831c3dc1a",
+                "name": "tenant_access_token",
+                "value": "={{ $json.data.resultData.runData[\"获取飞书token\"][0].data.main[0][0].json.tenant_access_token }}",
+                "type": "string"
+              },
+              {
+                "id": "c5d06deb-33dc-471e-8892-bbf2bb8c94f5",
+                "name": "app_token",
+                "value": "={{ $json.data.resultData.runData[\"指定多维表格和记录\"][0].data.main[0][0].json.app_token }}",
+                "type": "string"
+              },
+              {
+                "id": "1817ab91-0b11-40ed-b13e-2d8367d99638",
+                "name": "table_id",
+                "value": "={{ $json.data.resultData.runData[\"指定多维表格和记录\"][0].data.main[0][0].json.table_id }}",
+                "type": "string"
+              },
+              {
+                "id": "8fda768b-8b08-4ecd-a652-285581034ad7",
+                "name": "record_id",
+                "value": "={{ $json.data.resultData.runData[\"指定多维表格和记录\"][0].data.main[0][0].json.record_id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          320,
+          0
+        ],
+        "id": "20a20d4d-d184-4a4f-a20c-9eb02be07e74",
+        "name": "指定多维表格和记录",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $json.app_token }}/tables/{{ $json.table_id }}/records/{{ $json.record_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fields\": {\n    \"当前状态\": \"生成出错\"\n  }\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          480,
+          0
+        ],
+        "id": "e2d62e28-d549-489f-af37-bc0c51a0798d",
+        "name": "更新记录 生成出错",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "receive_id_type",
+                "value": "chat_id"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('指定多维表格和记录').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"AI短视频创作进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**视频主题**:{{ $('获取执行记录详情').item.json.data.resultData.runData[\"获取多维表格记录\"][0].data.main[0][0].json.data.items[0].fields[\"主题\"][0].text }}\\\\\\n **创建时间**:{{ new Date($('获取执行记录详情').item.json.data.resultData.runData[\"获取多维表格记录\"][0].data.main[0][0].json.data.items[0].fields[\"创建时间\"] ).toDateTime().format('yyyy-LL-dd HH:mm:ss') }}\\\\\\n **当前状态**:{{ $json.data.record.fields['当前状态'] }}\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**ID号**: {{ $('获取执行记录详情').item.json.data.resultData.runData[\"获取多维表格记录\"][0].data.main[0][0].json.data.items[0].fields.id }}\\\"},{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://mcn33lfbwjgi.feishu.cn/base/GGgVbo7jEarC8PsFNXFcpPQPnMe?table=tblO9cucSw4r39Ek&view=vewjXQZonO\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          640,
+          0
+        ],
+        "id": "49aea607-fb86-4dbe-8ebc-458333b3571a",
+        "name": "向群组发送即时消息",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      }
+    ],
+    "connections": {
+      "Error Trigger": {
+        "main": [
+          [
+            {
+              "node": "获取执行记录详情",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取执行记录详情": {
+        "main": [
+          [
+            {
+              "node": "指定多维表格和记录",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "指定多维表格和记录": {
+        "main": [
+          [
+            {
+              "node": "更新记录 生成出错",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "更新记录 生成出错": {
+        "main": [
+          [
+            {
+              "node": "向群组发送即时消息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Vincent Li",
+    "name": "Version dced1bea",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}

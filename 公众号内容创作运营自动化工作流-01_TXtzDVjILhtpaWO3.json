@@ -1,0 +1,766 @@
+{
+  "updatedAt": "2026-07-22T12:59:23.000Z",
+  "createdAt": "2026-07-19T17:55:02.914Z",
+  "id": "TXtzDVjILhtpaWO3",
+  "name": "公众号内容创作运营自动化工作流-01",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "主题配置",
+        "formDescription": "用于配置公众号的创作内容，包含主题",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "主题",
+              "placeholder": "巴菲特的投资哲学"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -960,
+        288
+      ],
+      "id": "26d4077d-4425-4593-9def-fca77b1aa828",
+      "name": "填写表单触发",
+      "webhookId": "711230ee-bd1c-4326-bab5-df73db6ca96c"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.0-flash"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -736,
+        496
+      ],
+      "id": "1b0b2b06-27a9-4932-94d0-d53f3ab7251c",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"title\": {\n\t\t\t\"type\": \"string\"\n\t\t}\n\t}\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -592,
+        496
+      ],
+      "id": "4be53a53-546b-440c-b90b-c5c700b0f321",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"content\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n     \"prompt\": {\n\t\t\t\"type\": \"string\"\n\t\t}\n\t}\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -240,
+        496
+      ],
+      "id": "f4971782-461f-49bf-a9c9-86d3b3d1a8a0",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -416,
+        496
+      ],
+      "id": "1d71a811-4061-46ed-9d26-9eb01345b15a",
+      "name": "OpenAI Chat Model1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一位资深的社交媒体内容专家，尤其擅长撰写引人注目的微信公众号标题。请根据我提供的核心主题“{{ $json['主题'] }}”，为我生成1个爆款文章标题。\n    要求：    \n    1. 标题要有吸引力，能够激发读者的好奇心。    \n    2. 风格可以多样，例如疑问式、痛点式、利益式等。    \n    3. 以无序列表（Markdown格式）返回。",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -720,
+        288
+      ],
+      "id": "eb080450-4c8c-40e7-b27e-0bba1e3d6063",
+      "name": "写公众号文章标题"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一位专业的作家，请根据我提供的文章标题，撰写一篇大约800字的微信公众号文章，并且为这篇文章生成封面图提示词。    \n    要求：  \n    1. 结构清晰，包含引言、主体（可以分点论述）、和结论。    \n    2. 语言流畅，通俗易懂，适合大众阅读。    \n    3. 正文使用 HTML 格式进行排版。  \n\n文章标题是：{{ $json.output.title }}\n\nyour output must be json。there is the sample:{\"content\":\"这里是正文\",\" prompt\":\"这里是生图提示词\"}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -400,
+        288
+      ],
+      "id": "7cb79aa6-60fc-4717-a1f2-1c8b05d13b74",
+      "name": "写公众号文章正文"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ark.cn-beijing.volces.com/api/v3/images/generations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={    \n  \"model\": \"doubao-seedream-3-0-t2i-250415\",   \n  \"prompt\": \"{{ $('写公众号文章正文').item.json.output.prompt }}\",     \n  \"response_format\": \"b64_json\",    \n  \"seed\": 12,    \n  \"guidance_scale\": 2.5,    \n  \"watermark\": false\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        272,
+        128
+      ],
+      "id": "6667d3cb-84a2-450c-8d07-1e1402788852",
+      "name": "文生图",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "Kab0XKKmAdxvK1HE",
+          "name": "火山方舟"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ark.cn-beijing.volces.com/api/v3/images/generations",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer e7a34e62-b23d-49b4-a5d9-c1e83804eca6"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={    \n  \"model\": \"doubao-seedream-3-0-t2i-250415\",   \n  \"prompt\": \"{{ $json.output.prompt }}\",     \n  \"response_format\": \"b64_json\",    \n  \"seed\": 12,    \n  \"guidance_scale\": 2.5,    \n  \"watermark\": false\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        48,
+        528
+      ],
+      "id": "e8a6a463-6dd5-45ad-ba0e-c0886458e199",
+      "name": "文生图1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        528
+      ],
+      "id": "f3f2452e-e5f5-4c56-98ed-0474811f8639",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        480,
+        128
+      ],
+      "id": "d2bb4d91-896b-4189-bec7-8537e52c8401",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "078cbf50-a67a-42d2-93c0-26661c7d32f6",
+              "name": "media_id",
+              "value": "={{ JSON.parse($json.data).media_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        128
+      ],
+      "id": "e866a901-ad2e-4d47-adb3-f061cd286abd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "media:uploadOther"
+      },
+      "type": "n8n-nodes-wechat-offiaccount.wechatOfficialAccountNode",
+      "typeVersion": 1,
+      "position": [
+        752,
+        528
+      ],
+      "id": "11220d72-cfde-4926-af90-4e8192b97473",
+      "name": "社区节点上传图片素材"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.weixin.qq.com/cgi-bin/material/add_material?access_token={{ $('获取公众号后台访问token').item.json.access_token }}&type=image",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "media",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        128
+      ],
+      "id": "fc36035a-914a-4f61-9490-ae0774c0323d",
+      "name": "调用接口上传图片素材"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.weixin.qq.com/cgi-bin/stable_token",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"grant_type\": \"client_credential\",\n    \"appid\": \"填写自己的\",\n    \"secret\": \"填写自己的\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        64,
+        128
+      ],
+      "id": "bd53f3a7-762a-4fbd-a1da-e4e25f96b0d5",
+      "name": "获取公众号后台访问token"
+    },
+    {
+      "parameters": {
+        "content": "## AI Agent节点实现公众号文章的生成\n**生成文章标题**\n**生成文章正文**\n**生成文生图的prompt**",
+        "height": 496,
+        "width": 704
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -800,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "9845677d-ba59-41c5-bacb-2b35f5573a42",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## 使用微信公众号服务端 API 接口方式调用\n**使用HTTP节点**",
+        "height": 352,
+        "width": 1600
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "837ac9d5-7fef-44ea-911f-69e6a8f0353f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 使用n8n社区提供的微信公众号节点方式调用\n**使用社区节点**",
+        "height": 384,
+        "width": 1600
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        400
+      ],
+      "typeVersion": 1,
+      "id": "6f00b9a6-e47e-4467-84ed-130fb631ef87",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "draft:add",
+        "articles": "=[\n    {\n        \"article_type\":\"newspic\",\n        \"title\":{{ $('写公众号文章标题').item.json.output.title.toJsonString() }},\n        \"author\":\"南哥AGI研习社\",\n        \"digest\":\"图文消息的摘要，仅有单图文消息才有摘要\",\n        \"content\":{{ $('写公众号文章正文').item.json.output.content.toJsonString() }},\n        \"content_source_url\":\"https://nangeai.top\",\n        \"image_info\":{\n            \"image_list\":[\n                {\n                    \"image_media_id\":{{ $json.media_id.toJsonString() }}\n                }\n            ]\n        },\n        \"need_open_comment\":0,\n        \"only_fans_can_comment\":0\n    }\n]"
+      },
+      "type": "n8n-nodes-wechat-offiaccount.wechatOfficialAccountNode",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        624
+      ],
+      "id": "2dd5f9b1-c3e9-4214-b27e-0bc7fedef0c6",
+      "name": "社区节点上传图片草稿"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "draft:add",
+        "articles": "=[\n    {\n        \"article_type\":\"news\",\n        \"title\":{{ $('写公众号文章标题').item.json.output.title.toJsonString() }},\n        \"author\":\"南哥AGI研习社\",\n        \"digest\":\"图文消息的摘要，仅有单图文消息才有摘要\",\n        \"content\":{{ $('写公众号文章正文').item.json.output.content.toJsonString() }},\n        \"content_source_url\":\"https://nangeai.top\",\n        \"thumb_media_id\":{{ $json.media_id.toJsonString() }},\n        \"need_open_comment\":0,\n        \"only_fans_can_comment\":0\n    }\n] "
+      },
+      "type": "n8n-nodes-wechat-offiaccount.wechatOfficialAccountNode",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        432
+      ],
+      "id": "a40cab07-715b-4f02-9750-263a92ebecc9",
+      "name": "社区节点上传图文草稿"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.weixin.qq.com/cgi-bin/draft/add?access_token={{ $('获取公众号后台访问token').item.json.access_token }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"articles\": [\n        {\n            \"article_type\":\"news\",\n            \"title\":{{ $('写公众号文章标题').item.json.output.title.toJsonString() }},\n            \"author\":\"南哥AGI研习社\",\n            \"digest\":\"图文消息的摘要，仅有单图文消息才有摘要\",\n            \"content\":{{ $('写公众号文章正文').item.json.output.content.toJsonString() }},\n            \"content_source_url\":\"https://nangeai.top\",\n            \"thumb_media_id\":{{ $json.media_id.toJsonString() }},\n            \"need_open_comment\":0,\n            \"only_fans_can_comment\":0\n        }\n    ]\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1104,
+        32
+      ],
+      "id": "54fcec56-b4d4-49d5-a93a-5c0362a68449",
+      "name": "调用接口上传图文草稿"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.weixin.qq.com/cgi-bin/draft/add?access_token={{ $('获取公众号后台访问token').item.json.access_token }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"articles\": [\n        {\n            \"article_type\":\"newspic\",\n            \"title\":{{ $('写公众号文章标题').item.json.output.title.toJsonString() }},\n            \"author\":\"南哥AGI研习社\",\n            \"digest\":\"图文消息的摘要，仅有单图文消息才有摘要\",\n            \"content\":{{ $('写公众号文章正文').item.json.output.content.toJsonString() }},\n            \"content_source_url\":\"https://nangeai.top\",\n            \"image_info\":{\n                \"image_list\":[\n                    {\n                        \"image_media_id\":{{ $json.media_id.toJsonString() }}\n                    }\n                ]\n            },\n            \"need_open_comment\":0,\n            \"only_fans_can_comment\":0\n        }\n    ]\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1104,
+        208
+      ],
+      "id": "507ccb45-960e-479e-9e61-caf3e3fdddf7",
+      "name": "调用接口上传图片草稿"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "draft:get",
+        "media_id": "={{ $json.media_id }}"
+      },
+      "type": "n8n-nodes-wechat-offiaccount.wechatOfficialAccountNode",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        432
+      ],
+      "id": "8e9869a9-de1d-462b-bd18-0b510bd34de5",
+      "name": "社区节点获取图文草稿详情"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "operation": "draft:get",
+        "media_id": "={{ $json.media_id }}"
+      },
+      "type": "n8n-nodes-wechat-offiaccount.wechatOfficialAccountNode",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        624
+      ],
+      "id": "f7395bf1-73a2-48b1-960b-09ddf954accf",
+      "name": "社区节点获取图片草稿详情"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.weixin.qq.com/cgi-bin/draft/get?access_token={{ $('获取公众号后台访问token').item.json.access_token }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"media_id\": {{ JSON.parse($json.data).media_id.toJsonString() }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1344,
+        32
+      ],
+      "id": "6cdc907b-8278-4937-8958-61927ae1b58e",
+      "name": "调用接口获取图文草稿详情"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.weixin.qq.com/cgi-bin/draft/get?access_token={{ $('获取公众号后台访问token').item.json.access_token }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"media_id\": {{ JSON.parse($json.data).media_id.toJsonString() }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1344,
+        208
+      ],
+      "id": "f79b434d-ab47-41bd-bd1c-b21ae2221109",
+      "name": "调用接口获取图片草稿详情"
+    }
+  ],
+  "connections": {
+    "填写表单触发": {
+      "main": [
+        [
+          {
+            "node": "写公众号文章标题",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "写公众号文章标题",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "写公众号文章标题",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "写公众号文章正文",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "写公众号文章正文",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "写公众号文章标题": {
+      "main": [
+        [
+          {
+            "node": "写公众号文章正文",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "写公众号文章正文": {
+      "main": [
+        [
+          {
+            "node": "文生图1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "获取公众号后台访问token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "文生图": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "文生图1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "社区节点上传图片素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "调用接口上传图片素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "调用接口上传图片草稿",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "调用接口上传图文草稿",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "社区节点上传图片素材": {
+      "main": [
+        [
+          {
+            "node": "社区节点上传图文草稿",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "社区节点上传图片草稿",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用接口上传图片素材": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取公众号后台访问token": {
+      "main": [
+        [
+          {
+            "node": "文生图",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "社区节点上传图文草稿": {
+      "main": [
+        [
+          {
+            "node": "社区节点获取图文草稿详情",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用接口上传图片草稿": {
+      "main": [
+        [
+          {
+            "node": "调用接口获取图片草稿详情",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "社区节点上传图片草稿": {
+      "main": [
+        [
+          {
+            "node": "社区节点获取图片草稿详情",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调用接口上传图文草稿": {
+      "main": [
+        [
+          {
+            "node": "调用接口获取图文草稿详情",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {
+    "写公众号文章标题": [
+      {
+        "json": {
+          "output": {
+            "title": "- AGI爆发前夜：是人类的终极进化，还是最后的黄昏？"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "填写表单触发": [
+      {
+        "json": {
+          "主题": "AGI最新发展趋势",
+          "submittedAt": "2026-07-20T02:14:19.204-04:00",
+          "formMode": "test"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "973e2577-f508-4399-8fe0-93a6fdf69962",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-19T17:55:02.920Z",
+      "createdAt": "2026-07-19T17:55:02.920Z",
+      "role": "workflow:owner",
+      "workflowId": "TXtzDVjILhtpaWO3",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-15T07:56:34.425Z",
+      "createdAt": "2026-07-15T07:56:34.425Z",
+      "id": "GtDhh1imDFFEmCOs",
+      "name": "AI"
+    }
+  ]
+}

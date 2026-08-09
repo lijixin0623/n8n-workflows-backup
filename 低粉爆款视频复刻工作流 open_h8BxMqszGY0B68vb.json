@@ -1,0 +1,1023 @@
+{
+  "updatedAt": "2026-08-09T12:08:32.716Z",
+  "createdAt": "2026-08-09T12:08:32.716Z",
+  "id": "h8BxMqszGY0B68vb",
+  "name": "低粉爆款视频复刻工作流 open",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        96
+      ],
+      "id": "7729a00d-1bde-4bfd-8c5f-4d536ba62b80",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "getAll",
+        "databaseId": {
+          "__rl": true,
+          "value": "24c629a6-152d-8020-99c1-da383799f143",
+          "mode": "list",
+          "cachedResultName": "抖音低粉爆款视频",
+          "cachedResultUrl": "https://www.notion.so/24c629a6152d802099c1da383799f143"
+        },
+        "simple": false,
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "key": "转录|rich_text",
+              "condition": "is_empty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -1376,
+        96
+      ],
+      "id": "144b62d7-f2c3-4f8b-a232-fea49418602a",
+      "name": "Get many database pages"
+    },
+    {
+      "parameters": {
+        "url": " https://www.mxnzp.com/api/douyin/video",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ $('Loop Over Items').item.json.base64_url }}"
+            },
+            {
+              "name": "app_id",
+              "value": "填写平台的APP_ID"
+            },
+            {
+              "name": "app_secret",
+              "value": "填写平台的APP_SECRET"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        96
+      ],
+      "id": "ee55443c-d0bc-4284-9a3a-b1020b956eb5",
+      "name": "获取无水印视频",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "notes": "下载抖音无水印视频"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        208
+      ],
+      "id": "7f9b8532-fca7-428a-a43f-1616337d1e52",
+      "name": "下载视频",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./n8ndata/{{ $('Loop Over Items').item.json.properties.ID.rich_text[0].text.content }}/原视频.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        240,
+        208
+      ],
+      "id": "79c8d97a-0ef1-409a-b677-1a0c3bb5ba79",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./n8ndata/{{ $('Loop Over Items').item.json.properties.ID.rich_text[0].text.content }}/原封面.jpg",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "677423cd-b6a5-4149-bc4b-a38bed3260ec",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.cover }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "179a1a15-d88c-427a-9b7f-c43c4bda4d7d",
+      "name": "下载封面",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "fileSelector": "=./n8ndata/{{ $('Loop Over Items').item.json.properties.ID.rich_text[0].text.content }}/原音频.mp3",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1600,
+        464
+      ],
+      "id": "f6c6956a-e002-4791-84fa-363ae547d168",
+      "name": "Read/Write Files from Disk2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [
+        -1136,
+        688
+      ],
+      "id": "094cad39-66cc-4d1b-b65d-b6206d7ca3ee",
+      "name": "DeepSeek Chat Model"
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $('Loop Over Items').item.json.id }}",
+          "mode": "id"
+        },
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "转录|rich_text",
+              "textContent": "已转录"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -608,
+        464
+      ],
+      "id": "aaa7dace-4258-42fa-a169-67f730f6f03a",
+      "name": "Update a database page"
+    },
+    {
+      "parameters": {
+        "resource": "block",
+        "blockId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "heading_3",
+              "textContent": "原文案"
+            },
+            {
+              "textContent": "={{ $('音频转录').item.json.text }}"
+            },
+            {
+              "type": "heading_3",
+              "textContent": "翻拍文案"
+            },
+            {
+              "textContent": "={{ $('翻拍文案生成').item.json.output.copywriting }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        464
+      ],
+      "id": "80a34b08-4bdb-48d9-ba2e-7701c5668590",
+      "name": "Append a block"
+    },
+    {
+      "parameters": {
+        "maxItems": 2
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        96
+      ],
+      "id": "70e95177-be58-4eb1-9d7c-f4c4e2943b16",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./n8ndata/{{ $('Loop Over Items').item.json.properties.ID.rich_text[0].text.content }}/翻拍文案.txt",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        240,
+        464
+      ],
+      "id": "6d3688cd-66e9-47c2-99a0-6ecd28d60681",
+      "name": "Read/Write Files from Disk3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取所有输入数据\nconst items = $input.all();\n\n// 处理每个item，将URL转换为base64\nconst processedItems = items.map((item, index) => {\n  // 获取原始URL\n  const originalUrl = item.json.properties[\"网址\"].url;\n  \n  // 将URL转换为base64编码\n  const base64Url = Buffer.from(originalUrl, 'utf8').toString('base64');\n  \n  return {\n    json: {\n      ...item.json, // 保留原有数据\n      base64_url: base64Url, // 添加base64编码的URL\n      original_url: originalUrl // 可选：保留原始URL作为参考\n    }\n  };\n});\n\n// 返回处理后的数据\nreturn processedItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1152,
+        96
+      ],
+      "id": "85d0a67e-5d69-4fb9-a719-e92f219f5d19",
+      "name": "转Base64"
+    },
+    {
+      "parameters": {
+        "command": "=mkdir -p \"./n8ndata/{{ $json.properties.ID.rich_text[0].text.content }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        96
+      ],
+      "id": "93bd88ff-6583-4b10-a5b2-5a9ff44570b2",
+      "name": "创建本地文件夹"
+    },
+    {
+      "parameters": {
+        "command": "=[ ! -f \"./n8ndata/{{ $('Loop Over Items').item.json.properties.ID.rich_text[0].text.content }}/原音频.mp3\" ] && ffmpeg -i \"./n8ndata/{{ $('Limit').item.json.properties.ID.rich_text[0].text.content }}/原视频.mp4\" -q:a 0 -map a \"./n8ndata/{{ $('Loop Over Items').item.json.properties.ID.rich_text[0].text.content }}/原音频.mp3\" || echo \"原音频.mp3 已存在，跳过\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        464
+      ],
+      "id": "4b97d63e-7c0c-4eb8-a5e5-d21e1d9d9e8d",
+      "name": "视频转音频"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1360,
+        464
+      ],
+      "id": "3f0e0d08-4036-4c14-acf6-b78cb07db36b",
+      "name": "音频转录",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=原文案：{{ $json.text }}",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=你是一名资深短视频爆款文案创作者，请根据用户提供的原文案进行改写和润色，要求如下：\n\n1. 保留原文案自带的爆款逻辑和结构（如开头钩子、设问、案例、痛点共鸣、解决方案、对比、场景代入、行动号召等），保持内容节奏和传播力，不要固定死板的结构，但要维持“爆点逻辑”。\n2. 删除所有身份信息或角色设定（例如“我是老王”），不能出现任何可能暴露原作者的描述。\n3. 在保持核心信息不变的前提下，使用更有冲击力、更口语化、更简洁的表达，适合短视频口播和字幕。\n4. 句子尽量简短有力，避免废话，增强代入感和感染力。\n5. 文案内使用简单标点符号如逗号，句号做分割；但不使用特殊符号，如表情符号、大括号、小括号、换行符等。\n6. 同时生成一组和文案内容有关系的英文keywords，以便我用于搜索素材。"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1056,
+        464
+      ],
+      "id": "60f26f96-1a34-45da-b35c-9db3eebc6f09",
+      "name": "翻拍文案生成"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openspeech.bytedance.com/api/v1/tts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer;火山引擎应用密钥"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"app\": {\n        \"appid\": \"火山引擎应用appid\",\n        \"token\": \"12345\",\n        \"cluster\": \"volcano_tts\"\n    },\n    \"user\": {\n        \"uid\": \"uid123\"\n    },\n    \"audio\": {\n        \"voice_type\": \"{{ $('音色选择').item.json[\"亮嗓萌仔\"] }}\",\n        \"encoding\": \"mp3\",\n        \"speed_ratio\": 1.0\n    },\n    \"request\": {\n        \"reqid\": \"{{ $json.UUID }}\",\n        \"text\": \"{{ $('翻拍文案生成').item.json.output.copywriting }}\",\n        \"operation\": \"query\"\n    }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1600,
+        880
+      ],
+      "id": "0536aa3e-d14e-4341-ac70-67a8a7618589",
+      "name": "HTTP Request1",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "UUID"
+      },
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        880
+      ],
+      "id": "1c2a1374-1fdb-431b-a57a-bc85e9a7be7e",
+      "name": "Crypto1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取输入的 base64 字符串\nlet base64AudioData = $input.first().json.data;\n\n// 移除可能的 base64 前缀\nbase64AudioData = base64AudioData.replace(/^data:audio\\/[^;]+;base64,/, '');\nbase64AudioData = base64AudioData.replace(/[\\r\\n\\s]/g, '');\n\n// 转换为 Buffer\nconst audioBuffer = Buffer.from(base64AudioData, 'base64');\n\n// 返回 n8n 标准 item\nreturn [\n  {\n    json: {\n      message: 'Audio decoded successfully',\n      size: audioBuffer.length\n    },\n    binary: {\n      audio: {\n        // 注意这里要转回 base64\n        data: audioBuffer.toString('base64'),  \n        mimeType: 'audio/mpeg',  // 更通用的 MIME（推荐用 audio/mpeg 而不是 audio/mp3）\n        fileName: 'decoded_audio.mp3'\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1376,
+        880
+      ],
+      "id": "ab11ec96-67ee-4367-bca8-9bf5be7549c7",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./n8ndata/{{ $('Loop Over Items').item.json.properties.ID.rich_text[0].text.content }}/翻拍音频.mp3",
+        "dataPropertyName": "audio",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1152,
+        880
+      ],
+      "id": "4f347229-c1bc-4f7d-86ca-59c5e70c5057",
+      "name": "Read/Write Files from Disk4"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"copywriting\": \"翻拍文案\",\n\t\"keywords\": [\"关键词\", \"关键词\", \"关键词\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -864,
+        688
+      ],
+      "id": "0a0c3531-ff5a-4d16-a28b-1755aefcaafb",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "url": "https://api.pexels.com/videos/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $('翻拍文案生成').item.json.output.keywords[Math.floor(Math.random() * $('翻拍文案生成').item.json.output.keywords.length)] }}"
+            },
+            {
+              "name": "per_page",
+              "value": "5"
+            },
+            {
+              "name": "orientation",
+              "value": "portrait"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "pexels平台密钥"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        880
+      ],
+      "id": "88fe34b2-03f2-4f34-90b4-0fd46b55c00b",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "notesInFlow": true,
+      "notes": "根据关键词获取素材"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./n8ndata/{{ $('Loop Over Items').item.json.properties.ID.rich_text[0].text.content }}/翻拍素材{{$itemIndex}}.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        240,
+        880
+      ],
+      "id": "d3ce34b0-eec5-4740-bbe7-bc05fd53a2a3",
+      "name": "Read/Write Files from Disk5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "64c79c5f-b02d-4bba-943b-5b542951178c",
+              "name": "懒音绵宝",
+              "value": "zh_male_lanxiaoyang_mars_bigtts",
+              "type": "string"
+            },
+            {
+              "id": "496d1f75-fa81-4e08-b311-ff1f99fdfa8d",
+              "name": "亮嗓萌仔",
+              "value": "zh_male_dongmanhaimian_mars_bigtts",
+              "type": "string"
+            },
+            {
+              "id": "52914278-d4a1-478e-a55f-57c937543c01",
+              "name": "熊二",
+              "value": "zh_male_xionger_mars_bigtts",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1600,
+        96
+      ],
+      "id": "d9186cb1-3abd-4b5e-8db4-f0ed23438084",
+      "name": "音色选择",
+      "notesInFlow": true,
+      "notes": "可以根据分类和文案，自定义不同的音色，视频效果多元化"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -688,
+        96
+      ],
+      "id": "1b7ac871-5474-4f76-8551-6a9830d7f19e",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取输入数据\nconst transcribeText = $('音频转录').item.json.text || '';\nconst aiOutput = $('翻拍文案生成').first().json.output.copywriting || '';\n\n// 组合文本内容\nconst combinedContent = `原文案：\n${transcribeText}\n\n翻拍文案：\n${aiOutput}`;\n\n// 生成文件名（带时间戳）\nconst timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');\nconst fileName = `combined_text_${timestamp}.txt`;\n\n// 转换为base64格式\nconst base64Content = Buffer.from(combinedContent, 'utf8').toString('base64');\n\nreturn [\n  {\n    json: {\n      fileName: fileName,\n      fileSize: combinedContent.length\n    },\n    binary: {\n      data: {\n        data: base64Content,\n        mimeType: 'text/plain',\n        fileName: fileName,\n        fileExtension: 'txt'\n      }\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        464
+      ],
+      "id": "b79895db-75ff-410c-99f7-179138d37df3",
+      "name": "生成文案文件"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ae930b84-e03c-4c1f-bbf2-cd694bc06f27",
+              "leftValue": "={{ $json.total_results }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        880
+      ],
+      "id": "d3cc0668-dc5d-40da-8416-b79788e4fcfa",
+      "name": "判断素材"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.link }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -32,
+        880
+      ],
+      "id": "32dd7df7-22cf-4178-961c-58e409dbe116",
+      "name": "下载素材",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return $json.videos\n  .filter(v => v.video_files.length >= 4)   // 先过滤掉不足 4 个的\n  .map(v => {\n    return {\n      json: {\n        link: v.video_files[3].link\n      }\n    };\n  });\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        880
+      ],
+      "id": "3c3501d0-c72b-4642-9534-645771f735c3",
+      "name": "格式化素材URL"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-chat-latest",
+          "mode": "list",
+          "cachedResultName": "gpt-5-chat-latest"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1008,
+        688
+      ],
+      "id": "ee9e4e15-6fa3-4507-b3b7-0ef839941e9e",
+      "name": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "content": "## 工作流配套工具\n1. 火山引擎语音合成API：https://www.volcengine.com/product/tts\n2. 音色列表：https://www.volcengine.com/docs/6561/1257544\n3. 抖音视频解析下载API：https://www.mxnzp.com/doc/detail?id=31\n4. 素材平台：https://www.pexels.com/\n5. notion模版：[https://linbintalk.notion.site/250629a6152d8079929cfa28894a54b0?v=250629a6152d81a39237000c657e4d55](https://www.notion.so/250629a6152d8079929cfa28894a54b0?pvs=21)\n\n## n8n工作流安装ffmpeg\n1. 进入n8n容器：docker exec -it --user root <容器名或ID> sh  如：docker exec -it --user root n8n sh\n2. 安装：apk add --no-cache ffmpeg\n3. 退出：exit \n- 检验ffmpeg是否安装成功，可以在n8n工作流里面添加Execute Command节点，然后执行：ffmpeg -verison，查看版本信息\n- 如果重新（升级）安装了n8n版本，会导致ffmpeg库丢失，需要执行以上步骤重新安装。",
+        "height": 544,
+        "width": 576
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        464,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "09fbf704-7915-40ed-b9e6-0100c160fcba",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "音色选择",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many database pages": {
+      "main": [
+        [
+          {
+            "node": "转Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取无水印视频": {
+      "main": [
+        [
+          {
+            "node": "下载视频",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "下载封面",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载视频": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载封面": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "视频转音频",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk2": {
+      "main": [
+        [
+          {
+            "node": "音频转录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "翻拍文案生成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a database page": {
+      "main": [
+        [
+          {
+            "node": "Append a block",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append a block": {
+      "main": [
+        [
+          {
+            "node": "生成文案文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "转Base64": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "创建本地文件夹": {
+      "main": [
+        [
+          {
+            "node": "获取无水印视频",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "视频转音频": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "音频转录": {
+      "main": [
+        [
+          {
+            "node": "翻拍文案生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "翻拍文案生成": {
+      "main": [
+        [
+          {
+            "node": "Update a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk3": {
+      "main": [
+        [
+          {
+            "node": "Crypto1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "翻拍文案生成",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "判断素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "音色选择": {
+      "main": [
+        [
+          {
+            "node": "Get many database pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "创建本地文件夹",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk5": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成文案文件": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断素材": {
+      "main": [
+        [
+          {
+            "node": "格式化素材URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载素材": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "格式化素材URL": {
+      "main": [
+        [
+          {
+            "node": "下载素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "翻拍文案生成",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "37437fd2-775e-4fe9-9cac-b0b71b18241c",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-08-09T12:08:32.720Z",
+      "createdAt": "2026-08-09T12:08:32.720Z",
+      "role": "workflow:owner",
+      "workflowId": "h8BxMqszGY0B68vb",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

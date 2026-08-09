@@ -1,0 +1,192 @@
+{
+  "updatedAt": "2026-08-05T12:14:36.000Z",
+  "createdAt": "2026-07-24T10:14:48.697Z",
+  "id": "oxG0rjipTydLQg3n",
+  "name": "AI Agent实现MCP Server调用用例",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        -176
+      ],
+      "id": "b99dd6e5-a742-4f18-a732-a17cb6c329cb",
+      "name": "When chat message received",
+      "webhookId": "e5be7eb9-8984-43ca-8e7e-6a5368173d07"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.0-flash"
+        },
+        "options": {}
+      },
+      "id": "47db9e09-086d-4b3f-9b4b-2525cec05d10",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        496,
+        48
+      ],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a helpful assistant"
+        }
+      },
+      "id": "166f2929-b0b7-467b-a724-9ac70da63480",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        624,
+        -176
+      ],
+      "typeVersion": 1.8
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        624,
+        48
+      ],
+      "id": "1312b89a-dbfb-493e-9fa5-856efd614d65",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://mcp.amap.com/sse?key=848ae2b19dd64a65e5b0757",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        48
+      ],
+      "id": "54ebbf33-ef4d-4515-a40d-cb16b1e27ce8",
+      "name": "MCP Client"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"city\": \"北京\",\n\t\"detail\": \"天气详情\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        880,
+        48
+      ],
+      "id": "ba00a857-c16a-48cd-8717-f1e36b5194db",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP Client": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "e5b15d63-4589-4f0a-8958-5a035d78b33a",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-24T10:14:48.703Z",
+      "createdAt": "2026-07-24T10:14:48.703Z",
+      "role": "workflow:owner",
+      "workflowId": "oxG0rjipTydLQg3n",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-24T10:14:46.658Z",
+      "createdAt": "2026-07-24T10:14:46.658Z",
+      "id": "JnBd2Fr2VOVmhCM6",
+      "name": "Basic"
+    }
+  ]
+}

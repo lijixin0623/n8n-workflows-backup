@@ -1,0 +1,803 @@
+{
+  "updatedAt": "2026-08-05T12:14:02.780Z",
+  "createdAt": "2026-07-14T12:52:34.676Z",
+  "id": "qWbwXxNbu60Fiq6E",
+  "name": "Crawl4ai网站数据采集爬虫",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -256,
+        208
+      ],
+      "id": "ea618ea5-1ecc-4998-bef4-83068f8afcbb",
+      "name": "When chat message received",
+      "webhookId": "cb80dba4-2ec2-4e6a-b426-1aa11f55487e"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('When chat message received').item.json.chatInput }}",
+                    "rightValue": "xml",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "7a95a42d-b22a-483a-8b6e-af02d8d6b7a8"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "0"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9271be90-61b8-4988-b62d-453269d638aa",
+                    "leftValue": "String",
+                    "rightValue": "xml",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notContains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -48,
+        208
+      ],
+      "id": "21da086e-3a25-41cd-acd0-f1a4cd8a8963",
+      "name": "Switch"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2144,
+        224
+      ],
+      "id": "e3cef079-59e2-4d8f-bf1d-0e618f74616a",
+      "name": "Wait2",
+      "webhookId": "7b52980b-10a0-4659-beec-2eb3c1fdda96"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=请为以下单篇抓取文章进行深度重构，标题可以直接使用原文章的核心主题，或者基于以下内容提炼一个吸睛的自媒体标题。\n\n角色设定:你是一名信息结构化和知识库开发的专家，请始终保持专业态度。你的任务是将markdown 数据整理为适合LLM 驱动的 RAG知识库的结构化、易读格式。\n\n任务要求:\n1.内容解析\n2.结构化整理\n-识别markdown数据中的关键内容和主要结构。\n-以清晰的标题和分层逻辑组织信息，使其易于检索和理解，\n3.创建FAQ(如适用)\n-保留所有可能对回答用户查询有价值的细节。\n4.提升可读性\n-根据内容提炼出常见问题，并提供清晰、直接的解答。\n-采用项目符号、编号列表、段落分隔等格式优化排版，使内容更直\n观\n5.优化输出\n-严格去除AI生成的附加说明，仅保留清理后的核心数据。\n响应规则:\n1.完整性:确保所有相关信息完整保留，避免丢失对搜索和理解有价值的内容。\n2.精准性:FAQ需紧密围绕内容，确保清晰、简洁且符合用户需求。\n3.结构优化:确保最终输出便于分块存储、向量化处理，并支持高效检索。\n以下是待处理的网页原始数据：\n{{ $('HTTP Request2').item.json.markdown }}\n\n\n\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2576,
+        224
+      ],
+      "id": "6cc7d330-2fed-4476-b7fd-e6f9ebdb1977",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2480,
+        400
+      ],
+      "id": "e8c1219f-7d3e-4367-b9e3-918fa306133a",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "LgM5dRO1oUqcxm6i",
+          "name": "Google Gemini(PaLM) Api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        160,
+        -160
+      ],
+      "id": "0afe78cc-31be-448c-8d2a-a8c4ec19558b",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [
+        368,
+        -160
+      ],
+      "id": "13ad9af4-11f1-4c83-bb59-bde5ab1da3d0",
+      "name": "XML1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=urlset.url",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        576,
+        -160
+      ],
+      "id": "5d70e298-5992-443b-9271-f94fbed32a64",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        784,
+        -160
+      ],
+      "id": "ae61f88c-b227-4c24-ae8e-0e2593beddf5",
+      "name": "Limit1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1728,
+        -144
+      ],
+      "id": "8f5e99cd-34f3-40fc-b33c-c61a50bbc386",
+      "name": "Wait3",
+      "webhookId": "a65cf9aa-f87f-45ce-923f-470973c51ef1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "730b6415-4919-4f5a-9ef1-ad38f2e83880",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "=completed",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2144,
+        -144
+      ],
+      "id": "ced72eda-3b04-4352-8786-82c4b6661f85",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d8ef84ab-33a5-4414-9bd1-510a35715a10",
+              "name": "task_id",
+              "value": "={{ $('HTTP Request').item.json.task_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2304,
+        0
+      ],
+      "id": "0d9cbb4c-fffc-4ba2-b8de-74e58d26d043",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1056,
+        -160
+      ],
+      "id": "25144fa3-59f3-4c75-ae88-3064a7ef9d4a",
+      "name": "Loop Over Items1",
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=角色设定:你是一名信息结构化和知识库开发的专家，请始终保持专业态度。你的任务是将markdown 数据整理为适合LLM 驱动的 RAG知识库的结构化、易读格式。\nT\n任务要求:\n1.内容解析\n2.结构化整理\n-识别markdown数据中的关键内容和主要结构。\n-以清晰的标题和分层逻辑组织信息，使其易于检索和理解，\n3.创建FAQ(如适用)\n-保留所有可能对回答用户查询有价值的细节。\n4.提升可读性\n-根据内容提炼出常见问题，并提供清晰、直接的解答。\n-采用项目符号、编号列表、段落分隔等格式优化排版，使内容更直\n观\n5.优化输出\n-严格去除AI生成的附加说明，仅保留清理后的核心数据。\n响应规则:\n1.完整性:确保所有相关信息完整保留，避免丢失对搜索和理解有价值的内容。\n2.精准性:FAQ需紧密围绕内容，确保清晰、简洁且符合用户需求。\n3.结构优化:确保最终输出便于分块存储、向量化处理，并支持高效检索。\n数据输入:\n<markdown>{{ $json.result.markdown }}</markdown>",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2560,
+        -256
+      ],
+      "id": "bf40726d-6f3b-4524-8bd6-e07c7dca61b6",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2464,
+        -80
+      ],
+      "id": "ce13451d-b3c0-4892-9e39-3d8297485906",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "LgM5dRO1oUqcxm6i",
+          "name": "Google Gemini(PaLM) Api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "output",
+        "options": {
+          "fileName": "={{$json.output.split(\"\\n\")[0]\n}}.md"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2912,
+        -256
+      ],
+      "id": "0de23c0a-684e-4163-b110-2f4cb342dfd5",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./n8n_files/批量抓取_{{ $today.format('yyyy-MM-dd_HH-mm-ss') }}_{{ $json.loc ? $json.loc.split('/').pop().replace('.html','') : Math.floor(Math.random()*1000) }}.md",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        3168,
+        -256
+      ],
+      "id": "e3637452-3fad-4e22-bad2-96b6fe352cde",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        -144
+      ],
+      "id": "4d2e3b94-bff4-4ccb-ab5d-aa1eaa4dc7be",
+      "name": "Wait4",
+      "webhookId": "dcd8a6ac-e644-4ef4-89b1-1f57fbf5413e"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "output",
+        "options": {
+          "fileName": "={{ $('AI Agent1').text }}"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2928,
+        224
+      ],
+      "id": "f86bf189-0728-47f9-827f-fbc310bc6d91",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./n8n_files/单网页_{{ $('When chat message received').item.json.chatInput.replace('https://','').replace('http://','').replace(/\\//g,'_').replace(/\\?/g,'_') }}_{{ $today.format('yyyy-MM-dd_HH-mm-ss') }}.md",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        3184,
+        224
+      ],
+      "id": "1ac3ac6e-a6b5-4f6b-bc4c-2bcd2cbc67c0",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11235/crawl",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=urls",
+              "value": "={{ $('Loop Over Items1').item.json.loc }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1440,
+        -32
+      ],
+      "id": "fae30999-2159-4988-83b9-29f7ba8fe480",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "CCfaiC92ZhZwdTHC",
+          "name": "Crawl4ai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:11235/task/{{ $json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1936,
+        -144
+      ],
+      "id": "3e6821b2-7b92-4d74-8409-bcb45b9918d5",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "CCfaiC92ZhZwdTHC",
+          "name": "Crawl4ai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11235/crawl",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"urls\": [\n    \"{{ $('When chat message received').item.json.chatInput.trim() }}\"\n  ]\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1456,
+        224
+      ],
+      "id": "17fec516-b815-4179-818f-4f7ee404b80b",
+      "name": "HTTP Request2",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "CCfaiC92ZhZwdTHC",
+          "name": "Crawl4ai"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:11235/task/{{ $json.task_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1808,
+        224
+      ],
+      "id": "7497551f-7dc3-4609-be15-4d3307553600",
+      "name": "HTTP Request3",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "CCfaiC92ZhZwdTHC",
+          "name": "Crawl4ai"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "XML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "XML1": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Limit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {
+    "AI Agent2": [
+      {
+        "json": {
+          "output": "```\n# DeepSeek API 文档知识库\n\n## 1. 页面概述\n\n本页面是 DeepSeek API 文档的“提示库”部分，旨在展示 DeepSeek 提示词的样例，帮助用户探索更多可能性。页面包含导航、语言选择、社区链接及版权信息。\n\n## 2. 核心内容与结构\n\n### 2.1 网站标识与导航\n\n*   **网站名称**: DeepSeek API Docs\n*   **网站 Logo**: DeepSeek API Docs Logo (通过链接 `https://cdn.deepseek.com/platform/favicon.png` 获取)\n*   **主页链接**: `/`\n*   **DeepSeek 平台链接**: `https://platform.deepseek.com/`\n\n### 2.2 语言选项\n\n*   **当前语言**: English\n*   **可用语言**:\n    *   English: `/prompt-library`\n    *   中文（中国）: `/zh-cn/prompt-library`\n\n### 2.3 页面主题\n\n*   **主标题**: 提示库\n*   **描述**: 探索 DeepSeek 提示词样例，挖掘更多可能\n\n### 2.4 社区与资源\n\n*   **微信公众号**:\n    *   **名称**: WeChat Official Account\n    *   **二维码**: `https://cdn.deepseek.com/official_account.jpg`\n*   **社区连接**:\n    *   **邮箱**: （未提供具体链接，仅列出“Email”）\n    *   **Discord**: `https://discord.gg/Tc7c45Zzu5`\n    *   **Twitter**: `https://twitter.com/deepseek_ai`\n*   **更多资源**:\n    *   **GitHub**: `https://github.com/deepseek-ai`\n\n### 2.5 版权信息\n\n*   **版权所有**: Copyright © 2026 DeepSeek, Inc.\n\n## 3. 常见问题 (FAQ)\n\n### Q1: “提示库”页面主要提供什么内容？\n**A1**: “提示库”页面主要提供 DeepSeek 提示词的样例，旨在帮助用户探索和挖掘更多可能性。\n\n### Q2: 如何切换 DeepSeek API 文档的语言？\n**A2**: 您可以通过页面顶部的语言选项进行切换。目前支持“English”和“中文（中国）”。\n\n### Q3: 除了API文档，DeepSeek还提供哪些平台服务？\n**A3**: 您可以通过“DeepSeek Platform”链接（`https://platform.deepseek.com/`）访问DeepSeek的平台服务。\n\n### Q4: 如何加入 DeepSeek 的社区？\n**A4**: 您可以通过以下方式加入DeepSeek社区：\n*   关注其微信公众号（页面提供了二维码）。\n*   通过Email联系。\n*   加入Discord群组：`https://discord.gg/Tc7c45Zzu5`。\n*   关注其Twitter账号：`https://twitter.com/deepseek_ai`。\n\n### Q5: DeepSeek的开源项目或代码可以在哪里找到？\n**A5**: 您可以在DeepSeek的GitHub页面上找到其开源项目或代码：`https://github.com/deepseek-ai`。\n\n### Q6: DeepSeek API 文档的版权信息是什么？\n**A6**: 版权所有 © 2026 DeepSeek, Inc.。\n```"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "c1e50ed1-5896-4db4-9970-00a8c602623c",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-14T12:52:34.684Z",
+      "createdAt": "2026-07-14T12:52:34.684Z",
+      "role": "workflow:owner",
+      "workflowId": "qWbwXxNbu60Fiq6E",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

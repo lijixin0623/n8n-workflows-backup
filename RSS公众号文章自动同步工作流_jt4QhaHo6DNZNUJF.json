@@ -1,0 +1,580 @@
+{
+  "updatedAt": "2026-07-24T13:19:06.000Z",
+  "createdAt": "2026-07-24T09:56:43.956Z",
+  "id": "jt4QhaHo6DNZNUJF",
+  "name": "RSS公众号文章自动同步工作流",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "df0c9951-b1ba-47a6-bea4-ebc5a4b95f95",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "566f7d57-d592-48b3-82cd-fa010d8d70f0",
+              "name": "link",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "2bb11518-85f1-46cd-8105-1fceb90f20a9",
+              "name": "pubDate",
+              "value": "={{ $json.pubDate }}",
+              "type": "string"
+            },
+            {
+              "id": "bce97202-b8d5-4de8-a93e-3c9c5ff99fe3",
+              "name": "pubAuthor",
+              "value": "机器之心",
+              "type": "string"
+            },
+            {
+              "id": "1478e0ec-2591-42f9-aae1-0f8835f225eb",
+              "name": "data",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "1b458b56-6e6a-480a-8387-6a293387f1c3",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -592,
+        208
+      ],
+      "id": "63abf55a-b90a-4401-88d8-6d0ca0d17c3a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "http://rss.jintiankansha.me/rss/GEYDONJSPQYWCMZVGFQTIMRVGNRTEMDFDCY3DGIZGKYRXMYZDCYTFGQ======",
+        "options": {
+          "ignoreSSL": true
+        }
+      },
+      "id": "d4691fc0-af34-4345-a0d4-1262d23ee0df",
+      "name": "新智元",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        -304,
+        208
+      ],
+      "typeVersion": 1.1,
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "http://rss.jintiankansha.me/rss/G42TC7BVMUZDINTFHE3TCMJWGUZTAZBZDFGUYWIMBWGRRTMMA=",
+        "options": {
+          "ignoreSSL": true
+        }
+      },
+      "id": "10da949e-c28c-443a-97d6-242db2c9149b",
+      "name": "机器之心",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "position": [
+        -304,
+        16
+      ],
+      "typeVersion": 1.1,
+      "notesInFlow": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0e16dce2-0d1b-4fa4-99d0-b7f4fde812a8",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "df0c9951-b1ba-47a6-bea4-ebc5a4b95f95",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "566f7d57-d592-48b3-82cd-fa010d8d70f0",
+              "name": "link",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "2bb11518-85f1-46cd-8105-1fceb90f20a9",
+              "name": "pubDate",
+              "value": "={{ $json.pubDate }}",
+              "type": "string"
+            },
+            {
+              "id": "bce97202-b8d5-4de8-a93e-3c9c5ff99fe3",
+              "name": "pubAuthor",
+              "value": "新智元",
+              "type": "string"
+            },
+            {
+              "id": "1478e0ec-2591-42f9-aae1-0f8835f225eb",
+              "name": "data",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        192
+      ],
+      "id": "8b27e75c-2752-4532-9e71-4409668c9dfb",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "df0c9951-b1ba-47a6-bea4-ebc5a4b95f95",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "566f7d57-d592-48b3-82cd-fa010d8d70f0",
+              "name": "link",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            },
+            {
+              "id": "2bb11518-85f1-46cd-8105-1fceb90f20a9",
+              "name": "pubDate",
+              "value": "={{ $json.pubDate }}",
+              "type": "string"
+            },
+            {
+              "id": "bce97202-b8d5-4de8-a93e-3c9c5ff99fe3",
+              "name": "pubAuthor",
+              "value": "量子位",
+              "type": "string"
+            },
+            {
+              "id": "1478e0ec-2591-42f9-aae1-0f8835f225eb",
+              "name": "data",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        384
+      ],
+      "id": "bb1ddecb-b3d2-4750-a66d-485e88736724",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "url": "http://rss.jintiankansha.me/rss/GEYDQOJYPQ3DKMJSGY2DSZDCMI4TCZTBGMI3TONRWMJTDOM3EHFRTOZJRHE======",
+        "options": {
+          "ignoreSSL": true
+        }
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        -304,
+        400
+      ],
+      "id": "91ee45d1-49f1-4b47-91b2-35643802ea65",
+      "name": "量子位",
+      "executeOnce": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        0,
+        192
+      ],
+      "id": "73e6ae2a-9f69-4c47-b21a-7d66ab03b9da",
+      "name": "Markdown1"
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.content }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        0,
+        384
+      ],
+      "id": "d50c9c29-c6c2-4fad-9d18-4e6f3e2ba07e",
+      "name": "Markdown2"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./n8ndata/test.json",
+        "options": {
+          "append": false
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        80
+      ],
+      "id": "0a148722-dc7a-4eb1-ac3a-6cfb4e708dfc",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 将Markdown文本转换为纯文本\n * @param {string} markdown - 输入的Markdown格式文本\n * @returns {string} - 转换后的纯文本字符串\n */\nfunction markdownToText(markdown) {\n    if (!markdown) return '';\n\n    let text = markdown;\n\n    // 移除代码块\n    text = text.replace(/```[\\s\\S]*?```/g, '');\n    text = text.replace(/`([^`]+)`/g, '$1');\n\n    // 移除标题符号\n    text = text.replace(/^#{1,6}\\s+/gm, '');\n\n    // 移除粗体和斜体\n    text = text.replace(/[*_]{2}([^*_]+)[*_]{2}/g, '$1'); // 粗体\n    text = text.replace(/[*_]([^*_]+)[*_]/g, '$1'); // 斜体\n\n    // 处理链接\n    text = text.replace(/\\[([^\\]]+)\\]\\([^)]+\\)/g, '$1'); // [文本](链接)\n    text = text.replace(/\\[([^\\]]+)\\]\\[[^\\]]*\\]/g, '$1'); // [文本][引用]\n\n    // 移除图片标记\n    text = text.replace(/!\\[([^\\]]*?)\\]\\([^)]+\\)/g, '$1');\n\n    // 处理列表\n    text = text.replace(/^[\\s]*[\\-*+]\\s+/gm, ''); // 无序列表\n    text = text.replace(/^[\\s]*\\d+\\.\\s+/gm, ''); // 有序列表\n\n    // 处理引用\n    text = text.replace(/^\\s*>\\s+/gm, '');\n\n    // 处理水平分割线\n    text = text.replace(/^\\s*[-*_]{3,}\\s*$/gm, '\\n');\n\n    // 移除HTML标签\n    text = text.replace(/<[^>]+>/g, '');\n\n    // 处理转义字符\n    text = text.replace(/\\\\([\\\\`*_{}\\[\\]()#+\\-.!])/g, '$1');\n\n    // 清理多余的空行\n    text = text.replace(/\\n\\s*\\n/g, '\\n\\n');\n    text = text.replace(/^\\s+|\\s+$/g, '');\n\n    return text;\n}\n\n/**\n * 生成UUID\n * @returns {string} - 生成的UUID字符串\n */\nfunction generateUUID() {\n    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n        const r = Math.random() * 16 | 0;\n        const v = c == 'x' ? r : (r & 0x3 | 0x8);\n        return v.toString(16);\n    });\n}\n\n// 获取输入数据\nconst input = $input.first().json;\n\n// 格式化 pubDate\nconst pubDate = input.pubDate;\nconst date = new Date(pubDate);\nconst formattedDate = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;\n\n// 转换 Markdown 为纯文本\nconst plainText = markdownToText(input.data);\n\n// 生成唯一的 doc_id\nconst uuid = generateUUID();\nconst docId = `article_${uuid}`;\n\n// 返回 n8n 规范的输出\nreturn [{\n    docId: docId,\n    title: input.title,\n    link: input.link,\n    pubDate: formattedDate,\n    pubAuthor: input.pubAuthor,\n    content: plainText,\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        352
+      ],
+      "id": "9ac42b90-cbf9-4691-b19c-580124d85481",
+      "name": "Code",
+      "notesInFlow": true,
+      "notes": "内容分段"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        912,
+        192
+      ],
+      "id": "a6d8294a-7235-4ede-ae32-0851dd9415a8",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        448,
+        176
+      ],
+      "id": "77235131-9156-4a5e-b866-db18d0784dca",
+      "name": "合并数据"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        80
+      ],
+      "id": "4d408900-761c-460b-aaf3-0600b8d6d048",
+      "name": "Convert to File1",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f09a15e4-8637-4d43-ae2d-81437e946f89",
+              "leftValue": "={{ new Date($json.pubDate).getTime() }}",
+              "rightValue": "={{ Date.now() - 24 * 3600 * 1000 }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        656,
+        192
+      ],
+      "id": "870e33b3-4db6-4585-baa3-897d155c1463",
+      "name": "筛选文章时间",
+      "notesInFlow": true,
+      "notes": "保留24小时内的文章，放在有些源头长时间不更新同步到以前的数据\n"
+    }
+  ],
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "合并数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "新智元",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "机器之心",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "量子位",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "新智元": {
+      "main": [
+        [
+          {
+            "node": "Markdown1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "机器之心": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "合并数据",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "合并数据",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "量子位": {
+      "main": [
+        [
+          {
+            "node": "Markdown2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "合并数据": {
+      "main": [
+        [
+          {
+            "node": "筛选文章时间",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "筛选文章时间": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "0501e8b4-91d0-4e08-9856-93b581219282",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-24T09:56:43.965Z",
+      "createdAt": "2026-07-24T09:56:43.965Z",
+      "role": "workflow:owner",
+      "workflowId": "jt4QhaHo6DNZNUJF",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-24T09:56:41.877Z",
+      "createdAt": "2026-07-24T09:56:41.877Z",
+      "id": "S0xVyBNj5ABHqKLH",
+      "name": "Enterprise"
+    }
+  ]
+}

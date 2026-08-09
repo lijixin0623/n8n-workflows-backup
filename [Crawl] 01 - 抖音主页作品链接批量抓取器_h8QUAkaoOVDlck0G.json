@@ -1,0 +1,326 @@
+{
+  "updatedAt": "2026-07-24T22:07:24.975Z",
+  "createdAt": "2026-07-20T08:57:56.553Z",
+  "id": "h8QUAkaoOVDlck0G",
+  "name": "[Crawl] 01 - 抖音主页作品链接批量抓取器",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// 模拟输入的待抓取主页 URL 列表\nreturn [\n  { json: { profile_url: \"https://www.douyin.com/user/MS4wLjABAAAAncMfATtm3s5GN8tiPLVIWsnNIGU5EEL9_0AwgcvTLHyxOtuOJQJ_7yWMKFFS3iiW/\" } },\n  { json: { profile_url: \"https://www.douyin.com/user/MS4wLjABAAAAEcUqmvHy1KZfGKsCghoeP0Yy3pUfIXYvdPyl2OZBB_k/\" } }\n];\n"
+      },
+      "id": "9c372402-970f-4542-9d1c-caf431a52c98",
+      "name": "Mock Data Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -112,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "id": "eacb21c5-27ac-4b8f-bd82-3f908b056864",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        112,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.floor(Math.random() * 5) + 5 }}"
+      },
+      "id": "f42fba33-f513-4f89-9a70-14e968347488",
+      "name": "Random Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        752,
+        32
+      ],
+      "webhookId": "76cd59a8-cff7-4a04-bb5b-3772c6050c98"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:11235/crawl_sync",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"urls\": \"{{ $json.profile_url }}\",\n  \"priority\": 10,\n  \"js_code\": [\n    \"async () => { for(let i=0; i<10; i++) { window.scrollTo(0, document.body.scrollHeight); await new Promise(r => setTimeout(r, 1500)); } }\"\n  ],\n  \"crawler_params\": {\n    \"headless\": true,\n    \"simulate_user\": false,\n    \"page_timeout\": 60000,\n    \"verbose\": true\n  },\n  \"extra_headers\": {\n    \"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36\",\n    \"Cookie\": \"{{ $('Mock Data Input').item.json.cookie || '' }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "79d85ab2-1745-40a6-9aa5-2adfd366441a",
+      "name": "Crawl4ai Fetch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        368,
+        32
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "CCfaiC92ZhZwdTHC",
+          "name": "Crawl4ai Bearer Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const resultData = $input.item.json.result || {};\nconst htmlContent = resultData.html || '';\n\n// 扩大匹配范围：直接在整个 HTML 源码中搜索所有 18 到 20 位的抖音长数字 ID\nconst videoIdRegex = /\\b(7\\d{17,19})\\b/g;\nconst videoIds = new Set();\n\nlet match;\nwhile ((match = videoIdRegex.exec(htmlContent)) !== null) {\n  videoIds.add(match[1]);\n}\n\n// 转换为标准的抖音作品直链\nconst videoUrls = Array.from(videoIds).map(id => `https://www.douyin.com/video/${id}`);\n\nreturn [{\n  json: {\n    profile_url: resultData.url,\n    video_count: videoUrls.length,\n    video_urls: videoUrls,\n    extracted_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "50dc24e9-bf56-4a90-a9e0-ab35d54f9d50",
+      "name": "Extract Video URLs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        32
+      ]
+    }
+  ],
+  "connections": {
+    "Mock Data Input": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Crawl4ai Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Random Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crawl4ai Fetch": {
+      "main": [
+        [
+          {
+            "node": "Extract Video URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Video URLs": {
+      "main": [
+        [
+          {
+            "node": "Random Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {
+    "Extract Video URLs": [
+      {
+        "json": {
+          "profile_url": "https://www.douyin.com/user/MS4wLjABAAAAncMfATtm3s5GN8tiPLVIWsnNIGU5EEL9_0AwgcvTLHyxOtuOJQJ_7yWMKFFS3iiW/",
+          "video_count": 130,
+          "video_urls": [
+            "https://www.douyin.com/video/7664984270352008719",
+            "https://www.douyin.com/video/7274874715469124665",
+            "https://www.douyin.com/video/7263358514108797989",
+            "https://www.douyin.com/video/7241775515089589305",
+            "https://www.douyin.com/video/7246788405739279417",
+            "https://www.douyin.com/video/7252219946426455101",
+            "https://www.douyin.com/video/7255642645149062181",
+            "https://www.douyin.com/video/7255642645141279805",
+            "https://www.douyin.com/video/7094550955558967563",
+            "https://www.douyin.com/video/7044145585217083655",
+            "https://www.douyin.com/video/7516480886684568891",
+            "https://www.douyin.com/video/7117178766052294949",
+            "https://www.douyin.com/video/7022771022038388255",
+            "https://www.douyin.com/video/7103383121382359077",
+            "https://www.douyin.com/video/7112597828676993060",
+            "https://www.douyin.com/video/7110154541827768328",
+            "https://www.douyin.com/video/7104508677570953229",
+            "https://www.douyin.com/video/7105253451659739172",
+            "https://www.douyin.com/video/7081590255274606628",
+            "https://www.douyin.com/video/7079013128293466142",
+            "https://www.douyin.com/video/7077955891055706125",
+            "https://www.douyin.com/video/7078589840249487390",
+            "https://www.douyin.com/video/7079013118885625870",
+            "https://www.douyin.com/video/7078144013555073031",
+            "https://www.douyin.com/video/7078337909270708232",
+            "https://www.douyin.com/video/7077955888174235685",
+            "https://www.douyin.com/video/7081590255274623012",
+            "https://www.douyin.com/video/7078144088528273422",
+            "https://www.douyin.com/video/7079010933158330381",
+            "https://www.douyin.com/video/7077940426422091812",
+            "https://www.douyin.com/video/7078143971100557326",
+            "https://www.douyin.com/video/7079013104176267295",
+            "https://www.douyin.com/video/7079010819186540580",
+            "https://www.douyin.com/video/7078635905942716447",
+            "https://www.douyin.com/video/7079010811733213214",
+            "https://www.douyin.com/video/7078589836172640270",
+            "https://www.douyin.com/video/7079010811330560014",
+            "https://www.douyin.com/video/7077940427055546376",
+            "https://www.douyin.com/video/7078331218126897189",
+            "https://www.douyin.com/video/7080405269557067784",
+            "https://www.douyin.com/video/7078144019922534414",
+            "https://www.douyin.com/video/7079010796210110477",
+            "https://www.douyin.com/video/7078589839569993765",
+            "https://www.douyin.com/video/7079013124971610126",
+            "https://www.douyin.com/video/7078807877045075975",
+            "https://www.douyin.com/video/7078336803182411789",
+            "https://www.douyin.com/video/7077955893035450381",
+            "https://www.douyin.com/video/7078143983855288350",
+            "https://www.douyin.com/video/7079013130189783070",
+            "https://www.douyin.com/video/7081310526357159973",
+            "https://www.douyin.com/video/7078143983855271966",
+            "https://www.douyin.com/video/7078589827138551844",
+            "https://www.douyin.com/video/7079013129451077640",
+            "https://www.douyin.com/video/7078589838949253150",
+            "https://www.douyin.com/video/7079013128293482526",
+            "https://www.douyin.com/video/7078144285257908231",
+            "https://www.douyin.com/video/7078589830745161742",
+            "https://www.douyin.com/video/7078144114449039397",
+            "https://www.douyin.com/video/7077940428493996068",
+            "https://www.douyin.com/video/7080568360999829518",
+            "https://www.douyin.com/video/7078700246515236894",
+            "https://www.douyin.com/video/7078337911585947679",
+            "https://www.douyin.com/video/7078143972866162696",
+            "https://www.douyin.com/video/7077955887771615262",
+            "https://www.douyin.com/video/7079010811330576398",
+            "https://www.douyin.com/video/7079010933158313997",
+            "https://www.douyin.com/video/7079013134140276772",
+            "https://www.douyin.com/video/7079826172300820493",
+            "https://www.douyin.com/video/7081310526357143589",
+            "https://www.douyin.com/video/7080568360999813134",
+            "https://www.douyin.com/video/7077955887771598878",
+            "https://www.douyin.com/video/7078337909270691848",
+            "https://www.douyin.com/video/7078336803182395405",
+            "https://www.douyin.com/video/7079013124971593742",
+            "https://www.douyin.com/video/7078143972866146312",
+            "https://www.douyin.com/video/7077940428493979684",
+            "https://www.douyin.com/video/7078589836172623886",
+            "https://www.douyin.com/video/7077940427055529992",
+            "https://www.douyin.com/video/7077955893035433997",
+            "https://www.douyin.com/video/7078807877045059591",
+            "https://www.douyin.com/video/7078589838949236766",
+            "https://www.douyin.com/video/7078589828526391332",
+            "https://www.douyin.com/video/7144562170050297863",
+            "https://www.douyin.com/video/7140310710772301861",
+            "https://www.douyin.com/video/7156192518579699725",
+            "https://www.douyin.com/video/7152930060847513630",
+            "https://www.douyin.com/video/7078589838949138462",
+            "https://www.douyin.com/video/7160646892823696677",
+            "https://www.douyin.com/video/7158872738001704227",
+            "https://www.douyin.com/video/7063412051662181640",
+            "https://www.douyin.com/video/7013891885383357733",
+            "https://www.douyin.com/video/7013895284786844941",
+            "https://www.douyin.com/video/7161060666341414156",
+            "https://www.douyin.com/video/7107136073775715587",
+            "https://www.douyin.com/video/7114117545682359588",
+            "https://www.douyin.com/video/7160646892824548645",
+            "https://www.douyin.com/video/7042855778567738654",
+            "https://www.douyin.com/video/7048830093363844355",
+            "https://www.douyin.com/video/7166466914628474125",
+            "https://www.douyin.com/video/7118872350540371239",
+            "https://www.douyin.com/video/7159846805563577635",
+            "https://www.douyin.com/video/7164618722732414219",
+            "https://www.douyin.com/video/7156495273102759208",
+            "https://www.douyin.com/video/7165981003164341542",
+            "https://www.douyin.com/video/7159846805563610403",
+            "https://www.douyin.com/video/7166466914628228365",
+            "https://www.douyin.com/video/7165031632759117088",
+            "https://www.douyin.com/video/7102021815993095457",
+            "https://www.douyin.com/video/7165031632759182624",
+            "https://www.douyin.com/video/7159846805563807011",
+            "https://www.douyin.com/video/7165237368076293383",
+            "https://www.douyin.com/video/7106898753806849292",
+            "https://www.douyin.com/video/7165031632759280928",
+            "https://www.douyin.com/video/7166466914628162829",
+            "https://www.douyin.com/video/7151985333217842446",
+            "https://www.douyin.com/video/7161443741881603340",
+            "https://www.douyin.com/video/7130103723590440225",
+            "https://www.douyin.com/video/7161795280928511272",
+            "https://www.douyin.com/video/7158872738001474851",
+            "https://www.douyin.com/video/7061104933340271880",
+            "https://www.douyin.com/video/7153902817224693003",
+            "https://www.douyin.com/video/7164268671169565965",
+            "https://www.douyin.com/video/7387628873372111913",
+            "https://www.douyin.com/video/7366419400070632459",
+            "https://www.douyin.com/video/7376558155263726628",
+            "https://www.douyin.com/video/7387684818559947812",
+            "https://www.douyin.com/video/7387678504584107062",
+            "https://www.douyin.com/video/7387681959545279529",
+            "https://www.douyin.com/video/7662276243132402459",
+            "https://www.douyin.com/video/7470115392674464827"
+          ],
+          "extracted_at": "2026-07-21T14:23:22.204Z"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "c62dd745-d850-414c-8b64-db109962ae38",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-20T08:57:56.562Z",
+      "createdAt": "2026-07-20T08:57:56.562Z",
+      "role": "workflow:owner",
+      "workflowId": "h8QUAkaoOVDlck0G",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

@@ -1,0 +1,491 @@
+{
+  "updatedAt": "2026-07-31T12:55:20.634Z",
+  "createdAt": "2026-07-23T22:12:24.095Z",
+  "id": "gp58nIcDqAWVojEx",
+  "name": "【02_生成_主工作流】AI短视频生产线工作流",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"app_id\": \"cli_aac4c96597b85bcd\",\n    \"app_secret\": \"0CCdv8CG5aB4mjaVLGkupgDeemcvMdSM\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        208
+      ],
+      "id": "814bb260-8b51-49ca-b746-fd29b475ff7f",
+      "name": "获取飞书token",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1008,
+        320
+      ],
+      "id": "72e87b26-a20b-4e33-9f36-77af04fd48a9",
+      "name": "循环处理",
+      "notesInFlow": true,
+      "notes": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $json.app_token }}/tables/{{ $json.table_id }}/records/search ",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "user_id_type",
+              "value": "open_id"
+            },
+            {
+              "name": "page_token"
+            },
+            {
+              "name": "page_size",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sort\": [\n    {\n      \"field_name\": \"id\",\n      \"desc\": false\n    }\n  ],\n  \"filter\": {\n    \"conjunction\": \"and\",\n    \"conditions\": [\n      {\n        \"field_name\": \"发布日期\",\n        \"operator\": \"is\",\n        \"value\": [\n          \"Tomorrow\"\n        ]\n      },\n      {\n        \"field_name\": \"当前状态\",\n        \"operator\": \"is\",\n        \"value\": [\n          \"草稿\"\n        ]\n      }\n    ]\n  },\n  \"automatic_fields\": false\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        608,
+        208
+      ],
+      "id": "0c83d275-9678-421c-8ed3-fcaa90d85324",
+      "name": "获取多维表格记录",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5d06deb-33dc-471e-8892-bbf2bb8c94f5",
+              "name": "app_token",
+              "value": "TZqcbwWqeaQrCPsvc7fc2m5nnnd",
+              "type": "string"
+            },
+            {
+              "id": "1817ab91-0b11-40ed-b13e-2d8367d99638",
+              "name": "table_id",
+              "value": "tbl15M0lbST63Ya5",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        432,
+        208
+      ],
+      "id": "796929b3-1db3-46a6-b677-41509e00b22a",
+      "name": "指定多维表格",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "## 获取飞书多维表格记录\n- 获取状态为“草稿”且发布时间为明天的所有记录\n- 并将获取到的所有记录拆分进行后续的独立处理\n- 设置定时触发扫描数据表格",
+        "height": 544,
+        "width": 912,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "9d3a7e50-ff96-46f4-b03e-126527f6bc94",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        64,
+        208
+      ],
+      "id": "8c35d67f-a2b7-4f2d-9e2a-687a8cfdde72",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        64,
+        384
+      ],
+      "id": "73dbd487-ca8c-43eb-906a-a5a9432da705",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        128
+      ],
+      "id": "482dd6d3-405a-4370-9ba2-297eb7e7adc8",
+      "name": "合并最终数据统一处理",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Aggregate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_1faf20cbac5dddf8e9e7aa75253a411b\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"AI短视频创作进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**今天的视频创作已全部完成** \\\"}],[{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://mcn33lfbwjgi.feishu.cn/base/GGgVbo7jEarC8PsFNXFcpPQPnMe?table=tblO9cucSw4r39Ek&view=vewI3sjaI0\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        128
+      ],
+      "id": "1df1b005-3053-4b73-903a-0e04c6b84e7f",
+      "name": "向群组发送已完成消息",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst list = items[0].json.data.items;\n\nreturn list.map(row => {\n  return {\n    json: {\n      id: row.fields.id,\n      record_id: row.record_id,\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        784,
+        208
+      ],
+      "id": "44c47633-8501-4765-bc0d-715dd64770c7",
+      "name": "拆分和过滤数据",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "mO9ZG4R3pAjHZDZc",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/mO9ZG4R3pAjHZDZc",
+          "cachedResultName": "【03_生成_子工作流】AI短视频生产线工作流"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tenant_access_token": "={{ $('获取飞书token').item.json.tenant_access_token }}",
+            "app_token": "={{ $('指定多维表格').item.json.app_token }}",
+            "table_id": "={{ $('指定多维表格').item.json.table_id }}",
+            "record_id": "={{ $json.record_id }}",
+            "id": "={{ $json.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "tenant_access_token",
+              "displayName": "tenant_access_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "app_token",
+              "displayName": "app_token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "table_id",
+              "displayName": "table_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "record_id",
+              "displayName": "record_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        304
+      ],
+      "name": "Call 【03_生成_子工作流】AI短视频生产线工作流",
+      "id": "ea7d3082-8221-4b36-af55-0afe470a354d"
+    },
+    {
+      "parameters": {
+        "content": "## 循环处理\n- 对获取的每条记录进行逻辑处理\n- 全部处理完成后发送即时消息提醒实时状态",
+        "height": 544,
+        "width": 672,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        928,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "3cb14fa4-49a5-4dc1-880c-c0a054211e25",
+      "name": "Sticky Note4"
+    }
+  ],
+  "connections": {
+    "获取飞书token": {
+      "main": [
+        [
+          {
+            "node": "指定多维表格",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "循环处理": {
+      "main": [
+        [
+          {
+            "node": "合并最终数据统一处理",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 【03_生成_子工作流】AI短视频生产线工作流",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取多维表格记录": {
+      "main": [
+        [
+          {
+            "node": "拆分和过滤数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "指定多维表格": {
+      "main": [
+        [
+          {
+            "node": "获取多维表格记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "获取飞书token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "合并最终数据统一处理": {
+      "main": [
+        [
+          {
+            "node": "向群组发送已完成消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分和过滤数据": {
+      "main": [
+        [
+          {
+            "node": "循环处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 【03_生成_子工作流】AI短视频生产线工作流": {
+      "main": [
+        [
+          {
+            "node": "循环处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "6e3fa1fc-e987-4dbe-a551-68c32758a2a6",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-07-23T22:12:24.099Z",
+      "createdAt": "2026-07-23T22:12:24.099Z",
+      "role": "workflow:owner",
+      "workflowId": "gp58nIcDqAWVojEx",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": [
+    {
+      "updatedAt": "2026-07-23T22:11:45.827Z",
+      "createdAt": "2026-07-23T22:11:45.827Z",
+      "id": "8fut4L0nMD0B2TDT",
+      "name": "短视频"
+    },
+    {
+      "updatedAt": "2026-07-15T07:56:34.425Z",
+      "createdAt": "2026-07-15T07:56:34.425Z",
+      "id": "GtDhh1imDFFEmCOs",
+      "name": "AI"
+    },
+    {
+      "updatedAt": "2026-07-22T21:49:07.897Z",
+      "createdAt": "2026-07-22T21:49:07.897Z",
+      "id": "d4eYQQSD7AYbi8vK",
+      "name": "飞书"
+    }
+  ]
+}

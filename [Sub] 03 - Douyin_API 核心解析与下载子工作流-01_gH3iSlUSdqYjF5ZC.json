@@ -1,0 +1,404 @@
+{
+  "updatedAt": "2026-07-28T12:16:44.346Z",
+  "createdAt": "2026-07-20T15:40:46.718Z",
+  "id": "gH3iSlUSdqYjF5ZC",
+  "name": "[Sub] 03 - Douyin_API 核心解析与下载子工作流-01",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "697b9653-3ad6-4459-bce5-06890efe4341",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -608,
+        -112
+      ],
+      "id": "43e3edfe-3416-4ea9-94a8-2c5b0b8ce6cf",
+      "name": "Webhook",
+      "webhookId": "697b9653-3ad6-4459-bce5-06890efe4341"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.data.video?.play_addr?.url_list?.[0] || $json.data.video_data?.nwm_url_list?.[0] || $json.data.video_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.douyin.com/"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        752,
+        16
+      ],
+      "id": "bf05ade9-c43d-4256-a258-127d8c8b9b9b",
+      "name": "下载视频文件"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f372dafb-b869-437b-970f-1a142b0d516b",
+              "leftValue": "={{ $json.data?.type }}",
+              "rightValue": "image",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "021ec72b-3430-48c1-82bd-34ce77609ad7",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "Is Empty",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        -48
+      ],
+      "id": "f9ad8b36-cec9-497e-97bf-3a22a7929b5d",
+      "name": "If",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./n8n_files/video/douyin_{{ $now.toFormat('yyyyMMdd_HHmmss') }}.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        16
+      ],
+      "id": "462534df-29f9-460a-940c-2ae366e24cf8",
+      "name": "保存视频文件"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.images",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        752,
+        -128
+      ],
+      "id": "351e4422-3105-483e-a155-eb4eb5f370b5",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.download_url_list }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Referer",
+              "value": "https://www.douyin.com/"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        944,
+        -128
+      ],
+      "id": "ebf55b20-9ba9-46be-9168-df68bd3c1837",
+      "name": "下载单张图片"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./n8n_files/image/image_{{ $now.toFormat('yyyyMMdd_HHmmss') }}_{{ $itemIndex }}.jpg",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        -128
+      ],
+      "id": "02a41045-c18b-4343-8489-617112c8fe6b",
+      "name": "保存图片文件"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        528,
+        128
+      ],
+      "id": "a0b85802-386b-4f88-a3a3-e83b1ea18422",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pearktrue.cn/api/douyin/?url={{ encodeURIComponent($json.query.video_url) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -448,
+        128
+      ],
+      "id": "e1faeee7-3c7d-43c9-9657-24a4e779c91d",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "./n8n_files/video/{{ $json.title.replace(/[\\\\/:*?\"<>|]/g, '') }}.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        -112
+      ],
+      "id": "d8a8d6db-c6b8-45c5-9003-e3b5cecf0071",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "jsCode": "const responseData = $input.item.json;\n\n// 适配常见公共接口的返回结构（通常在 data 或 url 字段中）\nconst videoUrl = responseData.data?.url || responseData.url || responseData.video;\n\nreturn {\n  json: {\n    download_url: videoUrl,\n    title: responseData.data?.title || 'douyin_video'\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        -112
+      ],
+      "id": "4928d0fb-fe10-4a7a-b39d-9bb95d79dcb7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.download_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -80,
+        -96
+      ],
+      "id": "04443ac4-28d7-443a-8791-095e6e2e7143",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        128
+      ],
+      "id": "ba619273-c6dc-47ed-9ad9-e7528c030125",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:5000/download?url={{ encodeURIComponent($json.query.video_url) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -416,
+        -112
+      ],
+      "id": "b31553d3-c5af-4ce6-8977-7f7c2a42ab0f",
+      "name": "HTTP Request2"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "下载视频文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载视频文件": {
+      "main": [
+        [
+          {
+            "node": "保存视频文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "下载单张图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载单张图片": {
+      "main": [
+        [
+          {
+            "node": "保存图片文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        []
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "c644a74d-a2f9-4e59-ab07-399e8670ec93",
+  "activeVersionId": null,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-20T15:40:46.726Z",
+      "createdAt": "2026-07-20T15:40:46.726Z",
+      "role": "workflow:owner",
+      "workflowId": "gH3iSlUSdqYjF5ZC",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}

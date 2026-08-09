@@ -1,0 +1,4798 @@
+{
+  "updatedAt": "2026-08-02T13:49:38.739Z",
+  "createdAt": "2026-07-23T22:13:39.497Z",
+  "id": "KT6q3husx3g1OjCO",
+  "name": "【05_重新生成】AI短视频生产线工作流",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"app_id\": \"cli_aac4c96597b85bcd\",\n    \"app_secret\": \"0CCdv8CG5aB4mjaVLGkupgDeemcvMdSM\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1104,
+        512
+      ],
+      "id": "23d8ac55-7df3-4199-ae3b-2c4a8938cb98",
+      "name": "获取飞书token",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $json.app_token }}/tables/{{ $json.table_id }}/records/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "user_id_type",
+              "value": "open_id"
+            },
+            {
+              "name": "page_token"
+            },
+            {
+              "name": "page_size",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sort\": [\n    {\n      \"field_name\": \"id\",\n      \"desc\": true\n    }\n  ],\n  \"filter\": {\n    \"conjunction\": \"and\",\n    \"conditions\": [\n      {\n        \"field_name\": \"id\",\n        \"operator\": \"is\",\n        \"value\": [\n          {{ $json.id }}\n        ]\n      },\n      {\n        \"field_name\": \"当前状态\",\n        \"operator\": \"is\",\n        \"value\": [\n          \"等待确认\"\n        ]\n      }\n    ]\n  },\n  \"automatic_fields\": false\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -784,
+        512
+      ],
+      "id": "2f27e899-d248-48b7-b597-747b006780b8",
+      "name": "获取多维表格记录",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "content": "## 获取飞书多维表格记录\n- 接收飞书多维表格记录中点击按钮触发的HTTP请求\n- 根据过滤条件获取指定表格中的某条具体记录",
+        "height": 320,
+        "width": 816,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1312,
+        400
+      ],
+      "typeVersion": 1,
+      "id": "927f7d39-a192-46a1-91a8-d5565c1f6e28",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['分支条件'] }}",
+                    "rightValue": "=本地素材",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "06c6d19e-e2b2-4733-aa31-0184eb085567"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "A"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f9e96528-f529-4a2a-87d3-99786770d0b8",
+                    "leftValue": "={{ $json['分支条件'] }}",
+                    "rightValue": "素材网素材",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "B"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1136,
+        528
+      ],
+      "id": "7c02e5ac-5b34-4a22-adb0-6150d034ca65",
+      "name": "条件分支处理",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7e2bc2b-c5af-4302-adf4-4a9905a877c1",
+              "name": "分支条件",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"素材来源\"] === \"本地素材\" || $('获取多维表格记录').item.json.data.items[0].fields[\"背景音乐类型\"]  === '本地音乐' ? \"本地素材\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"素材来源\"] === \"免费素材网\" && $('获取多维表格记录').item.json.data.items[0].fields[\"背景音乐类型\"]  === '随机音乐' ? \"素材网素材\" :\n\"素材网素材\"   // 其他情况\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        944,
+        528
+      ],
+      "id": "3ae16ece-4105-4f37-b276-596f22d1b314",
+      "name": "分支决策",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=文案主题：{{ $('获取多维表格记录').item.json.data.items[0].fields['主题'][0].text }}",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=# 角色：资深内容创作专家\n\n## 背景：\n你是一位资深内容创作专家，擅长将文案主题内容转化为吸引眼球且具有高互动率的文案。请根据提供的内容，创作一篇符合以下要求的文案：\n\n## 规则：\n1. 语言年轻化、亲切自然，符合用户的表达习惯，带有轻松幽默感。\n2. 分段清晰，每个段落突出重点，便于阅读和理解。\n3. 结尾部分明确引导用户进行点赞、收藏和评论，提升互动率。\n4. 总字数控制在200-300字之间，内容精炼且信息完整，避免冗余，不要出现emoji图标。\n5. 根据主题提取3-5个英文核心关键词，用于在素材网站或图库中精准搜索相关图片素材。\n\n## 初始化\n请严格按照上述要求输出内容。",
+          "maxIterations": 10,
+          "returnIntermediateSteps": false,
+          "passthroughBinaryImages": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        944
+      ],
+      "id": "812fd2ad-bd37-4cb9-bd2e-709aadfe4ace",
+      "name": "视频文案内容创作",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "AI Agent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://host.docker.internal:8080/api/v1/videos",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"video_subject\": \"{{ $json.video_subject }}\",\n  \"video_script\": \"{{ $json.video_script }}\",\n  \"video_terms\": \"{{ $json.video_terms }}\",\n  \"video_aspect\": \"{{ $json.video_aspect }}\",\n  \"video_concat_mode\": \"{{ $json.video_concat_mode }}\",\n  \"video_transition_mode\": \"{{ $json.video_transition_mode }}\",\n  \"video_clip_duration\": {{ $json.video_clip_duration }},\n  \"video_count\": {{ $json.video_count }},\n  \"video_source\": \"{{ $json.video_source }}\",\n  \"video_materials\": {{ JSON.stringify($json.video_materials) }},\n  \"video_language\": \"{{ $json.video_language }}\",\n  \"voice_name\": \"{{ $json.voice_name }}\",\n  \"voice_volume\": {{ $json.voice_volume }},\n  \"voice_rate\": {{ $json.voice_rate }},\n  \"bgm_type\": \"{{ $json.bgm_type }}\",\n  \"bgm_file\": \"{{ $json.bgm_file }}\",\n  \"bgm_volume\": {{ $json.bgm_volume }},\n  \"subtitle_enabled\": {{ $json.subtitle_enabled }},\n  \"subtitle_position\": \"{{ $json.subtitle_position }}\",\n  \"custom_position\": {{ $json.custom_position }},\n  \"font_name\": \"{{ $json.font_name }}\",\n  \"text_fore_color\": \"{{ $json.text_fore_color }}\",\n  \"text_background_color\": {{ $json.text_background_color }},\n  \"font_size\": {{ $json.font_size }},\n  \"stroke_color\": \"{{ $json.stroke_color }}\",\n  \"stroke_width\": {{ $json.stroke_width }},\n  \"n_threads\": {{ $json.n_threads }},\n  \"paragraph_number\": {{ $json.paragraph_number }}\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2752,
+        672
+      ],
+      "id": "15cd6cb8-f9be-4445-8aca-70532d4e3b0b",
+      "name": "生成短视频",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"video_subject\": {{ $('获取多维表格记录').item.json.data.items[0].fields[\"主题\"][0].text.toJsonString() }},\n  \"video_script\": {{ $('文案统一格式').item.json['脚本文案'].toJsonString() }},\n  \"video_terms\": {{ $('文案统一格式').item.json['文案关键词'].toJsonString() }},\n  \"video_aspect\": {{ $json['宽高比'].toJsonString() }},\n  \"video_concat_mode\": {{ $json['合成模式'].toJsonString() }},\n  \"video_transition_mode\": {{ $json['转场模式'].toJsonString() }},\n  \"video_clip_duration\": 4,\n  \"video_count\": 1,\n  \"video_source\": {{ $json['素材来源'].toJsonString() }},\n  \"video_materials\": {{ $json['本地图片视频素材'].toJsonString() }},\n  \"video_language\": \"\",\n  \"voice_name\": {{ $json['配音音色'].toJsonString() }},\n  \"voice_volume\": 1.0,\n  \"voice_rate\": 1.2,\n  \"bgm_type\": {{ $json['背景音乐类型'].toJsonString() }},\n  \"bgm_file\": \"\",\n  \"bgm_volume\": 0.4,\n  \"subtitle_enabled\": true,\n  \"subtitle_position\": \"bottom\",\n  \"custom_position\": 70.0,\n  \"font_name\": \"MicrosoftYaHeiBold.ttc\",\n  \"text_fore_color\": \"#FFFFFF\",\n  \"text_background_color\": true,\n  \"font_size\": 60,\n  \"stroke_color\": \"#000000\",\n  \"stroke_width\": 1.5,\n  \"n_threads\": 2,\n  \"paragraph_number\": 1\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2496,
+        752
+      ],
+      "id": "89ad1af5-57f9-4b7e-836a-4a47c5de6231",
+      "name": "免费素材网接口参数固定",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8080/api/v1/tasks/{{ $json.data.task_id }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3152,
+        672
+      ],
+      "id": "f34b1358-2c45-4487-9eff-b5743e6fa0e3",
+      "name": "查询视频制作进度",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2960,
+        672
+      ],
+      "id": "35f90377-9192-43e7-aea0-c2a5c27f2558",
+      "name": "等待1分钟",
+      "webhookId": "38814d81-0bc5-4425-96c1-a85a1c0a578a",
+      "notesInFlow": true,
+      "notes": "Wait"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f5d66584-990a-4d75-ae70-22e521de4e91",
+              "leftValue": "={{ $json.data.progress }}",
+              "rightValue": 100,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3328,
+        672
+      ],
+      "id": "9c25ca02-8ffc-422e-b08c-caeedf50b667",
+      "name": "视频制作是否完成",
+      "notesInFlow": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "url": "=http://host.docker.internal:8080{{ $json.data.videos[0] }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3536,
+        656
+      ],
+      "id": "10608048-b519-428a-a2bf-3f16743b7967",
+      "name": "获取视频",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e4827c98-baac-464c-8a80-f5edb8ea907d",
+              "name": "素材来源",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields['素材来源'] === \"本地素材\" ? \"local\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['素材来源'] === \"免费素材网\" ? \"pexels\" : \"pexels\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "d60da1a1-571e-4464-9a23-04802d37910c",
+              "name": "本地图片视频素材",
+              "value": "null",
+              "type": "string"
+            },
+            {
+              "id": "e2db0968-7166-4b87-8e4d-6caf5f9fed4c",
+              "name": "背景音乐类型",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields['背景音乐类型'] === \"本地音乐\" ? \"custom\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['背景音乐类型'] === \"随机音乐\" ? \"random\" : \"random\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "a33a38ff-7cb6-4396-ad65-455433feadc6",
+              "name": "合成模式",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields['合成模式'] === \"随机拼接\" ? \"random\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['合成模式'] === \"顺序拼接\" ? \"sequential\" : \"random\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "0db02208-154f-4c23-9eee-9b2d6fed5cad",
+              "name": "转场模式",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"无转场\" ? \"None\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"随机转场\" ? \"Shuffle\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"渐入\" ? \"FadeIn\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"渐出\" ? \"FadeOut\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"滑动入\" ? \"SlideIn\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"滑动出\" ? \"SlideOut\" : \"Shuffle\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "bcb825bc-0f54-43b0-8282-b1a830b4900a",
+              "name": "宽高比",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields['宽高比'] === \"9:16(竖屏)\" ? \"9:16\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['宽高比'] === \"16:9(横屏)\" ? \"16:9\" : \"9:16\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "5c866334-df2f-4e92-82eb-c51a9b6e1bf3",
+              "name": "配音音色",
+              "value": "={{\n    $('获取多维表格记录').item.json.data.items[0].fields['配音音色'] === \"16:9(横屏)\" ? \"16:9\" : \"9:16\" === \"diana(女性)\" ? \"siliconflow:FunAudioLLM/CosyVoice2-0.5B:diana-Female\" : \"siliconflow:FunAudioLLM/CosyVoice2-0.5B:diana-Female\"\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1408,
+        752
+      ],
+      "id": "3759e030-413e-4c15-ad3a-fd982e56e92c",
+      "name": "固定参数",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格和记录').item.json.app_token }}/tables/{{ $('指定多维表格和记录').item.json.table_id }}/records/{{ $('指定多维表格和记录').item.json.record_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"脚本文案\": {{ $('文案统一格式').item.json['脚本文案'].toJsonString() }},\n    \"文案关键词\": {{ $('文案统一格式').item.json['文案关键词'].toJsonString() }},\n    \"当前状态\": \"等待确认\",\n    \"短视频\": [\n        {\n            \"file_token\": {{ $json.data.file_token.toJsonString() }}\n        }\n    ]\n  }\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4976,
+        368
+      ],
+      "id": "c32f54ab-ba04-4535-8183-0d1c18950df0",
+      "name": "更新记录",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "content": "## C分支：脚本文案不存在及其他情况\n- LLM对表格记录中的主题进行脚本文案内容、文案关键词生成\n- 再通过Code节点对生成的内容进行格式化处理",
+        "height": 496,
+        "width": 672,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        832
+      ],
+      "typeVersion": 1,
+      "id": "87293c26-dbf7-41bd-b610-44677221f75b",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 判断使用本地素材还是素材网\n- 对AI生成的文案内容进行格式化处理，方便短视频生成工具使用\n- 判断若使用本地素材则走A分支\n- 判断若使用素材网素材则走B分支",
+        "height": 320,
+        "width": 592,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        704,
+        384
+      ],
+      "typeVersion": 1,
+      "id": "6984045f-50d9-4c99-933a-2a100d1f6657",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## B分支处理逻辑:使用免费素材网\n- 使用素材网和随机音乐\n- 定义最终传递给接口的参数",
+        "height": 288,
+        "width": 1328,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1328,
+        624
+      ],
+      "typeVersion": 1,
+      "id": "a0244210-934b-4b1c-92b3-9bce406ebf9c",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "## 短视频生成\n- 使用MoneyPrinterTrubo免费开源工具\n- 定时查询视频制作状态\n- 可替换其他工具，调整对应逻辑即可",
+        "height": 416,
+        "width": 992,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2688,
+        496
+      ],
+      "typeVersion": 1,
+      "id": "6598d9c8-bae5-4cf2-b4b4-641bdc252637",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## 将生成的短视频上传到表格中并进行即时群消息提醒\n- 对生成的短视频进行分片上传至飞书\n- 将生成的文案、短视频、状态等更新多维表格\n- 发送群消息提醒",
+        "height": 720,
+        "width": 1664,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3712,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "355ae408-cd9c-41fd-a4d5-0e5b36b04128",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## A分支处理逻辑:使用本地素材\n- 从表格记录中获取上传的本地素材(图片、音频、视频)\n- 将获取到的本地素材保存到本地指定文件夹(为了给短视频生成工具使用)\n- 定义最终传递给接口的参数",
+        "height": 416,
+        "width": 1328,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1328,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "6ef0add9-2093-46ff-9d97-be00eb395391",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4432,
+        544
+      ],
+      "id": "20faf587-083f-4e5c-baa1-6687ef730e08",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：对获取到的视频进行分片处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nconst CHUNK_SIZE = 4 * 1024 * 1024; // 4MB in bytes\n\n// 获取输入的视频二进制数据\nconst binaryData = items[0].binary.data;\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\n// 计算需要分成多少块\nconst totalChunks = Math.ceil(buffer.length / CHUNK_SIZE);\nconst chunks = [];\n\n// 分割二进制数据\nfor (let i = 0; i < totalChunks; i++) {\n  const start = i * CHUNK_SIZE;\n  const end = Math.min(start + CHUNK_SIZE, buffer.length);\n  const chunkBuffer = buffer.slice(start, end);\n  \n  // 为每个块创建新的二进制数据对象\n  chunks.push({\n    json: {\n      chunkIndex: i,\n      totalChunks: totalChunks,\n      chunkSize: chunkBuffer.length,\n      originalFileName: binaryData.fileName || 'video'\n    },\n    binary: {\n      data: await this.helpers.prepareBinaryData(\n        chunkBuffer,\n        `${binaryData.fileName || 'video'}_chunk_${i}.bin`\n      )\n    }\n  });\n}\n\nreturn chunks;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4256,
+        544
+      ],
+      "id": "a8bac1b3-b26a-4525-9e40-3439c91f8acd",
+      "name": "视频分片",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_prepare",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"file_name\": \"test.mp4\",\n  \"parent_type\": \"bitable_file\",\n  \"parent_node\": \"{{ $('指定多维表格和记录').item.json.app_token }}\",\n  \"size\": {{ $json.size_in_bytes }}\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3920,
+        544
+      ],
+      "id": "c34199a1-173e-49d9-ba52-ca4ded8e44ba",
+      "name": "分片上传素材-预上传",
+      "notesInFlow": true,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：把某个上游节点的 json 和 binary 重新挂到当前输出上\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nreturn {\n  json: $('获取视频文件大小').item.json,\n  binary: $('获取视频文件大小').item.binary,\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4096,
+        544
+      ],
+      "id": "aca7ff44-254e-4696-a316-1bdd4f147600",
+      "name": "重新挂载二进制文件",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_finish",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"upload_id\": \"{{ $('分片上传素材-预上传').item.json.data.upload_id }}\",\n  \"block_num\": {{ $('分片上传素材-预上传').item.json.data.block_num }}\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4800,
+        368
+      ],
+      "id": "5a9e090e-8859-4e4b-9911-48835f3a1d2e",
+      "name": "分片上传素材-完成上传",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_part",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "multipart/form-data; boundary=---7MA4YWxkTrZu0gW"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "upload_id",
+              "value": "={{ $('分片上传素材-预上传').item.json.data.upload_id }}"
+            },
+            {
+              "name": "seq",
+              "value": "={{ $json.chunkIndex }}"
+            },
+            {
+              "name": "=size",
+              "value": "={{ $json.chunkSize }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "=data"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4640,
+        656
+      ],
+      "id": "4aeb563e-ccc3-4920-afd8-0a731d5eb51e",
+      "name": "分片上传素材-上传分片",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4992,
+        656
+      ],
+      "id": "234548e0-6131-4a90-8451-379a1b0cb0aa",
+      "name": "等待3秒",
+      "webhookId": "abba6fe3-b5e1-4e84-83b2-a3a333294c4d",
+      "notesInFlow": true,
+      "notes": "Wait"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        4624,
+        368
+      ],
+      "id": "6a1fb646-975f-48b4-8ad7-09d279b97f40",
+      "name": "合并数据统一处理3",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Aggregate"
+    },
+    {
+      "parameters": {
+        "fileSelector": "./.n8n-files/videos/test.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2752,
+        288
+      ],
+      "id": "64f10a82-a3c1-4d0d-b868-dbd5db03e0fc",
+      "name": "读取本地视频",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "content": "## 模拟短视频生成(测试使用)\n- 读取本地测试视频进行后续节点测试",
+        "height": 272,
+        "width": 992,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2688,
+        192
+      ],
+      "typeVersion": 1,
+      "id": "9d95bd9f-97d9-4c6b-bf62-28173395580a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"Video_Content\": {\n\t\t\t\"type\": \"string\",\n            \"description\":\"小红书文案内容\"\n\t\t},\n\t\t\"Video_Keywords\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\":\"视频关键词\"\n\t\t}\n\t},\n  \"required\": [\"Video_Content\", \"Video_Keywords\"]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        1184
+      ],
+      "id": "b272b471-e0d8-4045-a0be-f398aeb1ca7c",
+      "name": "强制格式化输出",
+      "notesInFlow": true,
+      "notes": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：获取当前传递过来视频二进制文件的大小和重新挂载视频文件传递给下一个节点\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\n// 读取二进制 buffer，返回字节数\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst sizeInBytes = buffer.length;\n\n// 同时把原来的 binary.data 一起传出去\nreturn [\n  {\n    json: {\n      size_in_bytes: sizeInBytes,\n    },\n    binary: {\n      // 直接复用上一个节点的 binary.data\n      data: $input.first().binary.data,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3760,
+        544
+      ],
+      "id": "9dedee5d-3b98-4cb6-8348-e98f35b4ef38",
+      "name": "获取视频文件大小",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_1faf20cbac5dddf8e9e7aa75253a411b\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"AI短视频创作进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**视频主题**:{{ $('获取多维表格记录').item.json.data.items[0].fields[\"主题\"][0].text }}\\\\\\n **创建时间**:{{ new Date($('获取多维表格记录').item.json.data.items[0].fields[\"创建时间\"] ).toDateTime().format('yyyy-LL-dd HH:mm:ss') }}\\\\\\n **当前状态**:{{ $json.data.record.fields['当前状态'] }}\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**AI生成的视频脚本**:\\\\\\n {{ $('文案统一格式').item.json['脚本文案'] }}\\\"},{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://r1l3h3s8hbg.feishu.cn/base/TZqcbwWqeaQrCPsvc7fc2m5nnnd?table=tbl15M0lbST63Ya5&view=vewI3sjaI0\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5152,
+        368
+      ],
+      "id": "d581ac71-a70e-4916-9bea-449ab3c327a7",
+      "name": "向群组发送即时消息",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "88f93589-8d95-43f8-9534-d9cbfc59c4ba",
+              "name": "本地素材",
+              "value": "={{ $('获取多维表格记录').item.json.data.items[0].fields[\"本地素材\"] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1392,
+        384
+      ],
+      "id": "ef23b4d5-4f8b-42b7-9954-b79321566123",
+      "name": "获取本地素材",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "[\"本地素材\"]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        384
+      ],
+      "id": "b38a6b5a-fae8-4721-9fe9-36b2b13f75ab",
+      "name": "拆分数据单独处理",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1744,
+        384
+      ],
+      "id": "e41fc8b4-d8bf-4cec-920b-9a15d626b489",
+      "name": "循环保存素材",
+      "notesInFlow": true,
+      "notes": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/{{ $json.file_token }}/download",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1952,
+        400
+      ],
+      "id": "2f3e95ba-dafe-4ab0-af11-400cdb90524e",
+      "name": "获取素材二进制文件",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./.n8n-files/mpt/storage/local_videos/{{ $json.file_token }}_{{ $json.name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2144,
+        400
+      ],
+      "id": "b377ddc0-7da6-4e62-9eb3-e29d93c1b6f5",
+      "name": "保存素材到本地",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2320,
+        400
+      ],
+      "id": "7cdc379e-3d53-4e33-a81d-338ff9023612",
+      "name": "等待2秒",
+      "webhookId": "06ec5a22-502b-447b-8d9e-e9c79b103d2e",
+      "notesInFlow": true,
+      "notes": "Wait"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1952,
+        224
+      ],
+      "id": "77c73991-6b6c-401c-abe0-7811f31277b1",
+      "name": "合并数据统一处理",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：对获取到的素材(图片、视频、音频)文件进行拼接\n// Author:@新哥AGI研习社\n\nconst files = $input.first().json.data;\n\n// 按类型分组\nconst imageLike = files.filter(i => i.type === 'image/jpeg' || i.type === 'video/mp4');\nconst audioLike = files.filter(i => i.type === 'audio/mpeg');\n\n// 1) 按照 MoneyPrinterTurbo 规范组装本地视频/图片素材列表\nconst imagesArray = imageLike.map(i => {\n  const fileTokenName = `${i.file_token}_${i.name}`;\n  \n  // 1. 根据后缀名或 type 严格区分 image 和 video\n  const isVideo = i.name.endsWith('.mp4') || i.type === 'video/mp4';\n  \n  return {\n    provider: 'local',\n    type: isVideo ? 'video' : 'image', // 务必对应正确！\n    url: `/MoneyPrinterTurbo/storage/local_videos/${fileTokenName}`,\n    duration: 0\n  };\n});\n\n// ⚠️ 注意：直接保留对象数组（Array），不要在此处使用 JSON.stringify！\nconst images = imagesArray; \n\n// 2) 当类型为 audio/mpeg 按照 MoneyPrinterTurbo 的格式要求封装为字符串输出\nlet audio = '';\nif (audioLike.length > 0) {\n  const i = audioLike[0]; // 只取第一条\n  const fileTokenName = `${i.file_token}_${i.name}`;\n  audio = `/MoneyPrinterTurbo/storage/local_videos/${fileTokenName}`;\n}\n\n// 只输出一条 item，把两种结果都放进同一个对象里\nreturn [\n  {\n    json: {\n      images, \n      audio, \n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        224
+      ],
+      "id": "53ffc807-74d8-42aa-b30d-c0bb01bc64b6",
+      "name": "本地素材数据格式化",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e4827c98-baac-464c-8a80-f5edb8ea907d",
+              "name": "素材来源",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"素材来源\"] === \"本地素材\" ? \"local\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"素材来源\"] === \"免费素材网\" ? \"pexels\" :\n  \"pexels\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "e2db0968-7166-4b87-8e4d-6caf5f9fed4c",
+              "name": "背景音乐类型",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"背景音乐类型\"] === \"本地音乐\" ? \"custom\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"背景音乐类型\"] === \"随机音乐\" ? \"random\" :\n  \"random\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "5993e652-9dec-445c-9581-f45b4684e8d3",
+              "name": "本地背景音乐素材",
+              "value": "={{ $ifEmpty($json.audio, \"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "a33a38ff-7cb6-4396-ad65-455433feadc6",
+              "name": "合成模式",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"合成模式\"] === \"随机拼接\" ? \"random\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"合成模式\"] === \"顺序拼接\" ? \"sequential\" :\n  \"random\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "0db02208-154f-4c23-9eee-9b2d6fed5cad",
+              "name": "转场模式",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"无转场\" ? \"None\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"随机转场\" ? \"Shuffle\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"渐入\" ? \"FadeIn\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"渐出\" ? \"FadeOut\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"滑动入\" ? \"SlideIn\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"滑动出\" ? \"SlideOut\" :\n  \"Shuffle\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "93434bca-34a7-468b-b097-f92dfa998dba",
+              "name": "宽高比",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"宽高比\"] === \"9:16(竖屏)\" ? \"9:16\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"宽高比\"] === \"16:9(横屏)\" ? \"16:9\" : \"9:16\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "5c866334-df2f-4e92-82eb-c51a9b6e1bf3",
+              "name": "配音音色",
+              "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"配音音色\"] === \"晓晓(女声)\" ? \"zh-CN-XiaoxiaoNeural\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"配音音色\"] === \"云希(男声)\" ? \"zh-CN-YunxiNeural\" :\n  \"zh-CN-XiaoxiaoNeural\"\n}}",
+              "type": "string"
+            },
+            {
+              "id": "b23b01ff-7c16-4398-a194-1bf1249b5d90",
+              "name": "本地图片视频素材",
+              "value": "={{ $json.images !== \"[]\" ? $json.images : \"null\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2320,
+        224
+      ],
+      "id": "eb5e16cf-cfd0-418a-a2b0-42970356866e",
+      "name": "固定本地素材",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"video_subject\": {{ ($json['主题'] || $json.video_subject || \"\").toJsonString() }},\n  \"video_script\": {{ ($json['脚本文案'] || $json.formatted_text || $json.video_script || \"\").toJsonString() }},\n  \"video_terms\": {{ ($json['文案关键词'] || $json.Video_Keywords || $json.video_terms || \"\").toJsonString() }},\n  \"video_aspect\": {{ ($json['宽高比'] || \"16:9\").toJsonString() }},\n  \"video_concat_mode\": {{ ($json['合成模式'] || \"sequential\").toJsonString() }},\n  \"video_transition_mode\": {{ ($json['转场模式'] || \"none\").toJsonString() }},\n  \"video_clip_duration\": 4,\n  \"video_count\": 1,\n  \"video_source\": {{ ($json['素材来源'] || \"local\").toJsonString() }},\n  \"video_materials\": {{ $json['本地图片视频素材'] || [] }},\n  \"bgm_file\": {{ ($json['本地背景音乐素材'] || \"\").toJsonString() }},\n  \"video_language\": \"\",\n  \"voice_name\": {{ ($json['配音音色'] || \"zh-CN-XiaoxiaoNeural\").toJsonString() }},\n  \"voice_volume\": 1.0,\n  \"voice_rate\": 1.2,\n  \"bgm_type\": {{ ($json['背景音乐类型'] || \"none\").toJsonString() }},\n  \"bgm_volume\": 0.4,\n  \"subtitle_enabled\": true,\n  \"subtitle_position\": \"bottom\",\n  \"custom_position\": 70.0,\n  \"font_name\": \"MicrosoftYaHeiBold.ttc\",\n  \"text_fore_color\": \"#FFFFFF\",\n  \"text_background_color\": true,\n  \"font_size\": 60,\n  \"stroke_color\": \"#000000\",\n  \"stroke_width\": 1.5,\n  \"n_threads\": 2,\n  \"paragraph_number\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2496,
+        224
+      ],
+      "id": "c8490bb4-a8f4-41da-b5fd-84fe4109ddfe",
+      "name": "本地素材接口参数固定",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "regenerate",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1264,
+        512
+      ],
+      "id": "06762f36-b7c3-40b3-a065-3a1599a17924",
+      "name": "接收POST请求",
+      "webhookId": "6e2c4464-37a1-4f51-949d-c0a01c938b25",
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "128iFexxUfVRERU5",
+          "name": "n8n+飞书搭建7x24小时AI短视频自动化运营系统"
+        }
+      },
+      "notes": "Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5d06deb-33dc-471e-8892-bbf2bb8c94f5",
+              "name": "app_token",
+              "value": "={{ $('接收POST请求').item.json.body.app_token }}",
+              "type": "string"
+            },
+            {
+              "id": "1817ab91-0b11-40ed-b13e-2d8367d99638",
+              "name": "table_id",
+              "value": "={{ $('接收POST请求').item.json.body.table_id }}",
+              "type": "string"
+            },
+            {
+              "id": "213a1bc0-306d-44b0-977c-6e9772773519",
+              "name": "record_id",
+              "value": "={{ $('接收POST请求').item.json.body.record_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2f1f952a-0612-41ae-9280-f400b020c105",
+              "name": "id",
+              "value": "={{ $('接收POST请求').item.json.body.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -944,
+        512
+      ],
+      "id": "b85194d1-a0d8-447a-8b77-64762944b636",
+      "name": "指定多维表格和记录",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7e2bc2b-c5af-4302-adf4-4a9905a877c1",
+              "name": "脚本文案",
+              "value": "={{ $json.formatted_text }}",
+              "type": "string"
+            },
+            {
+              "id": "6478b3dc-4819-4cbc-a48e-9cf8935bd2fd",
+              "name": "文案关键词",
+              "value": "={{ $json.Video_Keywords }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        528
+      ],
+      "id": "fb380a16-c756-4c7f-8063-ad112648ad59",
+      "name": "文案统一格式",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "## B分支：脚本文案存在且文案关键词不存在\n- LLM对表格记录中的脚本文案进行关键词提取\n- 再通过Code节点对获取的内容进行格式化处理",
+        "height": 480,
+        "width": 672,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "b577bdf7-f95a-4b57-9914-76ef748d6ef4",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"Video_Keywords\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\":\"视频关键词\"\n\t\t}\n\t},\n  \"required\": [\"Video_Keywords\"]\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        672
+      ],
+      "id": "769db463-b091-4f4f-82da-808cfc81bbb2",
+      "name": "强制格式化输出1",
+      "notesInFlow": true,
+      "notes": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=文案脚本内容：{{ $('获取多维表格记录').first().json.data.items[0].fields['脚本文案'][0].text }}",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=根据文案内容提取3-5个英文核心关键词，关键词之间用引文的逗号隔开，用于在素材网站或图库中精准搜索相关图片素材。",
+          "maxIterations": 10,
+          "returnIntermediateSteps": false,
+          "passthroughBinaryImages": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        432
+      ],
+      "id": "6327ec76-a003-4010-aab7-2f0604396675",
+      "name": "视频文案关键词提取",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "AI Agent"
+    },
+    {
+      "parameters": {
+        "content": "## A分支：脚本文案存在且文案关键词存在\n- 直接获取到表格中对应的内容\n- 再通过Code节点对获取的内容进行格式化处理",
+        "height": 288,
+        "width": 672,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "11abd602-4275-4efd-bb32-af30de3113ae",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## 判断脚本文案是否存在\n- 脚本文案存在且文案关键词存在则走A分支\n- 脚本文案存在且文案关键词不存在则走B分支\n- 脚本文案不存在等其他情况则走C分支",
+        "height": 320,
+        "width": 432,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -464,
+        400
+      ],
+      "typeVersion": 1,
+      "id": "45deb828-4e45-40bb-a78d-a9de998522b9",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7e2bc2b-c5af-4302-adf4-4a9905a877c1",
+              "name": "分支条件",
+              "value": "={{\n  (() => {\n    // 1. 安全获取 items 数组\n    const items = $('获取多维表格记录').item.json.data?.items;\n    if (!items || items.length === 0) {\n      return \"脚本文案不存在及其他情况\"; \n    }\n\n    // 2. 提取字段并判断值是否存在/不为空\n    const fields = items[0].fields || {};\n    const hasScript = fields[\"脚本文案\"] !== undefined && fields[\"脚本文案\"] !== \"\";\n    const hasKeywords = fields[\"文案关键词\"] !== undefined && fields[\"文案关键词\"] !== \"\";\n\n    // 3. 严格对齐 A / B / C 三个分支的文字定义\n    if (hasScript && hasKeywords) {\n      return \"脚本文案存在且文案关键词存在\";      // 准确对接 A 分支\n    } else if (hasScript && !hasKeywords) {\n      return \"脚本文案存在且文案关键词不存在\";    // 准确对接 B 分支\n    } else {\n      return \"脚本文案不存在及其他情况\";          // 准确对接 C 分支\n    }\n  })()\n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        544
+      ],
+      "id": "eeb45916-becc-4b1a-9116-d39821529053",
+      "name": "判断文案是否存在",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json['分支条件'] }}",
+                    "rightValue": "=脚本文案存在且文案关键词存在",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "06c6d19e-e2b2-4733-aa31-0184eb085567"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "A"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "f9e96528-f529-4a2a-87d3-99786770d0b8",
+                    "leftValue": "={{ $json['分支条件'] }}",
+                    "rightValue": "脚本文案存在且文案关键词不存在",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "B"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ba680b98-e3ad-4281-a31e-e16405510c25",
+                    "leftValue": "={{ $json['分支条件'] }}",
+                    "rightValue": "脚本文案不存在及其他情况",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "C"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -208,
+        528
+      ],
+      "id": "0b084d18-f2a5-409e-b724-429e77fe5e96",
+      "name": "条件分支",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：因生成的脚本文案内容需要提供给短视频生成工具作为其字幕脚本使用，需按照要求进行格式化处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n// 获取输入文本\nconst inputText = $('获取多维表格记录').first().json.data.items[0].fields['脚本文案'][0].text;\nconst videoKeywords = $('获取多维表格记录').first().json.data.items[0].fields['文案关键词'][0].text;\n\n// 使用正则表达式格式化文本函数，只保留需要的字符\nfunction formatText(text) {\n  \n  let cleanedText = text;\n  \n  // 1. 只保留中文、英文、数字、常用标点符号和空格。这样可以有效去除所有emoji（包括复合emoji）\n  cleanedText = cleanedText.replace(/[^\\u4e00-\\u9fff\\u3400-\\u4dbf\\u3000-\\u303f\\uff00-\\uffefa-zA-Z0-9\\s.,!?;:()（）！？；：、。，]/g, '');\n  \n  // 2. 去除换行符，替换为空格\n  cleanedText = cleanedText.replace(/\\n+/g, ' ');\n  \n  // 3. 去除tag标签（#开头的词汇）\n  cleanedText = cleanedText.replace(/#[^\\s#]+/g, '');\n  \n  // 4. 去除单双引号\n  cleanedText = cleanedText.replace(/['\"]/g, '');\n  \n  // 5. 清理多余空格并修剪首尾空格\n  cleanedText = cleanedText.replace(/\\s+/g, ' ').trim();\n  \n  return cleanedText;\n}\n\n// 处理文本\nconst formattedText = formatText(inputText);\n\n// 返回n8n格式的结果\nreturn [\n  {\n    json: {\n      formatted_text: formattedText,\n      character_count: formattedText.length,\n      Video_Keywords: videoKeywords\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        112
+      ],
+      "id": "2461f96a-1e06-4fab-a847-59085d7383b6",
+      "name": "A分支文案内容格式化",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：因生成的脚本文案内容需要提供给短视频生成工具作为其字幕脚本使用，需按照要求进行格式化处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\n// 获取输入文本\nconst inputText = $('获取多维表格记录').first().json.data.items[0].fields['脚本文案'][0].text;\nconst videoKeywords = $input.first().json.output.Video_Keywords;\n\n// 使用正则表达式格式化文本函数，只保留需要的字符\nfunction formatText(text) {\n  \n  let cleanedText = text;\n  \n  // 1. 只保留中文、英文、数字、常用标点符号和空格。这样可以有效去除所有emoji（包括复合emoji）\n  cleanedText = cleanedText.replace(/[^\\u4e00-\\u9fff\\u3400-\\u4dbf\\u3000-\\u303f\\uff00-\\uffefa-zA-Z0-9\\s.,!?;:()（）！？；：、。，]/g, '');\n  \n  // 2. 去除换行符，替换为空格\n  cleanedText = cleanedText.replace(/\\n+/g, ' ');\n  \n  // 3. 去除tag标签（#开头的词汇）\n  cleanedText = cleanedText.replace(/#[^\\s#]+/g, '');\n  \n  // 4. 去除单双引号\n  cleanedText = cleanedText.replace(/['\"]/g, '');\n  \n  // 5. 清理多余空格并修剪首尾空格\n  cleanedText = cleanedText.replace(/\\s+/g, ' ').trim();\n  \n  return cleanedText;\n}\n\n// 处理文本\nconst formattedText = formatText(inputText);\n\n// 返回n8n格式的结果\nreturn [\n  {\n    json: {\n      formatted_text: formattedText,\n      character_count: formattedText.length,\n      Video_Keywords: videoKeywords\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        480
+      ],
+      "id": "1f304496-3682-4fd3-93f9-e6bd445491a8",
+      "name": "B分支文案内容格式化",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 节点功能：因生成的脚本文案内容需要提供给短视频生成工具作为其字幕脚本使用，需按照要求进行格式化处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\n// 获取输入文本\nconst sourceNode = $('视频文案内容创作').first();\nconst inputText = sourceNode.json.output.Video_Content;\nconst videoKeywords = sourceNode.json.output.Video_Keywords;\n\n// 使用正则表达式格式化文本函数，只保留需要的字符\nfunction formatText(text) {\n  \n  let cleanedText = text;\n  \n  // 1. 只保留中文、英文、数字、常用标点符号和空格。这样可以有效去除所有emoji（包括复合emoji）\n  cleanedText = cleanedText.replace(/[^\\u4e00-\\u9fff\\u3400-\\u4dbf\\u3000-\\u303f\\uff00-\\uffefa-zA-Z0-9\\s.,!?;:()（）！？；：、。，]/g, '');\n  \n  // 2. 去除换行符，替换为空格\n  cleanedText = cleanedText.replace(/\\n+/g, ' ');\n  \n  // 3. 去除tag标签（#开头的词汇）\n  cleanedText = cleanedText.replace(/#[^\\s#]+/g, '');\n  \n  // 4. 去除单双引号\n  cleanedText = cleanedText.replace(/['\"]/g, '');\n  \n  // 5. 清理多余空格并修剪首尾空格\n  cleanedText = cleanedText.replace(/\\s+/g, ' ').trim();\n  \n  return cleanedText;\n}\n\n// 处理文本\nconst formattedText = formatText(inputText);\n\n// 返回n8n格式的结果\nreturn [\n  {\n    json: {\n      formatted_text: formattedText,\n      character_count: formattedText.length,\n      Video_Keywords: videoKeywords\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        976
+      ],
+      "id": "d7e28c1c-ddff-406c-b284-bd4088ae0d11",
+      "name": "C分支文案内容格式化",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格和记录').item.json.app_token }}/tables/{{ $('指定多维表格和记录').item.json.table_id }}/records/{{ $('指定多维表格和记录').item.json.record_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"当前状态\": \"生成中\"\n  }\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -624,
+        512
+      ],
+      "id": "2af0a525-1b17-46d2-9e75-db359095146b",
+      "name": "更新记录 生成中",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "temperature": 0.7,
+          "timeout": 60000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        656
+      ],
+      "id": "19eda14c-2cf1-4ae2-b7a9-ec522081dd38",
+      "name": "Agent AI",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "temperature": 0.7,
+          "timeout": 60000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        1168
+      ],
+      "id": "39a61045-9db5-44a9-8b5e-4ddf7aba2d89",
+      "name": "Agent AI1",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "temperature": 0.7,
+          "timeout": 60000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        656
+      ],
+      "id": "0506f96f-3cd6-4131-81b5-2d16b3f1bdc9",
+      "name": "Agent AI2",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "options": {
+          "frequencyPenalty": 0,
+          "responseFormat": "json_object",
+          "temperature": 0.7,
+          "timeout": 60000,
+          "maxRetries": 2,
+          "topP": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        1168
+      ],
+      "id": "248e4547-804a-4b18-8d8f-4de815fd2933",
+      "name": "Agent AI3",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.failed_stage }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "52eb6138-0d58-4c44-bdf6-c5589583a393"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "生成失败"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b4fad8aa-8243-4f3a-8dc8-9aa7b6a2018b",
+                    "leftValue": "={{ $json.data.failed_stage }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "还在生成中"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        3536,
+        800
+      ],
+      "id": "40b66e02-921a-459c-b343-88c030619fe7",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "errorMessage": "=视频合成失败 | 错误阶段: {{ $json.data.failed_stage }} | 详细原因: {{ $json.data.error }}"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3776,
+        784
+      ],
+      "id": "ba5c3138-d8e9-446d-a203-7d0ecf771e39",
+      "name": "Stop and Error"
+    }
+  ],
+  "connections": {
+    "获取飞书token": {
+      "main": [
+        [
+          {
+            "node": "指定多维表格和记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取多维表格记录": {
+      "main": [
+        [
+          {
+            "node": "更新记录 生成中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "条件分支处理": {
+      "main": [
+        [
+          {
+            "node": "获取本地素材",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "固定参数",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分支决策": {
+      "main": [
+        [
+          {
+            "node": "条件分支处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "视频文案内容创作": {
+      "main": [
+        [
+          {
+            "node": "C分支文案内容格式化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成短视频": {
+      "main": [
+        [
+          {
+            "node": "等待1分钟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "免费素材网接口参数固定": {
+      "main": [
+        [
+          {
+            "node": "生成短视频",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询视频制作进度": {
+      "main": [
+        [
+          {
+            "node": "视频制作是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待1分钟": {
+      "main": [
+        [
+          {
+            "node": "查询视频制作进度",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "视频制作是否完成": {
+      "main": [
+        [
+          {
+            "node": "获取视频",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "固定参数": {
+      "main": [
+        [
+          {
+            "node": "免费素材网接口参数固定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "合并数据统一处理3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "分片上传素材-上传分片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "视频分片": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分片上传素材-预上传": {
+      "main": [
+        [
+          {
+            "node": "重新挂载二进制文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "重新挂载二进制文件": {
+      "main": [
+        [
+          {
+            "node": "视频分片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分片上传素材-完成上传": {
+      "main": [
+        [
+          {
+            "node": "更新记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分片上传素材-上传分片": {
+      "main": [
+        [
+          {
+            "node": "等待3秒",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待3秒": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "合并数据统一处理3": {
+      "main": [
+        [
+          {
+            "node": "分片上传素材-完成上传",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "强制格式化输出": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "视频文案内容创作",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取视频文件大小": {
+      "main": [
+        [
+          {
+            "node": "分片上传素材-预上传",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新记录": {
+      "main": [
+        [
+          {
+            "node": "向群组发送即时消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取本地素材": {
+      "main": [
+        [
+          {
+            "node": "拆分数据单独处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分数据单独处理": {
+      "main": [
+        [
+          {
+            "node": "循环保存素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "循环保存素材": {
+      "main": [
+        [
+          {
+            "node": "合并数据统一处理",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "获取素材二进制文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取素材二进制文件": {
+      "main": [
+        [
+          {
+            "node": "保存素材到本地",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "保存素材到本地": {
+      "main": [
+        [
+          {
+            "node": "等待2秒",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待2秒": {
+      "main": [
+        [
+          {
+            "node": "循环保存素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "合并数据统一处理": {
+      "main": [
+        [
+          {
+            "node": "本地素材数据格式化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "本地素材数据格式化": {
+      "main": [
+        [
+          {
+            "node": "固定本地素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "固定本地素材": {
+      "main": [
+        [
+          {
+            "node": "本地素材接口参数固定",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "本地素材接口参数固定": {
+      "main": [
+        [
+          {
+            "node": "生成短视频",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "接收POST请求": {
+      "main": [
+        [
+          {
+            "node": "获取飞书token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "指定多维表格和记录": {
+      "main": [
+        [
+          {
+            "node": "获取多维表格记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "强制格式化输出1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "视频文案关键词提取",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "视频文案关键词提取": {
+      "main": [
+        [
+          {
+            "node": "B分支文案内容格式化",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "文案统一格式": {
+      "main": [
+        [
+          {
+            "node": "分支决策",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "判断文案是否存在": {
+      "main": [
+        [
+          {
+            "node": "条件分支",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "条件分支": {
+      "main": [
+        [
+          {
+            "node": "A分支文案内容格式化",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "视频文案关键词提取",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "视频文案内容创作",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A分支文案内容格式化": {
+      "main": [
+        [
+          {
+            "node": "文案统一格式",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B分支文案内容格式化": {
+      "main": [
+        [
+          {
+            "node": "文案统一格式",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "C分支文案内容格式化": {
+      "main": [
+        [
+          {
+            "node": "文案统一格式",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新记录 生成中": {
+      "main": [
+        [
+          {
+            "node": "判断文案是否存在",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取视频": {
+      "main": [
+        [
+          {
+            "node": "获取视频文件大小",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent AI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "视频文案关键词提取",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent AI1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "视频文案内容创作",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent AI2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "视频文案关键词提取",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "强制格式化输出1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent AI3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "视频文案内容创作",
+            "type": "ai_languageModel",
+            "index": 1
+          },
+          {
+            "node": "强制格式化输出",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "等待1分钟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "WSWtwq6K3XiL9kO1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 900
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "eeaf6be7-7be4-460f-9f01-22b6d96dcfdf",
+  "activeVersionId": "9c1b2560-9158-4920-b618-63f7663d7336",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-23T22:13:39.503Z",
+      "createdAt": "2026-07-23T22:13:39.503Z",
+      "role": "workflow:owner",
+      "workflowId": "KT6q3husx3g1OjCO",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-02T12:53:55.000Z",
+    "createdAt": "2026-07-31T20:55:21.339Z",
+    "versionId": "9c1b2560-9158-4920-b618-63f7663d7336",
+    "workflowId": "KT6q3husx3g1OjCO",
+    "nodes": [
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+          "sendHeaders": true,
+          "specifyHeaders": "json",
+          "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n    \"app_id\": \"cli_aac4c96597b85bcd\",\n    \"app_secret\": \"0CCdv8CG5aB4mjaVLGkupgDeemcvMdSM\"\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1104,
+          512
+        ],
+        "id": "23d8ac55-7df3-4199-ae3b-2c4a8938cb98",
+        "name": "获取飞书token",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "maxTries": 5,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $json.app_token }}/tables/{{ $json.table_id }}/records/search",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "user_id_type",
+                "value": "open_id"
+              },
+              {
+                "name": "page_token"
+              },
+              {
+                "name": "page_size",
+                "value": "20"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"sort\": [\n    {\n      \"field_name\": \"id\",\n      \"desc\": true\n    }\n  ],\n  \"filter\": {\n    \"conjunction\": \"and\",\n    \"conditions\": [\n      {\n        \"field_name\": \"id\",\n        \"operator\": \"is\",\n        \"value\": [\n          {{ $json.id }}\n        ]\n      },\n      {\n        \"field_name\": \"当前状态\",\n        \"operator\": \"is\",\n        \"value\": [\n          \"等待确认\"\n        ]\n      }\n    ]\n  },\n  \"automatic_fields\": false\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -784,
+          512
+        ],
+        "id": "2f27e899-d248-48b7-b597-747b006780b8",
+        "name": "获取多维表格记录",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "maxTries": 5,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "content": "## 获取飞书多维表格记录\n- 接收飞书多维表格记录中点击按钮触发的HTTP请求\n- 根据过滤条件获取指定表格中的某条具体记录",
+          "height": 320,
+          "width": 816,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1312,
+          400
+        ],
+        "typeVersion": 1,
+        "id": "927f7d39-a192-46a1-91a8-d5565c1f6e28",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json['分支条件'] }}",
+                      "rightValue": "=本地素材",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "06c6d19e-e2b2-4733-aa31-0184eb085567"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "A"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "f9e96528-f529-4a2a-87d3-99786770d0b8",
+                      "leftValue": "={{ $json['分支条件'] }}",
+                      "rightValue": "素材网素材",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "B"
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.3,
+        "position": [
+          1136,
+          528
+        ],
+        "id": "7c02e5ac-5b34-4a22-adb0-6150d034ca65",
+        "name": "条件分支处理",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Switch"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b7e2bc2b-c5af-4302-adf4-4a9905a877c1",
+                "name": "分支条件",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"素材来源\"] === \"本地素材\" || $('获取多维表格记录').item.json.data.items[0].fields[\"背景音乐类型\"]  === '本地音乐' ? \"本地素材\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"素材来源\"] === \"免费素材网\" && $('获取多维表格记录').item.json.data.items[0].fields[\"背景音乐类型\"]  === '随机音乐' ? \"素材网素材\" :\n\"素材网素材\"   // 其他情况\n}}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          944,
+          528
+        ],
+        "id": "3ae16ece-4105-4f37-b276-596f22d1b314",
+        "name": "分支决策",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=文案主题：{{ $('获取多维表格记录').item.json.data.items[0].fields['主题'][0].text }}",
+          "hasOutputParser": true,
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "=# 角色：资深内容创作专家\n\n## 背景：\n你是一位资深内容创作专家，擅长将文案主题内容转化为吸引眼球且具有高互动率的文案。请根据提供的内容，创作一篇符合以下要求的文案：\n\n## 规则：\n1. 语言年轻化、亲切自然，符合用户的表达习惯，带有轻松幽默感。\n2. 分段清晰，每个段落突出重点，便于阅读和理解。\n3. 结尾部分明确引导用户进行点赞、收藏和评论，提升互动率。\n4. 总字数控制在200-300字之间，内容精炼且信息完整，避免冗余，不要出现emoji图标。\n5. 根据主题提取3-5个英文核心关键词，用于在素材网站或图库中精准搜索相关图片素材。\n\n## 初始化\n请严格按照上述要求输出内容。",
+            "maxIterations": 10,
+            "returnIntermediateSteps": false,
+            "passthroughBinaryImages": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2.1,
+        "position": [
+          48,
+          944
+        ],
+        "id": "812fd2ad-bd37-4cb9-bd2e-709aadfe4ace",
+        "name": "视频文案内容创作",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "AI Agent"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=http://host.docker.internal:8080/api/v1/videos",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"video_subject\": \"{{ $json.video_subject }}\",\n    \"video_script\": \"{{ $json.video_script }}\",\n    \"video_terms\": \"{{ $json.video_terms }}\",\n    \"video_aspect\": \"{{ $json.video_aspect }}\",\n    \"video_concat_mode\": \"{{ $json.video_concat_mode }}\",\n    \"video_transition_mode\": \"{{ $json.video_transition_mode }}\",\n    \"video_clip_duration\": {{ $json.video_clip_duration }},\n    \"video_count\": {{ $json.video_count }},\n    \"video_source\": \"{{ $json.video_source }}\",\n    \"video_materials\":{{ $json.video_materials }},\n    \"video_language\": \"{{ $json.video_language }}\",\n    \"voice_name\": \"{{ $json.voice_name }}\",\n    \"voice_volume\": {{ $json.voice_volume }},\n    \"voice_rate\": {{ $json.voice_rate }},\n    \"bgm_type\": \"{{ $json.bgm_type }}\",\n    \"bgm_file\": \"{{ $json.bgm_file }}\",\n    \"bgm_volume\": {{ $json.bgm_volume }},\n    \"subtitle_enabled\": {{ $json.subtitle_enabled }},\n    \"subtitle_position\": \"{{ $json.subtitle_position }}\",\n    \"custom_position\": {{ $json.custom_position }},\n    \"font_name\": \"{{ $json.font_name }}\",\n    \"text_fore_color\": \"{{ $json.text_fore_color }}\",\n    \"text_background_color\": {{ $json.text_background_color }},\n    \"font_size\": {{ $json.font_size }},\n    \"stroke_color\": \"{{ $json.stroke_color }}\",\n    \"stroke_width\": {{ $json.stroke_width }},\n    \"n_threads\": {{ $json.n_threads }},\n    \"paragraph_number\": {{ $json.paragraph_number }}\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2752,
+          672
+        ],
+        "id": "15cd6cb8-f9be-4445-8aca-70532d4e3b0b",
+        "name": "生成短视频",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"video_subject\": {{ $('获取多维表格记录').item.json.data.items[0].fields[\"主题\"][0].text.toJsonString() }},\n  \"video_script\": {{ $('文案统一格式').item.json['脚本文案'].toJsonString() }},\n  \"video_terms\": {{ $('文案统一格式').item.json['文案关键词'].toJsonString() }},\n  \"video_aspect\": {{ $json['宽高比'].toJsonString() }},\n  \"video_concat_mode\": {{ $json['合成模式'].toJsonString() }},\n  \"video_transition_mode\": {{ $json['转场模式'].toJsonString() }},\n  \"video_clip_duration\": 4,\n  \"video_count\": 1,\n  \"video_source\": {{ $json['素材来源'].toJsonString() }},\n  \"video_materials\": {{ $json['本地图片视频素材'].toJsonString() }},\n  \"video_language\": \"\",\n  \"voice_name\": {{ $json['配音音色'].toJsonString() }},\n  \"voice_volume\": 1.0,\n  \"voice_rate\": 1.2,\n  \"bgm_type\": {{ $json['背景音乐类型'].toJsonString() }},\n  \"bgm_file\": \"\",\n  \"bgm_volume\": 0.4,\n  \"subtitle_enabled\": true,\n  \"subtitle_position\": \"bottom\",\n  \"custom_position\": 70.0,\n  \"font_name\": \"MicrosoftYaHeiBold.ttc\",\n  \"text_fore_color\": \"#FFFFFF\",\n  \"text_background_color\": true,\n  \"font_size\": 60,\n  \"stroke_color\": \"#000000\",\n  \"stroke_width\": 1.5,\n  \"n_threads\": 2,\n  \"paragraph_number\": 1\n} ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2496,
+          752
+        ],
+        "id": "89ad1af5-57f9-4b7e-836a-4a47c5de6231",
+        "name": "免费素材网接口参数固定",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "url": "=http://host.docker.internal:8080/api/v1/tasks/{{ $json.data.task_id }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3152,
+          672
+        ],
+        "id": "f34b1358-2c45-4487-9eff-b5743e6fa0e3",
+        "name": "查询视频制作进度",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "amount": 1,
+          "unit": "minutes"
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          2960,
+          672
+        ],
+        "id": "35f90377-9192-43e7-aea0-c2a5c27f2558",
+        "name": "等待1分钟",
+        "webhookId": "38814d81-0bc5-4425-96c1-a85a1c0a578a",
+        "notesInFlow": true,
+        "notes": "Wait"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "f5d66584-990a-4d75-ae70-22e521de4e91",
+                "leftValue": "={{ $json.data.progress }}",
+                "rightValue": 100,
+                "operator": {
+                  "type": "number",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          3328,
+          672
+        ],
+        "id": "9c25ca02-8ffc-422e-b08c-caeedf50b667",
+        "name": "视频制作是否完成",
+        "notesInFlow": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "url": "=http://host.docker.internal:8080{{ $json.data.videos[0] }}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3536,
+          656
+        ],
+        "id": "10608048-b519-428a-a2bf-3f16743b7967",
+        "name": "获取视频",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "e4827c98-baac-464c-8a80-f5edb8ea907d",
+                "name": "素材来源",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields['素材来源'] === \"本地素材\" ? \"local\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['素材来源'] === \"免费素材网\" ? \"pexels\" : \"pexels\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "d60da1a1-571e-4464-9a23-04802d37910c",
+                "name": "本地图片视频素材",
+                "value": "null",
+                "type": "string"
+              },
+              {
+                "id": "e2db0968-7166-4b87-8e4d-6caf5f9fed4c",
+                "name": "背景音乐类型",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields['背景音乐类型'] === \"本地音乐\" ? \"custom\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['背景音乐类型'] === \"随机音乐\" ? \"random\" : \"random\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "a33a38ff-7cb6-4396-ad65-455433feadc6",
+                "name": "合成模式",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields['合成模式'] === \"随机拼接\" ? \"random\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['合成模式'] === \"顺序拼接\" ? \"sequential\" : \"random\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "0db02208-154f-4c23-9eee-9b2d6fed5cad",
+                "name": "转场模式",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"无转场\" ? \"None\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"随机转场\" ? \"Shuffle\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"渐入\" ? \"FadeIn\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"渐出\" ? \"FadeOut\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"滑动入\" ? \"SlideIn\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['转场模式'] === \"滑动出\" ? \"SlideOut\" : \"Shuffle\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "bcb825bc-0f54-43b0-8282-b1a830b4900a",
+                "name": "宽高比",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields['宽高比'] === \"9:16(竖屏)\" ? \"9:16\" :\n  $('获取多维表格记录').item.json.data.items[0].fields['宽高比'] === \"16:9(横屏)\" ? \"16:9\" : \"9:16\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "5c866334-df2f-4e92-82eb-c51a9b6e1bf3",
+                "name": "配音音色",
+                "value": "={{\n    $('获取多维表格记录').item.json.data.items[0].fields['配音音色'] === \"16:9(横屏)\" ? \"16:9\" : \"9:16\" === \"diana(女性)\" ? \"siliconflow:FunAudioLLM/CosyVoice2-0.5B:diana-Female\" : \"siliconflow:FunAudioLLM/CosyVoice2-0.5B:diana-Female\"\n}}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1408,
+          752
+        ],
+        "id": "3759e030-413e-4c15-ad3a-fd982e56e92c",
+        "name": "固定参数",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格和记录').item.json.app_token }}/tables/{{ $('指定多维表格和记录').item.json.table_id }}/records/{{ $('指定多维表格和记录').item.json.record_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fields\": {\n    \"脚本文案\": {{ $('文案统一格式').item.json['脚本文案'].toJsonString() }},\n    \"文案关键词\": {{ $('文案统一格式').item.json['文案关键词'].toJsonString() }},\n    \"当前状态\": \"等待确认\",\n    \"短视频\": [\n        {\n            \"file_token\": {{ $json.data.file_token.toJsonString() }}\n        }\n    ]\n  }\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          4976,
+          368
+        ],
+        "id": "c32f54ab-ba04-4535-8183-0d1c18950df0",
+        "name": "更新记录",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "content": "## C分支：脚本文案不存在及其他情况\n- LLM对表格记录中的主题进行脚本文案内容、文案关键词生成\n- 再通过Code节点对生成的内容进行格式化处理",
+          "height": 496,
+          "width": 672,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          0,
+          832
+        ],
+        "typeVersion": 1,
+        "id": "87293c26-dbf7-41bd-b610-44677221f75b",
+        "name": "Sticky Note2"
+      },
+      {
+        "parameters": {
+          "content": "## 判断使用本地素材还是素材网\n- 对AI生成的文案内容进行格式化处理，方便短视频生成工具使用\n- 判断若使用本地素材则走A分支\n- 判断若使用素材网素材则走B分支",
+          "height": 320,
+          "width": 592,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          704,
+          384
+        ],
+        "typeVersion": 1,
+        "id": "6984045f-50d9-4c99-933a-2a100d1f6657",
+        "name": "Sticky Note3"
+      },
+      {
+        "parameters": {
+          "content": "## B分支处理逻辑:使用免费素材网\n- 使用素材网和随机音乐\n- 定义最终传递给接口的参数",
+          "height": 288,
+          "width": 1328,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          1328,
+          624
+        ],
+        "typeVersion": 1,
+        "id": "a0244210-934b-4b1c-92b3-9bce406ebf9c",
+        "name": "Sticky Note6"
+      },
+      {
+        "parameters": {
+          "content": "## 短视频生成\n- 使用MoneyPrinterTrubo免费开源工具\n- 定时查询视频制作状态\n- 可替换其他工具，调整对应逻辑即可",
+          "height": 416,
+          "width": 992,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          2688,
+          496
+        ],
+        "typeVersion": 1,
+        "id": "6598d9c8-bae5-4cf2-b4b4-641bdc252637",
+        "name": "Sticky Note7"
+      },
+      {
+        "parameters": {
+          "content": "## 将生成的短视频上传到表格中并进行即时群消息提醒\n- 对生成的短视频进行分片上传至飞书\n- 将生成的文案、短视频、状态等更新多维表格\n- 发送群消息提醒",
+          "height": 720,
+          "width": 1664,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          3712,
+          192
+        ],
+        "typeVersion": 1,
+        "id": "355ae408-cd9c-41fd-a4d5-0e5b36b04128",
+        "name": "Sticky Note8"
+      },
+      {
+        "parameters": {
+          "content": "## A分支处理逻辑:使用本地素材\n- 从表格记录中获取上传的本地素材(图片、音频、视频)\n- 将获取到的本地素材保存到本地指定文件夹(为了给短视频生成工具使用)\n- 定义最终传递给接口的参数",
+          "height": 416,
+          "width": 1328,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          1328,
+          192
+        ],
+        "typeVersion": 1,
+        "id": "6ef0add9-2093-46ff-9d97-be00eb395391",
+        "name": "Sticky Note10"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          4432,
+          544
+        ],
+        "id": "20faf587-083f-4e5c-baa1-6687ef730e08",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：对获取到的视频进行分片处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nconst CHUNK_SIZE = 4 * 1024 * 1024; // 4MB in bytes\n\n// 获取输入的视频二进制数据\nconst binaryData = items[0].binary.data;\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\n// 计算需要分成多少块\nconst totalChunks = Math.ceil(buffer.length / CHUNK_SIZE);\nconst chunks = [];\n\n// 分割二进制数据\nfor (let i = 0; i < totalChunks; i++) {\n  const start = i * CHUNK_SIZE;\n  const end = Math.min(start + CHUNK_SIZE, buffer.length);\n  const chunkBuffer = buffer.slice(start, end);\n  \n  // 为每个块创建新的二进制数据对象\n  chunks.push({\n    json: {\n      chunkIndex: i,\n      totalChunks: totalChunks,\n      chunkSize: chunkBuffer.length,\n      originalFileName: binaryData.fileName || 'video'\n    },\n    binary: {\n      data: await this.helpers.prepareBinaryData(\n        chunkBuffer,\n        `${binaryData.fileName || 'video'}_chunk_${i}.bin`\n      )\n    }\n  });\n}\n\nreturn chunks;\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4256,
+          544
+        ],
+        "id": "a8bac1b3-b26a-4525-9e40-3439c91f8acd",
+        "name": "视频分片",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_prepare",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"file_name\": \"test.mp4\",\n  \"parent_type\": \"bitable_file\",\n  \"parent_node\": \"{{ $('指定多维表格和记录').item.json.app_token }}\",\n  \"size\": {{ $json.size_in_bytes }}\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3920,
+          544
+        ],
+        "id": "c34199a1-173e-49d9-ba52-ca4ded8e44ba",
+        "name": "分片上传素材-预上传",
+        "notesInFlow": true,
+        "retryOnFail": false,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：把某个上游节点的 json 和 binary 重新挂到当前输出上\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\nreturn {\n  json: $('获取视频文件大小').item.json,\n  binary: $('获取视频文件大小').item.binary,\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4096,
+          544
+        ],
+        "id": "aca7ff44-254e-4696-a316-1bdd4f147600",
+        "name": "重新挂载二进制文件",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_finish",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"upload_id\": \"{{ $('分片上传素材-预上传').item.json.data.upload_id }}\",\n  \"block_num\": {{ $('分片上传素材-预上传').item.json.data.block_num }}\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          4800,
+          368
+        ],
+        "id": "5a9e090e-8859-4e4b-9911-48835f3a1d2e",
+        "name": "分片上传素材-完成上传",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/upload_part",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "multipart/form-data; boundary=---7MA4YWxkTrZu0gW"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "upload_id",
+                "value": "={{ $('分片上传素材-预上传').item.json.data.upload_id }}"
+              },
+              {
+                "name": "seq",
+                "value": "={{ $json.chunkIndex }}"
+              },
+              {
+                "name": "=size",
+                "value": "={{ $json.chunkSize }}"
+              },
+              {
+                "parameterType": "formBinaryData",
+                "name": "file",
+                "inputDataFieldName": "=data"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          4640,
+          656
+        ],
+        "id": "4aeb563e-ccc3-4920-afd8-0a731d5eb51e",
+        "name": "分片上传素材-上传分片",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "amount": 3
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          4992,
+          656
+        ],
+        "id": "234548e0-6131-4a90-8451-379a1b0cb0aa",
+        "name": "等待3秒",
+        "webhookId": "abba6fe3-b5e1-4e84-83b2-a3a333294c4d",
+        "notesInFlow": true,
+        "notes": "Wait"
+      },
+      {
+        "parameters": {
+          "fieldsToAggregate": {
+            "fieldToAggregate": [
+              {}
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          4624,
+          368
+        ],
+        "id": "6a1fb646-975f-48b4-8ad7-09d279b97f40",
+        "name": "合并数据统一处理3",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Aggregate"
+      },
+      {
+        "parameters": {
+          "fileSelector": "./.n8n-files/videos/test.mp4",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.readWriteFile",
+        "typeVersion": 1,
+        "position": [
+          2752,
+          288
+        ],
+        "id": "64f10a82-a3c1-4d0d-b868-dbd5db03e0fc",
+        "name": "读取本地视频",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000
+      },
+      {
+        "parameters": {
+          "content": "## 模拟短视频生成(测试使用)\n- 读取本地测试视频进行后续节点测试",
+          "height": 272,
+          "width": 992,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          2688,
+          192
+        ],
+        "typeVersion": 1,
+        "id": "9d95bd9f-97d9-4c6b-bf62-28173395580a",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "schemaType": "manual",
+          "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"Video_Content\": {\n\t\t\t\"type\": \"string\",\n            \"description\":\"小红书文案内容\"\n\t\t},\n\t\t\"Video_Keywords\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\":\"视频关键词\"\n\t\t}\n\t},\n  \"required\": [\"Video_Content\", \"Video_Keywords\"]\n}",
+          "autoFix": true
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          320,
+          1184
+        ],
+        "id": "b272b471-e0d8-4045-a0be-f398aeb1ca7c",
+        "name": "强制格式化输出",
+        "notesInFlow": true,
+        "notes": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：获取当前传递过来视频二进制文件的大小和重新挂载视频文件传递给下一个节点\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\n// 读取二进制 buffer，返回字节数\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\nconst sizeInBytes = buffer.length;\n\n// 同时把原来的 binary.data 一起传出去\nreturn [\n  {\n    json: {\n      size_in_bytes: sizeInBytes,\n    },\n    binary: {\n      // 直接复用上一个节点的 binary.data\n      data: $input.first().binary.data,\n    },\n  },\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3760,
+          544
+        ],
+        "id": "9dedee5d-3b98-4cb6-8348-e98f35b4ef38",
+        "name": "获取视频文件大小",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "receive_id_type",
+                "value": "chat_id"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"receive_id\":\"oc_1faf20cbac5dddf8e9e7aa75253a411b\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"AI短视频创作进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**视频主题**:{{ $('获取多维表格记录').item.json.data.items[0].fields[\"主题\"][0].text }}\\\\\\n **创建时间**:{{ new Date($('获取多维表格记录').item.json.data.items[0].fields[\"创建时间\"] ).toDateTime().format('yyyy-LL-dd HH:mm:ss') }}\\\\\\n **当前状态**:{{ $json.data.record.fields['当前状态'] }}\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**AI生成的视频脚本**:\\\\\\n {{ $('文案统一格式').item.json['脚本文案'] }}\\\"},{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://r1l3h3s8hbg.feishu.cn/base/TZqcbwWqeaQrCPsvc7fc2m5nnnd?table=tbl15M0lbST63Ya5&view=vewI3sjaI0\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          5152,
+          368
+        ],
+        "id": "d581ac71-a70e-4916-9bea-449ab3c327a7",
+        "name": "向群组发送即时消息",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "88f93589-8d95-43f8-9534-d9cbfc59c4ba",
+                "name": "本地素材",
+                "value": "={{ $('获取多维表格记录').item.json.data.items[0].fields[\"本地素材\"] }}",
+                "type": "array"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1392,
+          384
+        ],
+        "id": "ef23b4d5-4f8b-42b7-9954-b79321566123",
+        "name": "获取本地素材",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "[\"本地素材\"]",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          1552,
+          384
+        ],
+        "id": "b38a6b5a-fae8-4721-9fe9-36b2b13f75ab",
+        "name": "拆分数据单独处理",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Split Out"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          1744,
+          384
+        ],
+        "id": "e41fc8b4-d8bf-4cec-920b-9a15d626b489",
+        "name": "循环保存素材",
+        "notesInFlow": true,
+        "notes": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/{{ $json.file_token }}/download",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1952,
+          400
+        ],
+        "id": "2f3e95ba-dafe-4ab0-af11-400cdb90524e",
+        "name": "获取素材二进制文件",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "operation": "write",
+          "fileName": "=./.n8n-files/mpt/storage/local_videos/{{ $json.file_token }}_{{ $json.name }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.readWriteFile",
+        "typeVersion": 1,
+        "position": [
+          2144,
+          400
+        ],
+        "id": "b377ddc0-7da6-4e62-9eb3-e29d93c1b6f5",
+        "name": "保存素材到本地",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Read/Write Files from Disk"
+      },
+      {
+        "parameters": {
+          "amount": 3
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          2320,
+          400
+        ],
+        "id": "7cdc379e-3d53-4e33-a81d-338ff9023612",
+        "name": "等待2秒",
+        "webhookId": "06ec5a22-502b-447b-8d9e-e9c79b103d2e",
+        "notesInFlow": true,
+        "notes": "Wait"
+      },
+      {
+        "parameters": {
+          "aggregate": "aggregateAllItemData",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          1952,
+          224
+        ],
+        "id": "77c73991-6b6c-401c-abe0-7811f31277b1",
+        "name": "合并数据统一处理",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Aggregate"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：对获取到的素材(图片、视频、音频)文件进行拼接\n// Author:@新哥AGI研习社\n\nconst files = $input.first().json.data;\n\n// 按类型分组\nconst imageLike = files.filter(i => i.type === 'image/jpeg' || i.type === 'video/mp4');\nconst audioLike = files.filter(i => i.type === 'audio/mpeg');\n\n// 1) 按照 MoneyPrinterTurbo 规范组装本地视频/图片素材列表\nconst imagesArray = imageLike.map(i => {\n  const fileTokenName = `${i.file_token}_${i.name}`;\n  \n  // 1. 根据后缀名或 type 严格区分 image 和 video\n  const isVideo = i.name.endsWith('.mp4') || i.type === 'video/mp4';\n  \n  return {\n    provider: 'local',\n    type: isVideo ? 'video' : 'image', // 务必对应正确！\n    url: `/MoneyPrinterTurbo/storage/local_videos/${fileTokenName}`,\n    duration: 0\n  };\n});\n\n// ⚠️ 注意：直接保留对象数组（Array），不要在此处使用 JSON.stringify！\nconst images = imagesArray; \n\n// 2) 当类型为 audio/mpeg 按照 MoneyPrinterTurbo 的格式要求封装为字符串输出\nlet audio = '';\nif (audioLike.length > 0) {\n  const i = audioLike[0]; // 只取第一条\n  const fileTokenName = `${i.file_token}_${i.name}`;\n  audio = `/MoneyPrinterTurbo/storage/local_videos/${fileTokenName}`;\n}\n\n// 只输出一条 item，把两种结果都放进同一个对象里\nreturn [\n  {\n    json: {\n      images, \n      audio, \n    },\n  },\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2144,
+          224
+        ],
+        "id": "53ffc807-74d8-42aa-b30d-c0bb01bc64b6",
+        "name": "本地素材数据格式化",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "e4827c98-baac-464c-8a80-f5edb8ea907d",
+                "name": "素材来源",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"素材来源\"] === \"本地素材\" ? \"local\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"素材来源\"] === \"免费素材网\" ? \"pexels\" :\n  \"pexels\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "e2db0968-7166-4b87-8e4d-6caf5f9fed4c",
+                "name": "背景音乐类型",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"背景音乐类型\"] === \"本地音乐\" ? \"custom\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"背景音乐类型\"] === \"随机音乐\" ? \"random\" :\n  \"random\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "5993e652-9dec-445c-9581-f45b4684e8d3",
+                "name": "本地背景音乐素材",
+                "value": "={{ $ifEmpty($json.audio, \"\") }}",
+                "type": "string"
+              },
+              {
+                "id": "a33a38ff-7cb6-4396-ad65-455433feadc6",
+                "name": "合成模式",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"合成模式\"] === \"随机拼接\" ? \"random\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"合成模式\"] === \"顺序拼接\" ? \"sequential\" :\n  \"random\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "0db02208-154f-4c23-9eee-9b2d6fed5cad",
+                "name": "转场模式",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"无转场\" ? \"None\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"随机转场\" ? \"Shuffle\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"渐入\" ? \"FadeIn\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"渐出\" ? \"FadeOut\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"滑动入\" ? \"SlideIn\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"转场模式\"] === \"滑动出\" ? \"SlideOut\" :\n  \"Shuffle\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "93434bca-34a7-468b-b097-f92dfa998dba",
+                "name": "宽高比",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"宽高比\"] === \"9:16(竖屏)\" ? \"9:16\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"宽高比\"] === \"16:9(横屏)\" ? \"16:9\" : \"9:16\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "5c866334-df2f-4e92-82eb-c51a9b6e1bf3",
+                "name": "配音音色",
+                "value": "={{\n  $('获取多维表格记录').item.json.data.items[0].fields[\"配音音色\"] === \"晓晓(女声)\" ? \"zh-CN-XiaoxiaoNeural\" :\n  $('获取多维表格记录').item.json.data.items[0].fields[\"配音音色\"] === \"云希(男声)\" ? \"zh-CN-YunxiNeural\" :\n  \"zh-CN-XiaoxiaoNeural\"\n}}",
+                "type": "string"
+              },
+              {
+                "id": "b23b01ff-7c16-4398-a194-1bf1249b5d90",
+                "name": "本地图片视频素材",
+                "value": "={{ $json.images !== \"[]\" ? $json.images : \"null\" }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2320,
+          224
+        ],
+        "id": "eb5e16cf-cfd0-418a-a2b0-42970356866e",
+        "name": "固定本地素材",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"video_subject\": {{ $('获取多维表格记录').item.json.data.items[0].fields[\"主题\"][0].text.toJsonString() }},\n  \"video_script\": {{ $('文案统一格式').item.json['脚本文案'].toJsonString() }},\n  \"video_terms\": {{ $('文案统一格式').item.json['文案关键词'].toJsonString() }},\n  \"video_aspect\": {{ $json['宽高比'].toJsonString() }},\n  \"video_concat_mode\": {{ $json['合成模式'].toJsonString() }},\n  \"video_transition_mode\": {{ $json['转场模式'].toJsonString() }},\n  \"video_clip_duration\": 4,\n  \"video_count\": 1,\n  \"video_source\": {{ $json['素材来源'].toJsonString() }},\n  \"video_materials\": {{ $json['本地图片视频素材'].toJsonString() }},\n  \"video_language\": \"\",\n  \"voice_name\": {{ $json['配音音色'].toJsonString() }},\n  \"voice_volume\": 1.0,\n  \"voice_rate\": 1.2,\n  \"bgm_type\": {{ $json['背景音乐类型'].toJsonString() }},\n  \"bgm_file\": {{ $json['本地背景音乐素材'].toJsonString() }},\n  \"bgm_volume\": 0.4,\n  \"subtitle_enabled\": true,\n  \"subtitle_position\": \"bottom\",\n  \"custom_position\": 70.0,\n  \"font_name\": \"MicrosoftYaHeiBold.ttc\",\n  \"text_fore_color\": \"#FFFFFF\",\n  \"text_background_color\": true,\n  \"font_size\": 60,\n  \"stroke_color\": \"#000000\",\n  \"stroke_width\": 1.5,\n  \"n_threads\": 2,\n  \"paragraph_number\": 1\n} ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2496,
+          224
+        ],
+        "id": "c8490bb4-a8f4-41da-b5fd-84fe4109ddfe",
+        "name": "本地素材接口参数固定",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "regenerate",
+          "authentication": "headerAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -1264,
+          512
+        ],
+        "id": "06762f36-b7c3-40b3-a065-3a1599a17924",
+        "name": "接收POST请求",
+        "webhookId": "6e2c4464-37a1-4f51-949d-c0a01c938b25",
+        "notesInFlow": true,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "128iFexxUfVRERU5",
+            "name": "n8n+飞书搭建7x24小时AI短视频自动化运营系统"
+          }
+        },
+        "notes": "Webhook"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c5d06deb-33dc-471e-8892-bbf2bb8c94f5",
+                "name": "app_token",
+                "value": "={{ $('接收POST请求').item.json.body.app_token }}",
+                "type": "string"
+              },
+              {
+                "id": "1817ab91-0b11-40ed-b13e-2d8367d99638",
+                "name": "table_id",
+                "value": "={{ $('接收POST请求').item.json.body.table_id }}",
+                "type": "string"
+              },
+              {
+                "id": "213a1bc0-306d-44b0-977c-6e9772773519",
+                "name": "record_id",
+                "value": "={{ $('接收POST请求').item.json.body.record_id }}",
+                "type": "string"
+              },
+              {
+                "id": "2f1f952a-0612-41ae-9280-f400b020c105",
+                "name": "id",
+                "value": "={{ $('接收POST请求').item.json.body.id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -944,
+          512
+        ],
+        "id": "b85194d1-a0d8-447a-8b77-64762944b636",
+        "name": "指定多维表格和记录",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b7e2bc2b-c5af-4302-adf4-4a9905a877c1",
+                "name": "脚本文案",
+                "value": "={{ $json.formatted_text }}",
+                "type": "string"
+              },
+              {
+                "id": "6478b3dc-4819-4cbc-a48e-9cf8935bd2fd",
+                "name": "文案关键词",
+                "value": "={{ $json.Video_Keywords }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          736,
+          528
+        ],
+        "id": "fb380a16-c756-4c7f-8063-ad112648ad59",
+        "name": "文案统一格式",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "content": "## B分支：脚本文案存在且文案关键词不存在\n- LLM对表格记录中的脚本文案进行关键词提取\n- 再通过Code节点对获取的内容进行格式化处理",
+          "height": 480,
+          "width": 672,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          0,
+          320
+        ],
+        "typeVersion": 1,
+        "id": "b577bdf7-f95a-4b57-9914-76ef748d6ef4",
+        "name": "Sticky Note5"
+      },
+      {
+        "parameters": {
+          "schemaType": "manual",
+          "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"Video_Keywords\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\":\"视频关键词\"\n\t\t}\n\t},\n  \"required\": [\"Video_Keywords\"]\n}",
+          "autoFix": true
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          288,
+          672
+        ],
+        "id": "769db463-b091-4f4f-82da-808cfc81bbb2",
+        "name": "强制格式化输出1",
+        "notesInFlow": true,
+        "notes": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=文案脚本内容：{{ $('获取多维表格记录').first().json.data.items[0].fields['脚本文案'][0].text }}",
+          "hasOutputParser": true,
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "=根据文案内容提取3-5个英文核心关键词，关键词之间用引文的逗号隔开，用于在素材网站或图库中精准搜索相关图片素材。",
+            "maxIterations": 10,
+            "returnIntermediateSteps": false,
+            "passthroughBinaryImages": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 2.1,
+        "position": [
+          48,
+          432
+        ],
+        "id": "6327ec76-a003-4010-aab7-2f0604396675",
+        "name": "视频文案关键词提取",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "AI Agent"
+      },
+      {
+        "parameters": {
+          "content": "## A分支：脚本文案存在且文案关键词存在\n- 直接获取到表格中对应的内容\n- 再通过Code节点对获取的内容进行格式化处理",
+          "height": 288,
+          "width": 672,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          0,
+          0
+        ],
+        "typeVersion": 1,
+        "id": "11abd602-4275-4efd-bb32-af30de3113ae",
+        "name": "Sticky Note4"
+      },
+      {
+        "parameters": {
+          "content": "## 判断脚本文案是否存在\n- 脚本文案存在且文案关键词存在则走A分支\n- 脚本文案存在且文案关键词不存在则走B分支\n- 脚本文案不存在等其他情况则走C分支",
+          "height": 320,
+          "width": 432,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -464,
+          400
+        ],
+        "typeVersion": 1,
+        "id": "45deb828-4e45-40bb-a78d-a9de998522b9",
+        "name": "Sticky Note9"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b7e2bc2b-c5af-4302-adf4-4a9905a877c1",
+                "name": "分支条件",
+                "value": "={{\n  (() => {\n    // 1. 安全获取 items 数组\n    const items = $('获取多维表格记录').item.json.data?.items;\n    if (!items || items.length === 0) {\n      return \"脚本文案不存在及其他情况\"; \n    }\n\n    // 2. 提取字段并判断值是否存在/不为空\n    const fields = items[0].fields || {};\n    const hasScript = fields[\"脚本文案\"] !== undefined && fields[\"脚本文案\"] !== \"\";\n    const hasKeywords = fields[\"文案关键词\"] !== undefined && fields[\"文案关键词\"] !== \"\";\n\n    // 3. 严格对齐 A / B / C 三个分支的文字定义\n    if (hasScript && hasKeywords) {\n      return \"脚本文案存在且文案关键词存在\";      // 准确对接 A 分支\n    } else if (hasScript && !hasKeywords) {\n      return \"脚本文案存在且文案关键词不存在\";    // 准确对接 B 分支\n    } else {\n      return \"脚本文案不存在及其他情况\";          // 准确对接 C 分支\n    }\n  })()\n}}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -400,
+          544
+        ],
+        "id": "eeb45916-becc-4b1a-9116-d39821529053",
+        "name": "判断文案是否存在",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json['分支条件'] }}",
+                      "rightValue": "=脚本文案存在且文案关键词存在",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "06c6d19e-e2b2-4733-aa31-0184eb085567"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "A"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "f9e96528-f529-4a2a-87d3-99786770d0b8",
+                      "leftValue": "={{ $json['分支条件'] }}",
+                      "rightValue": "脚本文案存在且文案关键词不存在",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "B"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "ba680b98-e3ad-4281-a31e-e16405510c25",
+                      "leftValue": "={{ $json['分支条件'] }}",
+                      "rightValue": "脚本文案不存在及其他情况",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "C"
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.3,
+        "position": [
+          -208,
+          528
+        ],
+        "id": "0b084d18-f2a5-409e-b724-429e77fe5e96",
+        "name": "条件分支",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Switch"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：因生成的脚本文案内容需要提供给短视频生成工具作为其字幕脚本使用，需按照要求进行格式化处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n// 获取输入文本\nconst inputText = $('获取多维表格记录').first().json.data.items[0].fields['脚本文案'][0].text;\nconst videoKeywords = $('获取多维表格记录').first().json.data.items[0].fields['文案关键词'][0].text;\n\n// 使用正则表达式格式化文本函数，只保留需要的字符\nfunction formatText(text) {\n  \n  let cleanedText = text;\n  \n  // 1. 只保留中文、英文、数字、常用标点符号和空格。这样可以有效去除所有emoji（包括复合emoji）\n  cleanedText = cleanedText.replace(/[^\\u4e00-\\u9fff\\u3400-\\u4dbf\\u3000-\\u303f\\uff00-\\uffefa-zA-Z0-9\\s.,!?;:()（）！？；：、。，]/g, '');\n  \n  // 2. 去除换行符，替换为空格\n  cleanedText = cleanedText.replace(/\\n+/g, ' ');\n  \n  // 3. 去除tag标签（#开头的词汇）\n  cleanedText = cleanedText.replace(/#[^\\s#]+/g, '');\n  \n  // 4. 去除单双引号\n  cleanedText = cleanedText.replace(/['\"]/g, '');\n  \n  // 5. 清理多余空格并修剪首尾空格\n  cleanedText = cleanedText.replace(/\\s+/g, ' ').trim();\n  \n  return cleanedText;\n}\n\n// 处理文本\nconst formattedText = formatText(inputText);\n\n// 返回n8n格式的结果\nreturn [\n  {\n    json: {\n      formatted_text: formattedText,\n      character_count: formattedText.length,\n      Video_Keywords: videoKeywords\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          112
+        ],
+        "id": "2461f96a-1e06-4fab-a847-59085d7383b6",
+        "name": "A分支文案内容格式化",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：因生成的脚本文案内容需要提供给短视频生成工具作为其字幕脚本使用，需按照要求进行格式化处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\n// 获取输入文本\nconst inputText = $('获取多维表格记录').first().json.data.items[0].fields['脚本文案'][0].text;\nconst videoKeywords = $input.first().json.output.Video_Keywords;\n\n// 使用正则表达式格式化文本函数，只保留需要的字符\nfunction formatText(text) {\n  \n  let cleanedText = text;\n  \n  // 1. 只保留中文、英文、数字、常用标点符号和空格。这样可以有效去除所有emoji（包括复合emoji）\n  cleanedText = cleanedText.replace(/[^\\u4e00-\\u9fff\\u3400-\\u4dbf\\u3000-\\u303f\\uff00-\\uffefa-zA-Z0-9\\s.,!?;:()（）！？；：、。，]/g, '');\n  \n  // 2. 去除换行符，替换为空格\n  cleanedText = cleanedText.replace(/\\n+/g, ' ');\n  \n  // 3. 去除tag标签（#开头的词汇）\n  cleanedText = cleanedText.replace(/#[^\\s#]+/g, '');\n  \n  // 4. 去除单双引号\n  cleanedText = cleanedText.replace(/['\"]/g, '');\n  \n  // 5. 清理多余空格并修剪首尾空格\n  cleanedText = cleanedText.replace(/\\s+/g, ' ').trim();\n  \n  return cleanedText;\n}\n\n// 处理文本\nconst formattedText = formatText(inputText);\n\n// 返回n8n格式的结果\nreturn [\n  {\n    json: {\n      formatted_text: formattedText,\n      character_count: formattedText.length,\n      Video_Keywords: videoKeywords\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          512,
+          480
+        ],
+        "id": "1f304496-3682-4fd3-93f9-e6bd445491a8",
+        "name": "B分支文案内容格式化",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 节点功能：因生成的脚本文案内容需要提供给短视频生成工具作为其字幕脚本使用，需按照要求进行格式化处理\n// Author:@南哥AGI研习社 (B站 or YouTube 搜索“南哥AGI研习社”)\n\n// 获取输入文本\nconst sourceNode = $('视频文案内容创作').first();\nconst inputText = sourceNode.json.output.Video_Content;\nconst videoKeywords = sourceNode.json.output.Video_Keywords;\n\n// 使用正则表达式格式化文本函数，只保留需要的字符\nfunction formatText(text) {\n  \n  let cleanedText = text;\n  \n  // 1. 只保留中文、英文、数字、常用标点符号和空格。这样可以有效去除所有emoji（包括复合emoji）\n  cleanedText = cleanedText.replace(/[^\\u4e00-\\u9fff\\u3400-\\u4dbf\\u3000-\\u303f\\uff00-\\uffefa-zA-Z0-9\\s.,!?;:()（）！？；：、。，]/g, '');\n  \n  // 2. 去除换行符，替换为空格\n  cleanedText = cleanedText.replace(/\\n+/g, ' ');\n  \n  // 3. 去除tag标签（#开头的词汇）\n  cleanedText = cleanedText.replace(/#[^\\s#]+/g, '');\n  \n  // 4. 去除单双引号\n  cleanedText = cleanedText.replace(/['\"]/g, '');\n  \n  // 5. 清理多余空格并修剪首尾空格\n  cleanedText = cleanedText.replace(/\\s+/g, ' ').trim();\n  \n  return cleanedText;\n}\n\n// 处理文本\nconst formattedText = formatText(inputText);\n\n// 返回n8n格式的结果\nreturn [\n  {\n    json: {\n      formatted_text: formattedText,\n      character_count: formattedText.length,\n      Video_Keywords: videoKeywords\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          512,
+          976
+        ],
+        "id": "d7e28c1c-ddff-406c-b284-bd4088ae0d11",
+        "name": "C分支文案内容格式化",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格和记录').item.json.app_token }}/tables/{{ $('指定多维表格和记录').item.json.table_id }}/records/{{ $('指定多维表格和记录').item.json.record_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fields\": {\n    \"当前状态\": \"生成中\"\n  }\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -624,
+          512
+        ],
+        "id": "2af0a525-1b17-46d2-9e75-db359095146b",
+        "name": "更新记录 生成中",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "options": {
+            "frequencyPenalty": 0,
+            "responseFormat": "json_object",
+            "temperature": 0.7,
+            "timeout": 60000,
+            "maxRetries": 2,
+            "topP": 1
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          32,
+          656
+        ],
+        "id": "19eda14c-2cf1-4ae2-b7a9-ec522081dd38",
+        "name": "Agent AI",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "options": {
+            "frequencyPenalty": 0,
+            "responseFormat": "json_object",
+            "temperature": 0.7,
+            "timeout": 60000,
+            "maxRetries": 2,
+            "topP": 1
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          32,
+          1168
+        ],
+        "id": "39a61045-9db5-44a9-8b5e-4ddf7aba2d89",
+        "name": "Agent AI1",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "options": {
+            "frequencyPenalty": 0,
+            "responseFormat": "json_object",
+            "temperature": 0.7,
+            "timeout": 60000,
+            "maxRetries": 2,
+            "topP": 1
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          160,
+          656
+        ],
+        "id": "0506f96f-3cd6-4131-81b5-2d16b3f1bdc9",
+        "name": "Agent AI2",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "options": {
+            "frequencyPenalty": 0,
+            "responseFormat": "json_object",
+            "temperature": 0.7,
+            "timeout": 60000,
+            "maxRetries": 2,
+            "topP": 1
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.2,
+        "position": [
+          176,
+          1168
+        ],
+        "id": "248e4547-804a-4b18-8d8f-4de815fd2933",
+        "name": "Agent AI3",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.data.failed_stage }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "notEmpty",
+                        "singleValue": true
+                      },
+                      "id": "52eb6138-0d58-4c44-bdf6-c5589583a393"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "生成失败"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "b4fad8aa-8243-4f3a-8dc8-9aa7b6a2018b",
+                      "leftValue": "={{ $json.data.failed_stage }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "empty",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "还在生成中"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          3536,
+          800
+        ],
+        "id": "40b66e02-921a-459c-b343-88c030619fe7",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "errorMessage": "=视频合成失败 | 错误阶段: {{ $json.data.failed_stage }} | 详细原因: {{ $json.data.error }}"
+        },
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [
+          3776,
+          784
+        ],
+        "id": "ba5c3138-d8e9-446d-a203-7d0ecf771e39",
+        "name": "Stop and Error"
+      }
+    ],
+    "connections": {
+      "获取飞书token": {
+        "main": [
+          [
+            {
+              "node": "指定多维表格和记录",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取多维表格记录": {
+        "main": [
+          [
+            {
+              "node": "更新记录 生成中",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "条件分支处理": {
+        "main": [
+          [
+            {
+              "node": "获取本地素材",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "固定参数",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "分支决策": {
+        "main": [
+          [
+            {
+              "node": "条件分支处理",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "视频文案内容创作": {
+        "main": [
+          [
+            {
+              "node": "C分支文案内容格式化",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "生成短视频": {
+        "main": [
+          [
+            {
+              "node": "等待1分钟",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "免费素材网接口参数固定": {
+        "main": [
+          [
+            {
+              "node": "生成短视频",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "查询视频制作进度": {
+        "main": [
+          [
+            {
+              "node": "视频制作是否完成",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "等待1分钟": {
+        "main": [
+          [
+            {
+              "node": "查询视频制作进度",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "视频制作是否完成": {
+        "main": [
+          [
+            {
+              "node": "获取视频",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "固定参数": {
+        "main": [
+          [
+            {
+              "node": "免费素材网接口参数固定",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "合并数据统一处理3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "分片上传素材-上传分片",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "视频分片": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "分片上传素材-预上传": {
+        "main": [
+          [
+            {
+              "node": "重新挂载二进制文件",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "重新挂载二进制文件": {
+        "main": [
+          [
+            {
+              "node": "视频分片",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "分片上传素材-完成上传": {
+        "main": [
+          [
+            {
+              "node": "更新记录",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "分片上传素材-上传分片": {
+        "main": [
+          [
+            {
+              "node": "等待3秒",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "等待3秒": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "合并数据统一处理3": {
+        "main": [
+          [
+            {
+              "node": "分片上传素材-完成上传",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "强制格式化输出": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "视频文案内容创作",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取视频文件大小": {
+        "main": [
+          [
+            {
+              "node": "分片上传素材-预上传",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "更新记录": {
+        "main": [
+          [
+            {
+              "node": "向群组发送即时消息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取本地素材": {
+        "main": [
+          [
+            {
+              "node": "拆分数据单独处理",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "拆分数据单独处理": {
+        "main": [
+          [
+            {
+              "node": "循环保存素材",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "循环保存素材": {
+        "main": [
+          [
+            {
+              "node": "合并数据统一处理",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "获取素材二进制文件",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取素材二进制文件": {
+        "main": [
+          [
+            {
+              "node": "保存素材到本地",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "保存素材到本地": {
+        "main": [
+          [
+            {
+              "node": "等待2秒",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "等待2秒": {
+        "main": [
+          [
+            {
+              "node": "循环保存素材",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "合并数据统一处理": {
+        "main": [
+          [
+            {
+              "node": "本地素材数据格式化",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "本地素材数据格式化": {
+        "main": [
+          [
+            {
+              "node": "固定本地素材",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "固定本地素材": {
+        "main": [
+          [
+            {
+              "node": "本地素材接口参数固定",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "本地素材接口参数固定": {
+        "main": [
+          [
+            {
+              "node": "生成短视频",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "接收POST请求": {
+        "main": [
+          [
+            {
+              "node": "获取飞书token",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "指定多维表格和记录": {
+        "main": [
+          [
+            {
+              "node": "获取多维表格记录",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "强制格式化输出1": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "视频文案关键词提取",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "视频文案关键词提取": {
+        "main": [
+          [
+            {
+              "node": "B分支文案内容格式化",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "文案统一格式": {
+        "main": [
+          [
+            {
+              "node": "分支决策",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "判断文案是否存在": {
+        "main": [
+          [
+            {
+              "node": "条件分支",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "条件分支": {
+        "main": [
+          [
+            {
+              "node": "A分支文案内容格式化",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "视频文案关键词提取",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "视频文案内容创作",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "A分支文案内容格式化": {
+        "main": [
+          [
+            {
+              "node": "文案统一格式",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "B分支文案内容格式化": {
+        "main": [
+          [
+            {
+              "node": "文案统一格式",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "C分支文案内容格式化": {
+        "main": [
+          [
+            {
+              "node": "文案统一格式",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "更新记录 生成中": {
+        "main": [
+          [
+            {
+              "node": "判断文案是否存在",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取视频": {
+        "main": [
+          [
+            {
+              "node": "获取视频文件大小",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Agent AI": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "视频文案关键词提取",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Agent AI1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "视频文案内容创作",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Agent AI2": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "视频文案关键词提取",
+              "type": "ai_languageModel",
+              "index": 1
+            },
+            {
+              "node": "强制格式化输出1",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Agent AI3": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "视频文案内容创作",
+              "type": "ai_languageModel",
+              "index": 1
+            },
+            {
+              "node": "强制格式化输出",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Stop and Error",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "等待1分钟",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Vincent Li",
+    "name": "Version 9c1b2560",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": [
+    {
+      "updatedAt": "2026-07-23T22:11:45.827Z",
+      "createdAt": "2026-07-23T22:11:45.827Z",
+      "id": "8fut4L0nMD0B2TDT",
+      "name": "短视频"
+    },
+    {
+      "updatedAt": "2026-07-15T07:56:34.425Z",
+      "createdAt": "2026-07-15T07:56:34.425Z",
+      "id": "GtDhh1imDFFEmCOs",
+      "name": "AI"
+    },
+    {
+      "updatedAt": "2026-07-22T21:49:07.897Z",
+      "createdAt": "2026-07-22T21:49:07.897Z",
+      "id": "d4eYQQSD7AYbi8vK",
+      "name": "飞书"
+    }
+  ]
+}

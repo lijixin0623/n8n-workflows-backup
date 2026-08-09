@@ -1,0 +1,4190 @@
+{
+  "updatedAt": "2026-08-05T16:53:15.263Z",
+  "createdAt": "2026-07-23T22:14:52.779Z",
+  "id": "jfXADRokHHTxr6Km",
+  "name": "【08_小红书平台_n8n定时触发】短视频自动发布工作流",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        64,
+        960
+      ],
+      "id": "9e367954-03e0-4e82-a34c-4aad507bc807",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"app_id\": \"cli_aac4c96597b85bcd\",\n    \"app_secret\": \"0CCdv8CG5aB4mjaVLGkupgDeemcvMdSM\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        896
+      ],
+      "id": "c8310478-08c2-4dac-b300-22b822fddf66",
+      "name": "获取飞书token",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1792,
+        976
+      ],
+      "id": "358dfd2b-fb23-4c8e-9b3a-f9cec20435cf",
+      "name": "循环处理",
+      "notesInFlow": true,
+      "notes": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $json.app_token }}/tables/{{ $json.table_id }}/records/search ",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "user_id_type",
+              "value": "open_id"
+            },
+            {
+              "name": "page_token"
+            },
+            {
+              "name": "page_size",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"sort\": [\n    {\n      \"field_name\": \"id\",\n      \"desc\": true\n    }\n  ],\n  \"filter\": {\n    \"conjunction\": \"and\",\n    \"conditions\": [\n      {\n        \"field_name\": \"发布日期\",\n        \"operator\": \"is\",\n        \"value\": [\n          \"Today\"\n        ]\n      },\n      {\n        \"field_name\": \"发布平台\",\n        \"operator\": \"is\",\n        \"value\": [\n          \"小红书\"\n        ]\n      },\n      {\n        \"field_name\": \"当前状态\",\n        \"operator\": \"is\",\n        \"value\": [\n          \"确认完毕\"\n        ]\n      }\n    ]\n  },\n  \"automatic_fields\": false\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1408,
+        688
+      ],
+      "id": "15757d23-59f3-4d3c-b054-83c24950ba81",
+      "name": "获取多维表格记录",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c5d06deb-33dc-471e-8892-bbf2bb8c94f5",
+              "name": "app_token",
+              "value": "TZqcbwWqeaQrCPsvc7fc2m5nnnd",
+              "type": "string"
+            },
+            {
+              "id": "1817ab91-0b11-40ed-b13e-2d8367d99638",
+              "name": "table_id",
+              "value": "tbl15M0lbST63Ya5",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        688
+      ],
+      "id": "0acf9b38-0569-44ac-9ef6-2ccf0fb99112",
+      "name": "指定多维表格",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2048,
+        528
+      ],
+      "id": "27a24696-4e96-41eb-af67-8b633c409504",
+      "name": "合并最终数据统一处理",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Aggregate"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token2').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"小红书发布进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**今天的短视频发布已全部完成** \\\"}],[{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://r1l3h3s8hbg.feishu.cn/base/TZqcbwWqeaQrCPsvc7fc2m5nnnd?table=tbl15M0lbST63Ya5&view=vewI3sjaI0\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2448,
+        528
+      ],
+      "id": "f3d1a19e-5e4f-4e07-9bdd-c61c0530fd4c",
+      "name": "向群组发送已完成消息",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格').item.json.app_token }}/tables/{{ $('指定多维表格').item.json.table_id }}/records/search ",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "user_id_type",
+              "value": "open_id"
+            },
+            {
+              "name": "page_token"
+            },
+            {
+              "name": "page_size",
+              "value": "20"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"sort\": [\n    {\n      \"field_name\": \"id\",\n      \"desc\": true\n    }\n  ],\n  \"filter\": {\n    \"conjunction\": \"and\",\n    \"conditions\": [\n      {\n        \"field_name\": \"id\",\n        \"operator\": \"is\",\n        \"value\": [\n          {{ $json.id }}\n        ]\n      }\n    ]\n  },\n  \"automatic_fields\": false\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2048,
+        992
+      ],
+      "id": "01df7ad4-7735-488a-bf21-fc977674026f",
+      "name": "获取多维表格单条记录",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst list = items[0].json.data.items;\n\nreturn list.map(row => {\n  return {\n    json: {\n      id: row.fields.id,\n      record_id: row.record_id,\n    },\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        688
+      ],
+      "id": "f6936ddc-3947-4da9-99a6-a9e49331c9eb",
+      "name": "拆分和过滤数据",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9c725f6a-1aff-4dd0-8d5a-80f9db0dcbe8",
+              "leftValue": "={{ $('检查小红书当前登陆状态').item.json.output.isLogin }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        800
+      ],
+      "id": "329f041c-5569-419f-8794-198d1e9220d0",
+      "name": "登陆是否成功",
+      "notesInFlow": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        432,
+        1104
+      ],
+      "id": "dbdf4f80-8a94-4a8e-a8b8-bcb0c46ce999",
+      "name": "gpt-4.1-mini",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "={{ $('定义小红书MCP端点').item.json.xhs_endpoint }}",
+        "include": "selected",
+        "includeTools": [
+          "check_login_status"
+        ],
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        1104
+      ],
+      "id": "294548e3-db41-4ac3-8764-9220fde230c2",
+      "name": "小红书MCP",
+      "notesInFlow": true,
+      "notes": "MCP Client"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格').item.json.app_token }}/tables/{{ $('指定多维表格').item.json.table_id }}/records/{{ $json.data.items[0].record_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"当前状态\": \"发布中\"\n  }\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        992
+      ],
+      "id": "b2dc943c-5b25-484c-ad89-34a82e25cef4",
+      "name": "更新记录 发布中",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=根据视频文案内容生成小红书风格的标题、正文以及标签，并以json格式化输出。\n\n规则：\n标题字数20字以内\n正文字数300字以内\n标签4个，且以#开头\n\n文案内容如下所示：\n\n{{ $('获取多维表格记录').item.json.data.items[0].fields['脚本文案'][0].text }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        2528,
+        832
+      ],
+      "id": "64a9981c-5f3e-43e5-9a42-89a5af58cf80",
+      "name": "小红书风格标题和文案润色",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2592,
+        1056
+      ],
+      "id": "16f0975a-c1e2-4627-9632-215e678fdf89",
+      "name": "deepseek-v3 ",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"isLogin\": true\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        816,
+        1104
+      ],
+      "id": "b06539e0-7764-4e0b-96b3-75ad70d63ac9",
+      "name": "结构化输出结果",
+      "notesInFlow": true,
+      "notes": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=./.n8n-files/{{ $('设置本地文件夹名称').item.json.fold }}/{{ $json[\"短视频名称\"] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        4080,
+        912
+      ],
+      "id": "05a29d3b-2483-4778-a5c8-d54a5a632009",
+      "name": "保存短视频到本地",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/{{ $json['短视频元数据'][0].file_token }}/download",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3744,
+        912
+      ],
+      "id": "62632aad-9c4e-4cee-a025-4051bb194100",
+      "name": "下载短视频",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "88f93589-8d95-43f8-9534-d9cbfc59c4ba",
+              "name": "短视频元数据",
+              "value": "={{ $('获取多维表格单条记录').item.json.data.items[0].fields[\"短视频\"] }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3600,
+        912
+      ],
+      "id": "66961da6-1106-4cb6-99d5-e842fae5717a",
+      "name": "获取短视频元数据",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "command": "=mkdir -p ./n8ndata/{{ $json.fold }}"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3424,
+        912
+      ],
+      "id": "c4ef2aa0-e2ac-40e3-acba-563cfc45ba0a",
+      "name": "执行命令创建文件夹",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Execute Command"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5f62450b-99eb-40d2-b859-1a5d2fa24de1",
+              "name": "fold",
+              "value": "=xhs_short_video/{{ $now.toFormat('yyyy-MM-dd') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3248,
+        912
+      ],
+      "id": "71e0e0c3-f21b-41be-bf65-9b257396a8ce",
+      "name": "设置本地文件夹名称",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取输入文本\nconst inputText = $input.first().json.output.title;\n\n// 格式化文本函数 - 反向操作，只保留需要的字符\nfunction formatText(text) {\n  let cleanedText = text;\n  \n  // 1. 只保留中文、英文、数字、常用标点符号和空格\n  // 这样可以有效去除所有emoji（包括复合emoji）\n  cleanedText = cleanedText.replace(/[^\\u4e00-\\u9fff\\u3400-\\u4dbf\\u3000-\\u303f\\uff00-\\uffefa-zA-Z0-9\\s.,!?;:()（）！？；：、。，]/g, '');\n  \n  // 2. 去除换行符，替换为空格\n  cleanedText = cleanedText.replace(/\\n+/g, ' ');\n  \n  // 3. 去除tag标签（#开头的词汇）\n  cleanedText = cleanedText.replace(/#[^\\s#]+/g, '');\n  \n  // 4. 去除单双引号\n  cleanedText = cleanedText.replace(/['\"]/g, '');\n  \n  // 5. 清理多余空格并修剪首尾空格\n  cleanedText = cleanedText.replace(/\\s+/g, ' ').trim();\n  \n  return cleanedText;\n}\n\n// 处理文本\nconst formattedText = formatText(inputText);\n\n// 返回n8n格式的结果\nreturn [\n  {\n    json: {\n      formatted_text: formattedText,\n      character_count: formattedText.length\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        912
+      ],
+      "id": "3ace77b5-9b91-45bd-82de-d1dafe5b1fb6",
+      "name": "标题格式化处理",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5f62450b-99eb-40d2-b859-1a5d2fa24de1",
+              "name": "短视频名称",
+              "value": "={{ $('标题格式化处理').item.json.formatted_text }}_{{ $now.toFormat('yyyyMMddHHmmss') }}_{{ $json['短视频元数据'][0].name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3904,
+        912
+      ],
+      "id": "812c761c-810e-4b00-8634-0e50aa2fcffa",
+      "name": "设置短视频名称",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notesInFlow": true,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"title\": \"小红书标题\",\n\t\"content\": \"小红书正文\",\n    \"tags\":\"#AI,#小红书\"\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2736,
+        1072
+      ],
+      "id": "3d17d53a-690e-42e4-85ef-655c24c33182",
+      "name": "结构化输出标题和正文",
+      "notesInFlow": true,
+      "notes": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5248,
+        1040
+      ],
+      "id": "409b2525-b1dd-41ee-86c7-095d911fb1d9",
+      "name": "等待10分钟",
+      "webhookId": "32ddceda-6336-4528-a794-8d523fb6db50",
+      "notesInFlow": true,
+      "notes": "Wait"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"app_id\": \"cli_a8759c6a213d500e\",\n    \"app_secret\": \"hLjKsc00B0lCNEM9Vr0qkdjC06mIj6mb\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        528
+      ],
+      "id": "affec251-270c-451c-90b3-a73c5e5c8659",
+      "name": "获取飞书token2",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "使用xiaohongshu-mcp中的check_login_status，检查小红书登陆状态，并以json结构化数据输出，数据类型为布尔类型\n\n例子：\n{\n    isLogin:true\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        640,
+        896
+      ],
+      "id": "bb429c1a-def2-42ca-b446-c3d0bfd87fb3",
+      "name": "检查小红书当前登陆状态",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput",
+      "notes": "AI Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52d2b100-5540-4da3-8ff6-8a5442094c6b",
+              "name": "error",
+              "value": "Agent获取登陆状态出错，请检查工作流。",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        1072
+      ],
+      "id": "77454163-ada9-431d-a7a5-b79b26a4195a",
+      "name": "定义Agent错误提示消息",
+      "notesInFlow": true,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52d2b100-5540-4da3-8ff6-8a5442094c6b",
+              "name": "error",
+              "value": "登陆状态异常，请重新登陆。",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        880
+      ],
+      "id": "2d1eefcc-d6c0-4bbe-bf2b-5ca473b485dd",
+      "name": "定义登陆状态失效提示消息",
+      "notesInFlow": true,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"小红书发布进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"{{ $json.error }} \\\"}]]}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1456,
+        880
+      ],
+      "id": "f3b62263-f014-4b6a-8579-8936791192aa",
+      "name": "向群组发送登陆失效消息",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"小红书发布进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"{{ $json.error }} \\\"}]]}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1456,
+        1072
+      ],
+      "id": "e488b700-fc56-4ae7-ad5a-b5f3e985f9a9",
+      "name": "向群组发送错误消息",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        1104
+      ],
+      "id": "1f79b6d5-0aca-445b-ac74-5de61a01dc02",
+      "name": "deepseek-v3  ",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2448,
+        1056
+      ],
+      "id": "0aeb175c-b7c3-42f9-a103-a0ec44e06725",
+      "name": "gpt-4.1-mini  ",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtMinute": 55
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        64,
+        752
+      ],
+      "id": "466086d8-3b8f-4e87-834f-6a93f70c5ca3",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "使用xiaohongshu-mcp中的check_login_status，检查小红书登陆状态，并以json结构化数据输出，数据类型为布尔类型\n\n例子：\n{\n    isLogin:true\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        80,
+        176
+      ],
+      "id": "6d45cdf5-11d5-4433-93e5-92720870807c",
+      "name": "检查小红书登陆",
+      "notesInFlow": true,
+      "notes": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"isLogin\": true\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        304,
+        384
+      ],
+      "id": "1aeb6376-f625-4b1d-9132-eb2592f2223c",
+      "name": "结构化输出登陆结果",
+      "notesInFlow": true,
+      "notes": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        208
+      ],
+      "id": "b99f6f2e-e379-4a99-9100-a6bfc4037c30",
+      "name": "gpt-4.1-mini1",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://192.168.1.7:18060/mcp",
+        "include": "selected",
+        "includeTools": [
+          "publish_content"
+        ],
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        752,
+        208
+      ],
+      "id": "7e600380-2f2a-4ffc-9f37-409089ae39d8",
+      "name": "小红书MCP1",
+      "notesInFlow": true,
+      "notes": "MCP Client"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52d2b100-5540-4da3-8ff6-8a5442094c6b",
+              "name": "错误信息",
+              "value": "登陆异常",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        416
+      ],
+      "id": "4903ecb1-8c81-4316-bea8-794a3ccc2dfd",
+      "name": "账号登陆错误",
+      "notesInFlow": true,
+      "notes": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9c725f6a-1aff-4dd0-8d5a-80f9db0dcbe8",
+              "leftValue": "={{ $json.output.isLogin }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        176
+      ],
+      "id": "ede80454-ddf6-4c36-ae12-d9bc8fb5beee",
+      "name": "登陆是否成功1",
+      "notesInFlow": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        32,
+        384
+      ],
+      "id": "6579c9e0-0afa-46a4-99fc-5e263bf2a1d0",
+      "name": "gpt-4.1-mini2",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "http://192.168.1.7:18060/mcp",
+        "include": "selected",
+        "includeTools": [
+          "check_login_status"
+        ],
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        384
+      ],
+      "id": "fdde9f04-fb1e-4ddc-bced-55c835570db9",
+      "name": "小红书MCP2",
+      "notesInFlow": true,
+      "notes": "MCP Client"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "使用xiaohongshu-mcp中的publish_content\n标题：\"这里是南哥AGI研习社\"\n正文：'南哥AGI研习社'\n配图： /Volumes/Files/xhsmcp/01.jpg、/Volumes/Files/xhsmcp/02.jpg\n标签：#AI、#n8n\n\n请立即发布，不需要确认。",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        592,
+        16
+      ],
+      "id": "76a3d050-42c0-45d3-a042-9fbc5d9a6aec",
+      "name": "发布小红书图文1",
+      "notesInFlow": true,
+      "notes": "AI Agent"
+    },
+    {
+      "parameters": {
+        "content": "## 定时触发\n- 检查小红书登陆状态\n- 获取当前触发的表格记录内容",
+        "height": 640,
+        "width": 1696,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        624
+      ],
+      "typeVersion": 1,
+      "id": "810be30c-0434-4361-82b2-f8d73a1a8ba1",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ef740281-8365-414c-baa8-79d8f7014992",
+              "name": "xhs_endpoint",
+              "value": "http://host.docker.internal:18060/mcp",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        272,
+        896
+      ],
+      "id": "15044261-8a1a-4afe-a6db-c92f1c144403",
+      "name": "定义小红书MCP端点"
+    },
+    {
+      "parameters": {
+        "content": "## AI润色文案\n- 获取当前循环的记录内容\n- 根据发布平台的不同润色不同风格的文案",
+        "height": 512,
+        "width": 992,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2000,
+        688
+      ],
+      "typeVersion": 1,
+      "id": "1fca9939-891c-4edb-b4cd-78b7401bf93a",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 短视频发布归档\n- 以发布日期动态创建文件夹\n- 发布成功的视频自动归档\n- 从飞书多维表格记录中的短视频列下载短视频",
+        "height": 512,
+        "width": 1200,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3024,
+        688
+      ],
+      "typeVersion": 1,
+      "id": "fa8a11e7-d5c5-4cfd-ae34-a1f9590d5f49",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 小红书MCP测试",
+        "height": 576,
+        "width": 928,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "1ea701a2-b799-4f71-901f-ec0fb7271dbb",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"isPublished\": true\n}",
+        "autoFix": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        4720,
+        1040
+      ],
+      "id": "9c232afe-dc04-4c3c-a0e7-d37aa74bcca0",
+      "name": "结构化输出发布结果",
+      "notesInFlow": true,
+      "notes": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4592,
+        1040
+      ],
+      "id": "3e4e39b3-6eb7-47eb-bbd3-fe63e72323d9",
+      "name": "deepseek-v3   ",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9c725f6a-1aff-4dd0-8d5a-80f9db0dcbe8",
+              "leftValue": "={{ $json.output.isPublished }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4624,
+        800
+      ],
+      "id": "c91b0d6e-8306-4ab1-af31-4d90f24d0a3c",
+      "name": "发布是否成功",
+      "notesInFlow": true,
+      "notes": "If"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格').item.json.app_token }}/tables/{{ $('指定多维表格').item.json.table_id }}/records/{{ $('循环处理').item.json.record_id }} }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"当前状态\": \"发布出错\",\n    \"发布日期\": {{ '' + $now }} \n  }\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4848,
+        864
+      ],
+      "id": "ab7dfa4e-aa18-455e-bc06-ae76e1d73976",
+      "name": "更新记录 发布出错",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"小红书发布进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**视频主题**:{{ $('获取多维表格单条记录').item.json.data.items[0].fields['主题'][0].text }}\\\\\\n **发布时间**:{{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}\\\\\\n **当前状态**:{{ $json.data.record.fields['当前状态'] }}\\\"}],[{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://r1l3h3s8hbg.feishu.cn/base/TZqcbwWqeaQrCPsvc7fc2m5nnnd?table=tbl15M0lbST63Ya5&view=vewI3sjaI0\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5056,
+        864
+      ],
+      "id": "66a95cf0-0227-4f51-8125-0cf1bd2c86ae",
+      "name": "向群组发送即时消息 ",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "content": "## 短视频发布到小红书\n- 在小红书中发布视频\n- 发布成功后修改当前记录状态为“已发布”\n- 群消息通知发布实时状态",
+        "height": 512,
+        "width": 1152,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4256,
+        688
+      ],
+      "typeVersion": 1,
+      "id": "d0e98fc2-79dc-41cd-8744-f38f51884539",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格').item.json.app_token }}/tables/{{ $('指定多维表格').item.json.table_id }}/records/{{ $('循环处理').item.json.record_id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fields\": {\n    \"当前状态\": \"已发布\",\n    \"发布日期\": {{ '' + $now }} \n  }\n} ",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4848,
+        704
+      ],
+      "id": "7526724a-39bd-405f-adc5-395f0fe364fe",
+      "name": "更新记录 已发布",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "receive_id_type",
+              "value": "chat_id"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"小红书发布进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**视频主题**:{{ $('获取多维表格单条记录').item.json.data.items[0].fields['主题'][0].text }}\\\\\\n **发布时间**:{{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}\\\\\\n **当前状态**:{{ $json.data.record.fields['当前状态'] }}\\\"}],[{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://r1l3h3s8hbg.feishu.cn/base/TZqcbwWqeaQrCPsvc7fc2m5nnnd?table=tbl15M0lbST63Ya5&view=vewI3sjaI0\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5056,
+        704
+      ],
+      "id": "32b3acc8-2d8e-440f-b537-041a2077839d",
+      "name": "向群组发送即时消息",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=使用xiaohongshu-mcp中的publish_with_video\n标题：{{ $('小红书风格标题和文案润色').item.json.output.title }}\n正文：{{ $('小红书风格标题和文案润色').item.json.output.content }}\n视频： /Volumes/Files/n8n-files/{{ $('设置本地文件夹名称').item.json.fold }}/{{ $('设置短视频名称').item.json['短视频名称'] }}\n标签：{{ $('小红书风格标题和文案润色').item.json.output.tags }}\n\n请立即发布，不需要确认。 \n\n发布的结果以json结构化数据输出，数据类型为布尔类型。发布成功为true，失败则为false。",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        4320,
+        832
+      ],
+      "id": "2efeebcd-adc6-43dc-86bd-1f6c2fdaf7c0",
+      "name": "发布小红书图文",
+      "notesInFlow": true,
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "notes": "AI Agent"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "={{ $('定义小红书MCP端点').item.json.xhs_endpoint }}",
+        "include": "selected",
+        "includeTools": [
+          "publish_with_video"
+        ],
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        4464,
+        1040
+      ],
+      "id": "365f202a-cd2d-4584-a639-95558bd2f613",
+      "name": "小红书MCP ",
+      "notesInFlow": true,
+      "notes": "MCP Client"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "agnes-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "agnes-2.5-flash"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        4336,
+        1040
+      ],
+      "id": "d69d687b-e884-42b5-aa1a-b295b17591fe",
+      "name": "gpt-4.1-mini ",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "wFfkpLGXSLI513V2",
+          "name": "Agent AI"
+        }
+      },
+      "notes": "OpenAI Chat Model"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "获取飞书token": {
+      "main": [
+        [
+          {
+            "node": "检查小红书当前登陆状态",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "循环处理": {
+      "main": [
+        [
+          {
+            "node": "合并最终数据统一处理",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "获取多维表格单条记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取多维表格记录": {
+      "main": [
+        [
+          {
+            "node": "拆分和过滤数据",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "指定多维表格": {
+      "main": [
+        [
+          {
+            "node": "获取多维表格记录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "合并最终数据统一处理": {
+      "main": [
+        [
+          {
+            "node": "获取飞书token2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取多维表格单条记录": {
+      "main": [
+        [
+          {
+            "node": "更新记录 发布中",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "拆分和过滤数据": {
+      "main": [
+        [
+          {
+            "node": "循环处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4.1-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "检查小红书当前登陆状态",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "小红书MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "检查小红书当前登陆状态",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "登陆是否成功": {
+      "main": [
+        [
+          {
+            "node": "指定多维表格",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "定义登陆状态失效提示消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新记录 发布中": {
+      "main": [
+        [
+          {
+            "node": "小红书风格标题和文案润色",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "deepseek-v3 ": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "结构化输出标题和正文",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "结构化输出结果": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "检查小红书当前登陆状态",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "小红书风格标题和文案润色": {
+      "main": [
+        [
+          {
+            "node": "标题格式化处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "保存短视频到本地": {
+      "main": [
+        [
+          {
+            "node": "发布小红书图文",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载短视频": {
+      "main": [
+        [
+          {
+            "node": "设置短视频名称",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取短视频元数据": {
+      "main": [
+        [
+          {
+            "node": "下载短视频",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "标题格式化处理": {
+      "main": [
+        [
+          {
+            "node": "设置本地文件夹名称",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "设置短视频名称": {
+      "main": [
+        [
+          {
+            "node": "保存短视频到本地",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "结构化输出标题和正文": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "小红书风格标题和文案润色",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待10分钟": {
+      "main": [
+        [
+          {
+            "node": "循环处理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取飞书token2": {
+      "main": [
+        [
+          {
+            "node": "向群组发送已完成消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查小红书当前登陆状态": {
+      "main": [
+        [
+          {
+            "node": "登陆是否成功",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "定义Agent错误提示消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "定义Agent错误提示消息": {
+      "main": [
+        [
+          {
+            "node": "向群组发送错误消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "定义登陆状态失效提示消息": {
+      "main": [
+        [
+          {
+            "node": "向群组发送登陆失效消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "deepseek-v3  ": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "结构化输出结果",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4.1-mini  ": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "小红书风格标题和文案润色",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查小红书登陆": {
+      "main": [
+        [
+          {
+            "node": "登陆是否成功1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "结构化输出登陆结果": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "检查小红书登陆",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4.1-mini1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "发布小红书图文1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "小红书MCP1": {
+      "ai_tool": [
+        [
+          {
+            "node": "发布小红书图文1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "登陆是否成功1": {
+      "main": [
+        [
+          {
+            "node": "发布小红书图文1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "账号登陆错误",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4.1-mini2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "检查小红书登陆",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "小红书MCP2": {
+      "ai_tool": [
+        [
+          {
+            "node": "检查小红书登陆",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "定义小红书MCP端点": {
+      "main": [
+        [
+          {
+            "node": "获取飞书token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "结构化输出发布结果": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "发布小红书图文",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "deepseek-v3   ": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "结构化输出发布结果",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "发布是否成功": {
+      "main": [
+        [
+          {
+            "node": "更新记录 已发布",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "更新记录 发布出错",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新记录 发布出错": {
+      "main": [
+        [
+          {
+            "node": "向群组发送即时消息 ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "向群组发送即时消息 ": {
+      "main": [
+        [
+          {
+            "node": "等待10分钟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "更新记录 已发布": {
+      "main": [
+        [
+          {
+            "node": "向群组发送即时消息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "向群组发送即时消息": {
+      "main": [
+        [
+          {
+            "node": "等待10分钟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "发布小红书图文": {
+      "main": [
+        [
+          {
+            "node": "发布是否成功",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "小红书MCP ": {
+      "ai_tool": [
+        [
+          {
+            "node": "发布小红书图文",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gpt-4.1-mini ": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "发布小红书图文",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "定义小红书MCP端点",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "7dc2d77b-01f6-49c2-a96a-bf0ce7cb0127",
+  "activeVersionId": "4ff9a81e-be80-45ec-a515-03c2a5fb52b3",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-07-23T22:14:52.783Z",
+      "createdAt": "2026-07-23T22:14:52.783Z",
+      "role": "workflow:owner",
+      "workflowId": "jfXADRokHHTxr6Km",
+      "projectId": "RyIhgl3MzfF191OW"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-08-05T11:34:05.000Z",
+    "createdAt": "2026-08-05T11:33:55.434Z",
+    "versionId": "4ff9a81e-be80-45ec-a515-03c2a5fb52b3",
+    "workflowId": "jfXADRokHHTxr6Km",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          64,
+          960
+        ],
+        "id": "9e367954-03e0-4e82-a34c-4aad507bc807",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+          "sendHeaders": true,
+          "specifyHeaders": "json",
+          "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n    \"app_id\": \"cli_aac4c96597b85bcd\",\n    \"app_secret\": \"0CCdv8CG5aB4mjaVLGkupgDeemcvMdSM\"\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          464,
+          896
+        ],
+        "id": "c8310478-08c2-4dac-b300-22b822fddf66",
+        "name": "获取飞书token",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "maxTries": 5,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          1792,
+          976
+        ],
+        "id": "358dfd2b-fb23-4c8e-9b3a-f9cec20435cf",
+        "name": "循环处理",
+        "notesInFlow": true,
+        "notes": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $json.app_token }}/tables/{{ $json.table_id }}/records/search ",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "user_id_type",
+                "value": "open_id"
+              },
+              {
+                "name": "page_token"
+              },
+              {
+                "name": "page_size",
+                "value": "20"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"sort\": [\n    {\n      \"field_name\": \"id\",\n      \"desc\": true\n    }\n  ],\n  \"filter\": {\n    \"conjunction\": \"and\",\n    \"conditions\": [\n      {\n        \"field_name\": \"发布日期\",\n        \"operator\": \"is\",\n        \"value\": [\n          \"Today\"\n        ]\n      },\n      {\n        \"field_name\": \"发布平台\",\n        \"operator\": \"is\",\n        \"value\": [\n          \"小红书\"\n        ]\n      },\n      {\n        \"field_name\": \"当前状态\",\n        \"operator\": \"is\",\n        \"value\": [\n          \"确认完毕\"\n        ]\n      }\n    ]\n  },\n  \"automatic_fields\": false\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1408,
+          688
+        ],
+        "id": "15757d23-59f3-4d3c-b054-83c24950ba81",
+        "name": "获取多维表格记录",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "maxTries": 5,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "c5d06deb-33dc-471e-8892-bbf2bb8c94f5",
+                "name": "app_token",
+                "value": "TZqcbwWqeaQrCPsvc7fc2m5nnnd",
+                "type": "string"
+              },
+              {
+                "id": "1817ab91-0b11-40ed-b13e-2d8367d99638",
+                "name": "table_id",
+                "value": "tbl15M0lbST63Ya5",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1232,
+          688
+        ],
+        "id": "0acf9b38-0569-44ac-9ef6-2ccf0fb99112",
+        "name": "指定多维表格",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "aggregate": "aggregateAllItemData",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          2048,
+          528
+        ],
+        "id": "27a24696-4e96-41eb-af67-8b633c409504",
+        "name": "合并最终数据统一处理",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Aggregate"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "receive_id_type",
+                "value": "chat_id"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token2').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"小红书发布进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**今天的短视频发布已全部完成** \\\"}],[{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://r1l3h3s8hbg.feishu.cn/base/TZqcbwWqeaQrCPsvc7fc2m5nnnd?table=tbl15M0lbST63Ya5&view=vewI3sjaI0\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2448,
+          528
+        ],
+        "id": "f3d1a19e-5e4f-4e07-9bdd-c61c0530fd4c",
+        "name": "向群组发送已完成消息",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格').item.json.app_token }}/tables/{{ $('指定多维表格').item.json.table_id }}/records/search ",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "user_id_type",
+                "value": "open_id"
+              },
+              {
+                "name": "page_token"
+              },
+              {
+                "name": "page_size",
+                "value": "20"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"sort\": [\n    {\n      \"field_name\": \"id\",\n      \"desc\": true\n    }\n  ],\n  \"filter\": {\n    \"conjunction\": \"and\",\n    \"conditions\": [\n      {\n        \"field_name\": \"id\",\n        \"operator\": \"is\",\n        \"value\": [\n          {{ $json.id }}\n        ]\n      }\n    ]\n  },\n  \"automatic_fields\": false\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          2048,
+          992
+        ],
+        "id": "01df7ad4-7735-488a-bf21-fc977674026f",
+        "name": "获取多维表格单条记录",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "maxTries": 5,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst list = items[0].json.data.items;\n\nreturn list.map(row => {\n  return {\n    json: {\n      id: row.fields.id,\n      record_id: row.record_id,\n    },\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          688
+        ],
+        "id": "f6936ddc-3947-4da9-99a6-a9e49331c9eb",
+        "name": "拆分和过滤数据",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "9c725f6a-1aff-4dd0-8d5a-80f9db0dcbe8",
+                "leftValue": "={{ $('检查小红书当前登陆状态').item.json.output.isLogin }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          992,
+          800
+        ],
+        "id": "329f041c-5569-419f-8794-198d1e9220d0",
+        "name": "登陆是否成功",
+        "notesInFlow": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          432,
+          1104
+        ],
+        "id": "dbdf4f80-8a94-4a8e-a8b8-bcb0c46ce999",
+        "name": "gpt-4.1-mini",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "endpointUrl": "={{ $('定义小红书MCP端点').item.json.xhs_endpoint }}",
+          "include": "selected",
+          "includeTools": [
+            "check_login_status"
+          ],
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+        "typeVersion": 1.2,
+        "position": [
+          560,
+          1104
+        ],
+        "id": "294548e3-db41-4ac3-8764-9220fde230c2",
+        "name": "小红书MCP",
+        "notesInFlow": true,
+        "notes": "MCP Client"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格').item.json.app_token }}/tables/{{ $('指定多维表格').item.json.table_id }}/records/{{ $json.data.items[0].record_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fields\": {\n    \"当前状态\": \"发布中\"\n  }\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2240,
+          992
+        ],
+        "id": "b2dc943c-5b25-484c-ad89-34a82e25cef4",
+        "name": "更新记录 发布中",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=根据视频文案内容生成小红书风格的标题、正文以及标签，并以json格式化输出。\n\n规则：\n标题字数20字以内\n正文字数300字以内\n标签4个，且以#开头\n\n文案内容如下所示：\n\n{{ $('获取多维表格记录').item.json.data.items[0].fields['脚本文案'][0].text }}",
+          "hasOutputParser": true,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          2528,
+          832
+        ],
+        "id": "64a9981c-5f3e-43e5-9a42-89a5af58cf80",
+        "name": "小红书风格标题和文案润色",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "AI Agent"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "responsesApiEnabled": false,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          2592,
+          1056
+        ],
+        "id": "16f0975a-c1e2-4627-9632-215e678fdf89",
+        "name": "deepseek-v3 ",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n\t\"isLogin\": true\n}",
+          "autoFix": true
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          816,
+          1104
+        ],
+        "id": "b06539e0-7764-4e0b-96b3-75ad70d63ac9",
+        "name": "结构化输出结果",
+        "notesInFlow": true,
+        "notes": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "operation": "write",
+          "fileName": "=./.n8n-files/{{ $('设置本地文件夹名称').item.json.fold }}/{{ $json[\"短视频名称\"] }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.readWriteFile",
+        "typeVersion": 1,
+        "position": [
+          4080,
+          912
+        ],
+        "id": "05a29d3b-2483-4778-a5c8-d54a5a632009",
+        "name": "保存短视频到本地",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Read/Write Files from Disk"
+      },
+      {
+        "parameters": {
+          "url": "=https://open.feishu.cn/open-apis/drive/v1/medias/{{ $json['短视频元数据'][0].file_token }}/download",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3744,
+          912
+        ],
+        "id": "62632aad-9c4e-4cee-a025-4051bb194100",
+        "name": "下载短视频",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "88f93589-8d95-43f8-9534-d9cbfc59c4ba",
+                "name": "短视频元数据",
+                "value": "={{ $('获取多维表格单条记录').item.json.data.items[0].fields[\"短视频\"] }}",
+                "type": "array"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          3600,
+          912
+        ],
+        "id": "66961da6-1106-4cb6-99d5-e842fae5717a",
+        "name": "获取短视频元数据",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "command": "=mkdir -p ./n8ndata/{{ $json.fold }}"
+        },
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [
+          3424,
+          912
+        ],
+        "id": "c4ef2aa0-e2ac-40e3-acba-563cfc45ba0a",
+        "name": "执行命令创建文件夹",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Execute Command"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5f62450b-99eb-40d2-b859-1a5d2fa24de1",
+                "name": "fold",
+                "value": "=xhs_short_video/{{ $now.toFormat('yyyy-MM-dd') }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          3248,
+          912
+        ],
+        "id": "71e0e0c3-f21b-41be-bf65-9b257396a8ce",
+        "name": "设置本地文件夹名称",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 获取输入文本\nconst inputText = $input.first().json.output.title;\n\n// 格式化文本函数 - 反向操作，只保留需要的字符\nfunction formatText(text) {\n  let cleanedText = text;\n  \n  // 1. 只保留中文、英文、数字、常用标点符号和空格\n  // 这样可以有效去除所有emoji（包括复合emoji）\n  cleanedText = cleanedText.replace(/[^\\u4e00-\\u9fff\\u3400-\\u4dbf\\u3000-\\u303f\\uff00-\\uffefa-zA-Z0-9\\s.,!?;:()（）！？；：、。，]/g, '');\n  \n  // 2. 去除换行符，替换为空格\n  cleanedText = cleanedText.replace(/\\n+/g, ' ');\n  \n  // 3. 去除tag标签（#开头的词汇）\n  cleanedText = cleanedText.replace(/#[^\\s#]+/g, '');\n  \n  // 4. 去除单双引号\n  cleanedText = cleanedText.replace(/['\"]/g, '');\n  \n  // 5. 清理多余空格并修剪首尾空格\n  cleanedText = cleanedText.replace(/\\s+/g, ' ').trim();\n  \n  return cleanedText;\n}\n\n// 处理文本\nconst formattedText = formatText(inputText);\n\n// 返回n8n格式的结果\nreturn [\n  {\n    json: {\n      formatted_text: formattedText,\n      character_count: formattedText.length\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3072,
+          912
+        ],
+        "id": "3ace77b5-9b91-45bd-82de-d1dafe5b1fb6",
+        "name": "标题格式化处理",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5f62450b-99eb-40d2-b859-1a5d2fa24de1",
+                "name": "短视频名称",
+                "value": "={{ $('标题格式化处理').item.json.formatted_text }}_{{ $now.toFormat('yyyyMMddHHmmss') }}_{{ $json['短视频元数据'][0].name }}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          3904,
+          912
+        ],
+        "id": "812c761c-810e-4b00-8634-0e50aa2fcffa",
+        "name": "设置短视频名称",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notesInFlow": true,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n\t\"title\": \"小红书标题\",\n\t\"content\": \"小红书正文\",\n    \"tags\":\"#AI,#小红书\"\n}",
+          "autoFix": true
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          2736,
+          1072
+        ],
+        "id": "3d17d53a-690e-42e4-85ef-655c24c33182",
+        "name": "结构化输出标题和正文",
+        "notesInFlow": true,
+        "notes": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "amount": 2,
+          "unit": "minutes"
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          5248,
+          1040
+        ],
+        "id": "409b2525-b1dd-41ee-86c7-095d911fb1d9",
+        "name": "等待10分钟",
+        "webhookId": "32ddceda-6336-4528-a794-8d523fb6db50",
+        "notesInFlow": true,
+        "notes": "Wait"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal/",
+          "sendHeaders": true,
+          "specifyHeaders": "json",
+          "jsonHeaders": "{\n  \"Content-Type\":\"application/json; charset=utf-8\"\n}",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n    \"app_id\": \"cli_a8759c6a213d500e\",\n    \"app_secret\": \"hLjKsc00B0lCNEM9Vr0qkdjC06mIj6mb\"\n}",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2240,
+          528
+        ],
+        "id": "affec251-270c-451c-90b3-a73c5e5c8659",
+        "name": "获取飞书token2",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 5000,
+        "maxTries": 5,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "使用xiaohongshu-mcp中的check_login_status，检查小红书登陆状态，并以json结构化数据输出，数据类型为布尔类型\n\n例子：\n{\n    isLogin:true\n}",
+          "hasOutputParser": true,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          640,
+          896
+        ],
+        "id": "bb429c1a-def2-42ca-b446-c3d0bfd87fb3",
+        "name": "检查小红书当前登陆状态",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "onError": "continueErrorOutput",
+        "notes": "AI Agent"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "52d2b100-5540-4da3-8ff6-8a5442094c6b",
+                "name": "error",
+                "value": "Agent获取登陆状态出错，请检查工作流。",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1232,
+          1072
+        ],
+        "id": "77454163-ada9-431d-a7a5-b79b26a4195a",
+        "name": "定义Agent错误提示消息",
+        "notesInFlow": true,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "52d2b100-5540-4da3-8ff6-8a5442094c6b",
+                "name": "error",
+                "value": "登陆状态异常，请重新登陆。",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1232,
+          880
+        ],
+        "id": "2d1eefcc-d6c0-4bbe-bf2b-5ca473b485dd",
+        "name": "定义登陆状态失效提示消息",
+        "notesInFlow": true,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "receive_id_type",
+                "value": "chat_id"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"小红书发布进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"{{ $json.error }} \\\"}]]}}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1456,
+          880
+        ],
+        "id": "f3b62263-f014-4b6a-8579-8936791192aa",
+        "name": "向群组发送登陆失效消息",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "receive_id_type",
+                "value": "chat_id"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"小红书发布进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"{{ $json.error }} \\\"}]]}}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1456,
+          1072
+        ],
+        "id": "e488b700-fc56-4ae7-ad5a-b5f3e985f9a9",
+        "name": "向群组发送错误消息",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "responsesApiEnabled": false,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          688,
+          1104
+        ],
+        "id": "1f79b6d5-0aca-445b-ac74-5de61a01dc02",
+        "name": "deepseek-v3  ",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          2448,
+          1056
+        ],
+        "id": "0aeb175c-b7c3-42f9-a103-a0ec44e06725",
+        "name": "gpt-4.1-mini  ",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 19,
+                "triggerAtMinute": 35
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          64,
+          752
+        ],
+        "id": "466086d8-3b8f-4e87-834f-6a93f70c5ca3",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "使用xiaohongshu-mcp中的check_login_status，检查小红书登陆状态，并以json结构化数据输出，数据类型为布尔类型\n\n例子：\n{\n    isLogin:true\n}",
+          "hasOutputParser": true,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3,
+        "position": [
+          80,
+          176
+        ],
+        "id": "6d45cdf5-11d5-4433-93e5-92720870807c",
+        "name": "检查小红书登陆",
+        "notesInFlow": true,
+        "notes": "AI Agent"
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n\t\"isLogin\": true\n}"
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          304,
+          384
+        ],
+        "id": "1aeb6376-f625-4b1d-9132-eb2592f2223c",
+        "name": "结构化输出登陆结果",
+        "notesInFlow": true,
+        "notes": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          592,
+          208
+        ],
+        "id": "b99f6f2e-e379-4a99-9100-a6bfc4037c30",
+        "name": "gpt-4.1-mini1",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "endpointUrl": "http://192.168.1.7:18060/mcp",
+          "include": "selected",
+          "includeTools": [
+            "publish_content"
+          ],
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+        "typeVersion": 1.2,
+        "position": [
+          752,
+          208
+        ],
+        "id": "7e600380-2f2a-4ffc-9f37-409089ae39d8",
+        "name": "小红书MCP1",
+        "notesInFlow": true,
+        "notes": "MCP Client"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "52d2b100-5540-4da3-8ff6-8a5442094c6b",
+                "name": "错误信息",
+                "value": "登陆异常",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          592,
+          416
+        ],
+        "id": "4903ecb1-8c81-4316-bea8-794a3ccc2dfd",
+        "name": "账号登陆错误",
+        "notesInFlow": true,
+        "notes": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "9c725f6a-1aff-4dd0-8d5a-80f9db0dcbe8",
+                "leftValue": "={{ $json.output.isLogin }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          384,
+          176
+        ],
+        "id": "ede80454-ddf6-4c36-ae12-d9bc8fb5beee",
+        "name": "登陆是否成功1",
+        "notesInFlow": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          32,
+          384
+        ],
+        "id": "6579c9e0-0afa-46a4-99fc-5e263bf2a1d0",
+        "name": "gpt-4.1-mini2",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "endpointUrl": "http://192.168.1.7:18060/mcp",
+          "include": "selected",
+          "includeTools": [
+            "check_login_status"
+          ],
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+        "typeVersion": 1.2,
+        "position": [
+          160,
+          384
+        ],
+        "id": "fdde9f04-fb1e-4ddc-bced-55c835570db9",
+        "name": "小红书MCP2",
+        "notesInFlow": true,
+        "notes": "MCP Client"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "使用xiaohongshu-mcp中的publish_content\n标题：\"这里是南哥AGI研习社\"\n正文：'南哥AGI研习社'\n配图： /Volumes/Files/xhsmcp/01.jpg、/Volumes/Files/xhsmcp/02.jpg\n标签：#AI、#n8n\n\n请立即发布，不需要确认。",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 1.7,
+        "position": [
+          592,
+          16
+        ],
+        "id": "76a3d050-42c0-45d3-a042-9fbc5d9a6aec",
+        "name": "发布小红书图文1",
+        "notesInFlow": true,
+        "notes": "AI Agent"
+      },
+      {
+        "parameters": {
+          "content": "## 定时触发\n- 检查小红书登陆状态\n- 获取当前触发的表格记录内容",
+          "height": 640,
+          "width": 1696,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          0,
+          624
+        ],
+        "typeVersion": 1,
+        "id": "810be30c-0434-4361-82b2-f8d73a1a8ba1",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "ef740281-8365-414c-baa8-79d8f7014992",
+                "name": "xhs_endpoint",
+                "value": "http://host.docker.internal:18060/mcp",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          272,
+          896
+        ],
+        "id": "15044261-8a1a-4afe-a6db-c92f1c144403",
+        "name": "定义小红书MCP端点"
+      },
+      {
+        "parameters": {
+          "content": "## AI润色文案\n- 获取当前循环的记录内容\n- 根据发布平台的不同润色不同风格的文案",
+          "height": 512,
+          "width": 992,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          2000,
+          688
+        ],
+        "typeVersion": 1,
+        "id": "1fca9939-891c-4edb-b4cd-78b7401bf93a",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "content": "## 短视频发布归档\n- 以发布日期动态创建文件夹\n- 发布成功的视频自动归档\n- 从飞书多维表格记录中的短视频列下载短视频",
+          "height": 512,
+          "width": 1200,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          3024,
+          688
+        ],
+        "typeVersion": 1,
+        "id": "fa8a11e7-d5c5-4cfd-ae34-a1f9590d5f49",
+        "name": "Sticky Note2"
+      },
+      {
+        "parameters": {
+          "content": "## 小红书MCP测试",
+          "height": 576,
+          "width": 928,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          0,
+          0
+        ],
+        "typeVersion": 1,
+        "id": "1ea701a2-b799-4f71-901f-ec0fb7271dbb",
+        "name": "Sticky Note4"
+      },
+      {
+        "parameters": {
+          "jsonSchemaExample": "{\n\t\"isPublished\": true\n}",
+          "autoFix": true
+        },
+        "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+        "typeVersion": 1.3,
+        "position": [
+          4720,
+          1040
+        ],
+        "id": "9c232afe-dc04-4c3c-a0e7-d37aa74bcca0",
+        "name": "结构化输出发布结果",
+        "notesInFlow": true,
+        "notes": "Structured Output Parser"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "responsesApiEnabled": false,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          4592,
+          1040
+        ],
+        "id": "3e4e39b3-6eb7-47eb-bbd3-fe63e72323d9",
+        "name": "deepseek-v3   ",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "9c725f6a-1aff-4dd0-8d5a-80f9db0dcbe8",
+                "leftValue": "={{ $json.output.isPublished }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          4624,
+          800
+        ],
+        "id": "c91b0d6e-8306-4ab1-af31-4d90f24d0a3c",
+        "name": "发布是否成功",
+        "notesInFlow": true,
+        "notes": "If"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格').item.json.app_token }}/tables/{{ $('指定多维表格').item.json.table_id }}/records/{{ $('循环处理').item.json.record_id }} }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fields\": {\n    \"当前状态\": \"发布出错\",\n    \"发布日期\": {{ '' + $now }} \n  }\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          4848,
+          864
+        ],
+        "id": "ab7dfa4e-aa18-455e-bc06-ae76e1d73976",
+        "name": "更新记录 发布出错",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "receive_id_type",
+                "value": "chat_id"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"小红书发布进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**视频主题**:{{ $('获取多维表格单条记录').item.json.data.items[0].fields['主题'][0].text }}\\\\\\n **发布时间**:{{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}\\\\\\n **当前状态**:{{ $json.data.record.fields['当前状态'] }}\\\"}],[{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://r1l3h3s8hbg.feishu.cn/base/TZqcbwWqeaQrCPsvc7fc2m5nnnd?table=tbl15M0lbST63Ya5&view=vewI3sjaI0\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          5056,
+          864
+        ],
+        "id": "66a95cf0-0227-4f51-8125-0cf1bd2c86ae",
+        "name": "向群组发送即时消息 ",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "content": "## 短视频发布到小红书\n- 在小红书中发布视频\n- 发布成功后修改当前记录状态为“已发布”\n- 群消息通知发布实时状态",
+          "height": 512,
+          "width": 1152,
+          "color": 5
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          4256,
+          688
+        ],
+        "typeVersion": 1,
+        "id": "d0e98fc2-79dc-41cd-8744-f38f51884539",
+        "name": "Sticky Note5"
+      },
+      {
+        "parameters": {
+          "method": "PUT",
+          "url": "=https://open.feishu.cn/open-apis/bitable/v1/apps/{{ $('指定多维表格').item.json.app_token }}/tables/{{ $('指定多维表格').item.json.table_id }}/records/{{ $('循环处理').item.json.record_id }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"fields\": {\n    \"当前状态\": \"已发布\",\n    \"发布日期\": {{ '' + $now }} \n  }\n} ",
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          4848,
+          704
+        ],
+        "id": "7526724a-39bd-405f-adc5-395f0fe364fe",
+        "name": "更新记录 已发布",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://open.feishu.cn/open-apis/im/v1/messages",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "receive_id_type",
+                "value": "chat_id"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $('获取飞书token').item.json.tenant_access_token }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"receive_id\":\"oc_9619619c722d54d1b6589f7405855d59\",\n    \"msg_type\": \"post\",\n    \"content\":\"{\\\"zh_cn\\\":{\\\"title\\\":\\\"小红书发布进度\\\",\\\"content\\\":[[{\\\"tag\\\":\\\"at\\\",\\\"user_id\\\":\\\"\\\",\\\"user_name\\\":\\\"所有人\\\"}],[{\\\"tag\\\":\\\"md\\\",\\\"text\\\":\\\"**视频主题**:{{ $('获取多维表格单条记录').item.json.data.items[0].fields['主题'][0].text }}\\\\\\n **发布时间**:{{ $now.toFormat('yyyy-MM-dd HH:mm:ss') }}\\\\\\n **当前状态**:{{ $json.data.record.fields['当前状态'] }}\\\"}],[{\\\"tag\\\":\\\"a\\\",\\\"href\\\":\\\"https://r1l3h3s8hbg.feishu.cn/base/TZqcbwWqeaQrCPsvc7fc2m5nnnd?table=tbl15M0lbST63Ya5&view=vewI3sjaI0\\\",\\\"text\\\":\\\"点击查看详情\\\"}]]}}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          5056,
+          704
+        ],
+        "id": "32b3acc8-2d8e-440f-b537-041a2077839d",
+        "name": "向群组发送即时消息",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=使用xiaohongshu-mcp中的publish_with_video\n标题：{{ $('小红书风格标题和文案润色').item.json.output.title }}\n正文：{{ $('小红书风格标题和文案润色').item.json.output.content }}\n视频： /Volumes/Files/n8n-files/{{ $('设置本地文件夹名称').item.json.fold }}/{{ $('设置短视频名称').item.json['短视频名称'] }}\n标签：{{ $('小红书风格标题和文案润色').item.json.output.tags }}\n\n请立即发布，不需要确认。 \n\n发布的结果以json结构化数据输出，数据类型为布尔类型。发布成功为true，失败则为false。",
+          "hasOutputParser": true,
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 1.7,
+        "position": [
+          4320,
+          832
+        ],
+        "id": "2efeebcd-adc6-43dc-86bd-1f6c2fdaf7c0",
+        "name": "发布小红书图文",
+        "notesInFlow": true,
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "notes": "AI Agent"
+      },
+      {
+        "parameters": {
+          "endpointUrl": "={{ $('定义小红书MCP端点').item.json.xhs_endpoint }}",
+          "include": "selected",
+          "includeTools": [
+            "publish_with_video"
+          ],
+          "options": {
+            "timeout": 60000
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+        "typeVersion": 1.2,
+        "position": [
+          4464,
+          1040
+        ],
+        "id": "365f202a-cd2d-4584-a639-95558bd2f613",
+        "name": "小红书MCP ",
+        "notesInFlow": true,
+        "notes": "MCP Client"
+      },
+      {
+        "parameters": {
+          "model": {
+            "__rl": true,
+            "value": "agnes-2.5-flash",
+            "mode": "list",
+            "cachedResultName": "agnes-2.5-flash"
+          },
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "typeVersion": 1.3,
+        "position": [
+          4336,
+          1040
+        ],
+        "id": "d69d687b-e884-42b5-aa1a-b295b17591fe",
+        "name": "gpt-4.1-mini ",
+        "notesInFlow": true,
+        "credentials": {
+          "openAiApi": {
+            "id": "wFfkpLGXSLI513V2",
+            "name": "Agent AI"
+          }
+        },
+        "notes": "OpenAI Chat Model"
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          []
+        ]
+      },
+      "获取飞书token": {
+        "main": [
+          [
+            {
+              "node": "检查小红书当前登陆状态",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "循环处理": {
+        "main": [
+          [
+            {
+              "node": "合并最终数据统一处理",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "获取多维表格单条记录",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取多维表格记录": {
+        "main": [
+          [
+            {
+              "node": "拆分和过滤数据",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "指定多维表格": {
+        "main": [
+          [
+            {
+              "node": "获取多维表格记录",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "合并最终数据统一处理": {
+        "main": [
+          [
+            {
+              "node": "获取飞书token2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取多维表格单条记录": {
+        "main": [
+          [
+            {
+              "node": "更新记录 发布中",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "拆分和过滤数据": {
+        "main": [
+          [
+            {
+              "node": "循环处理",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gpt-4.1-mini": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "检查小红书当前登陆状态",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "小红书MCP": {
+        "ai_tool": [
+          [
+            {
+              "node": "检查小红书当前登陆状态",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "登陆是否成功": {
+        "main": [
+          [
+            {
+              "node": "指定多维表格",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "定义登陆状态失效提示消息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "更新记录 发布中": {
+        "main": [
+          [
+            {
+              "node": "小红书风格标题和文案润色",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "deepseek-v3 ": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "结构化输出标题和正文",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "结构化输出结果": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "检查小红书当前登陆状态",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "小红书风格标题和文案润色": {
+        "main": [
+          [
+            {
+              "node": "标题格式化处理",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "保存短视频到本地": {
+        "main": [
+          [
+            {
+              "node": "发布小红书图文",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "下载短视频": {
+        "main": [
+          [
+            {
+              "node": "设置短视频名称",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取短视频元数据": {
+        "main": [
+          [
+            {
+              "node": "下载短视频",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "标题格式化处理": {
+        "main": [
+          [
+            {
+              "node": "设置本地文件夹名称",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "设置短视频名称": {
+        "main": [
+          [
+            {
+              "node": "保存短视频到本地",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "结构化输出标题和正文": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "小红书风格标题和文案润色",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "等待10分钟": {
+        "main": [
+          [
+            {
+              "node": "循环处理",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取飞书token2": {
+        "main": [
+          [
+            {
+              "node": "向群组发送已完成消息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "检查小红书当前登陆状态": {
+        "main": [
+          [
+            {
+              "node": "登陆是否成功",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "定义Agent错误提示消息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "定义Agent错误提示消息": {
+        "main": [
+          [
+            {
+              "node": "向群组发送错误消息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "定义登陆状态失效提示消息": {
+        "main": [
+          [
+            {
+              "node": "向群组发送登陆失效消息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "deepseek-v3  ": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "结构化输出结果",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gpt-4.1-mini  ": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "小红书风格标题和文案润色",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "检查小红书登陆": {
+        "main": [
+          [
+            {
+              "node": "登陆是否成功1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "结构化输出登陆结果": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "检查小红书登陆",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gpt-4.1-mini1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "发布小红书图文1",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "小红书MCP1": {
+        "ai_tool": [
+          [
+            {
+              "node": "发布小红书图文1",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "登陆是否成功1": {
+        "main": [
+          [
+            {
+              "node": "发布小红书图文1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "账号登陆错误",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gpt-4.1-mini2": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "检查小红书登陆",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "小红书MCP2": {
+        "ai_tool": [
+          [
+            {
+              "node": "检查小红书登陆",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "定义小红书MCP端点": {
+        "main": [
+          [
+            {
+              "node": "获取飞书token",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "结构化输出发布结果": {
+        "ai_outputParser": [
+          [
+            {
+              "node": "发布小红书图文",
+              "type": "ai_outputParser",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "deepseek-v3   ": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "结构化输出发布结果",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "发布是否成功": {
+        "main": [
+          [
+            {
+              "node": "更新记录 已发布",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "更新记录 发布出错",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "更新记录 发布出错": {
+        "main": [
+          [
+            {
+              "node": "向群组发送即时消息 ",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "向群组发送即时消息 ": {
+        "main": [
+          [
+            {
+              "node": "等待10分钟",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "更新记录 已发布": {
+        "main": [
+          [
+            {
+              "node": "向群组发送即时消息",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "向群组发送即时消息": {
+        "main": [
+          [
+            {
+              "node": "等待10分钟",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "发布小红书图文": {
+        "main": [
+          [
+            {
+              "node": "发布是否成功",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "小红书MCP ": {
+        "ai_tool": [
+          [
+            {
+              "node": "发布小红书图文",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gpt-4.1-mini ": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "发布小红书图文",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "定义小红书MCP端点",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Vincent Li",
+    "name": "Version 4ff9a81e",
+    "description": "",
+    "autosaved": true
+  },
+  "tags": []
+}
