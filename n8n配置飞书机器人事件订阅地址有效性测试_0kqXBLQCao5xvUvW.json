@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-27T15:02:23.141Z",
+  "updatedAt": "2026-08-06T12:12:03.715Z",
   "createdAt": "2026-07-27T15:02:23.141Z",
   "id": "0kqXBLQCao5xvUvW",
   "name": "n8n配置飞书机器人事件订阅地址有效性测试",
@@ -81,7 +81,7 @@
   "meta": null,
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "a37a833b-4dd7-4a04-ac69-aa806ecd5dd0",
+  "versionId": "47a9cfc5-56e7-4444-b0ea-a6ee262958ce",
   "activeVersionId": null,
   "triggerCount": 0,
   "shared": [
