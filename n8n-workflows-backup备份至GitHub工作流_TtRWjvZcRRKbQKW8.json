@@ -126,7 +126,7 @@
   "nodeGroups": [],
   "pinData": {},
   "versionId": "54e87992-bfab-4cab-889a-8127d8a015ef",
-  "activeVersionId": "9551dd20-860d-4ccc-9510-191543c6b267",
+  "activeVersionId": "54e87992-bfab-4cab-889a-8127d8a015ef",
   "triggerCount": 1,
   "shared": [
     {
@@ -138,9 +138,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-08-09T22:14:07.000Z",
-    "createdAt": "2026-08-09T22:05:43.826Z",
-    "versionId": "9551dd20-860d-4ccc-9510-191543c6b267",
+    "updatedAt": "2026-08-09T23:01:06.000Z",
+    "createdAt": "2026-08-09T22:56:21.039Z",
+    "versionId": "54e87992-bfab-4cab-889a-8127d8a015ef",
     "workflowId": "TtRWjvZcRRKbQKW8",
     "nodes": [
       {
@@ -184,7 +184,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const workflows = $input.first().json.data;\nconst results = [];\n\nfor (const wf of workflows) {\n  // 过滤文件名中的非法字符\n  const safeName = wf.name.replace(/[^a-zA-Z0-9_\\u4e00-\\u9fa5\\-]/g, '_');\n  const fileName = `${safeName}_${wf.id}.json`;\n  \n  results.push({\n    json: {\n      id: wf.id,\n      name: wf.name,\n      fileName: fileName,\n      // 格式化美化 JSON\n      content: JSON.stringify(wf, null, 2)\n    }\n  });\n}\n\nreturn results;"
+          "jsCode": "const fs = require('fs');\n\nconst backupDir = '/home/node/n8n-backups';\nif (!fs.existsSync(backupDir)) {\n  fs.mkdirSync(backupDir, { recursive: true });\n}\n\nconst inputJson = $input.first().json;\nconst workflows = Array.isArray(inputJson) ? inputJson : (inputJson.data || []);\n\nreturn workflows.map(wf => {\n  const safeName = (wf.name || 'unnamed_workflow')\n    .replace(/[/\\\\?%*:|\"<>]/g, '_')\n    .trim();\n    \n  const fileName = `${safeName}_${wf.id}.json`;\n  const filePath = `${backupDir}/${fileName}`;\n  \n  fs.writeFileSync(filePath, JSON.stringify(wf, null, 2), 'utf8');\n\n  return {\n    json: {\n      id: wf.id,\n      name: wf.name,\n      fileName: fileName\n    }\n  };\n});"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -197,8 +197,7 @@
       },
       {
         "parameters": {
-          "executeOnce": false,
-          "command": "=export GIT_TERMINAL_PROMPT=0\ncd /home/node/n8n-backups\n\n# 1. Base64 安全写入文件\necho \"{{ Buffer.from($json.content).toString('base64') }}\" | base64 -d > \"{{ $json.fileName }}\"\n\n# 2. Git 基础配置\ngit config --global --add safe.directory /home/node/n8n-backups\ngit config --global user.name \"n8n-bot\"\ngit config --global user.email \"n8n@local.com\"\n\n# 3. 读取环境变量中的 Token，不再硬编码\ngit remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/lijixin0623/n8n-workflows-backup.git\n\n# 4. 提交并推送\ngit add .\nif [ -n \"$(git status --porcelain)\" ]; then\n  git commit -m \"Auto backup: {{ $json.name }}\"\n  git push origin main\nfi"
+          "command": "=export GIT_TERMINAL_PROMPT=0\ncd /home/node/n8n-backups\n\n# 1. 配置 Git 基础信息\ngit config --global --add safe.directory /home/node/n8n-backups\ngit config --global user.name \"n8n-bot\"\ngit config --global user.email \"n8n@local.com\"\n\n# 2. 绑定远程库\ngit remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/lijixin0623/n8n-workflows-backup.git\n\n# 3. 提交并推送\ngit add .\nif [ -n \"$(git status --porcelain)\" ]; then\n  git commit -m \"Auto backup workflows: $(date '+%Y-%m-%d %H:%M:%S')\"\n  git push origin main\nfi"
         },
         "type": "n8n-nodes-base.executeCommand",
         "typeVersion": 1,
@@ -247,7 +246,7 @@
     },
     "nodeGroups": [],
     "authors": "Vincent Li",
-    "name": "Version 9551dd20",
+    "name": "Version 54e87992",
     "description": "",
     "autosaved": true
   },

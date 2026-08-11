@@ -2387,7 +2387,7 @@
   "nodeGroups": [],
   "pinData": {},
   "versionId": "eeaf6be7-7be4-460f-9f01-22b6d96dcfdf",
-  "activeVersionId": "9c1b2560-9158-4920-b618-63f7663d7336",
+  "activeVersionId": "eeaf6be7-7be4-460f-9f01-22b6d96dcfdf",
   "triggerCount": 1,
   "shared": [
     {
@@ -2399,9 +2399,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-08-02T12:53:55.000Z",
-    "createdAt": "2026-07-31T20:55:21.339Z",
-    "versionId": "9c1b2560-9158-4920-b618-63f7663d7336",
+    "updatedAt": "2026-08-10T12:22:24.000Z",
+    "createdAt": "2026-08-02T13:49:38.743Z",
+    "versionId": "eeaf6be7-7be4-460f-9f01-22b6d96dcfdf",
     "workflowId": "KT6q3husx3g1OjCO",
     "nodes": [
       {
@@ -2630,7 +2630,7 @@
           "url": "=http://host.docker.internal:8080/api/v1/videos",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={\n    \"video_subject\": \"{{ $json.video_subject }}\",\n    \"video_script\": \"{{ $json.video_script }}\",\n    \"video_terms\": \"{{ $json.video_terms }}\",\n    \"video_aspect\": \"{{ $json.video_aspect }}\",\n    \"video_concat_mode\": \"{{ $json.video_concat_mode }}\",\n    \"video_transition_mode\": \"{{ $json.video_transition_mode }}\",\n    \"video_clip_duration\": {{ $json.video_clip_duration }},\n    \"video_count\": {{ $json.video_count }},\n    \"video_source\": \"{{ $json.video_source }}\",\n    \"video_materials\":{{ $json.video_materials }},\n    \"video_language\": \"{{ $json.video_language }}\",\n    \"voice_name\": \"{{ $json.voice_name }}\",\n    \"voice_volume\": {{ $json.voice_volume }},\n    \"voice_rate\": {{ $json.voice_rate }},\n    \"bgm_type\": \"{{ $json.bgm_type }}\",\n    \"bgm_file\": \"{{ $json.bgm_file }}\",\n    \"bgm_volume\": {{ $json.bgm_volume }},\n    \"subtitle_enabled\": {{ $json.subtitle_enabled }},\n    \"subtitle_position\": \"{{ $json.subtitle_position }}\",\n    \"custom_position\": {{ $json.custom_position }},\n    \"font_name\": \"{{ $json.font_name }}\",\n    \"text_fore_color\": \"{{ $json.text_fore_color }}\",\n    \"text_background_color\": {{ $json.text_background_color }},\n    \"font_size\": {{ $json.font_size }},\n    \"stroke_color\": \"{{ $json.stroke_color }}\",\n    \"stroke_width\": {{ $json.stroke_width }},\n    \"n_threads\": {{ $json.n_threads }},\n    \"paragraph_number\": {{ $json.paragraph_number }}\n} ",
+          "jsonBody": "={\n  \"video_subject\": \"{{ $json.video_subject }}\",\n  \"video_script\": \"{{ $json.video_script }}\",\n  \"video_terms\": \"{{ $json.video_terms }}\",\n  \"video_aspect\": \"{{ $json.video_aspect }}\",\n  \"video_concat_mode\": \"{{ $json.video_concat_mode }}\",\n  \"video_transition_mode\": \"{{ $json.video_transition_mode }}\",\n  \"video_clip_duration\": {{ $json.video_clip_duration }},\n  \"video_count\": {{ $json.video_count }},\n  \"video_source\": \"{{ $json.video_source }}\",\n  \"video_materials\": {{ JSON.stringify($json.video_materials) }},\n  \"video_language\": \"{{ $json.video_language }}\",\n  \"voice_name\": \"{{ $json.voice_name }}\",\n  \"voice_volume\": {{ $json.voice_volume }},\n  \"voice_rate\": {{ $json.voice_rate }},\n  \"bgm_type\": \"{{ $json.bgm_type }}\",\n  \"bgm_file\": \"{{ $json.bgm_file }}\",\n  \"bgm_volume\": {{ $json.bgm_volume }},\n  \"subtitle_enabled\": {{ $json.subtitle_enabled }},\n  \"subtitle_position\": \"{{ $json.subtitle_position }}\",\n  \"custom_position\": {{ $json.custom_position }},\n  \"font_name\": \"{{ $json.font_name }}\",\n  \"text_fore_color\": \"{{ $json.text_fore_color }}\",\n  \"text_background_color\": {{ $json.text_background_color }},\n  \"font_size\": {{ $json.font_size }},\n  \"stroke_color\": \"{{ $json.stroke_color }}\",\n  \"stroke_width\": {{ $json.stroke_width }},\n  \"n_threads\": {{ $json.n_threads }},\n  \"paragraph_number\": {{ $json.paragraph_number }}\n}",
           "options": {
             "timeout": 60000
           }
@@ -3526,7 +3526,7 @@
       {
         "parameters": {
           "mode": "raw",
-          "jsonOutput": "={\n  \"video_subject\": {{ $('获取多维表格记录').item.json.data.items[0].fields[\"主题\"][0].text.toJsonString() }},\n  \"video_script\": {{ $('文案统一格式').item.json['脚本文案'].toJsonString() }},\n  \"video_terms\": {{ $('文案统一格式').item.json['文案关键词'].toJsonString() }},\n  \"video_aspect\": {{ $json['宽高比'].toJsonString() }},\n  \"video_concat_mode\": {{ $json['合成模式'].toJsonString() }},\n  \"video_transition_mode\": {{ $json['转场模式'].toJsonString() }},\n  \"video_clip_duration\": 4,\n  \"video_count\": 1,\n  \"video_source\": {{ $json['素材来源'].toJsonString() }},\n  \"video_materials\": {{ $json['本地图片视频素材'].toJsonString() }},\n  \"video_language\": \"\",\n  \"voice_name\": {{ $json['配音音色'].toJsonString() }},\n  \"voice_volume\": 1.0,\n  \"voice_rate\": 1.2,\n  \"bgm_type\": {{ $json['背景音乐类型'].toJsonString() }},\n  \"bgm_file\": {{ $json['本地背景音乐素材'].toJsonString() }},\n  \"bgm_volume\": 0.4,\n  \"subtitle_enabled\": true,\n  \"subtitle_position\": \"bottom\",\n  \"custom_position\": 70.0,\n  \"font_name\": \"MicrosoftYaHeiBold.ttc\",\n  \"text_fore_color\": \"#FFFFFF\",\n  \"text_background_color\": true,\n  \"font_size\": 60,\n  \"stroke_color\": \"#000000\",\n  \"stroke_width\": 1.5,\n  \"n_threads\": 2,\n  \"paragraph_number\": 1\n} ",
+          "jsonOutput": "={\n  \"video_subject\": {{ ($json['主题'] || $json.video_subject || \"\").toJsonString() }},\n  \"video_script\": {{ ($json['脚本文案'] || $json.formatted_text || $json.video_script || \"\").toJsonString() }},\n  \"video_terms\": {{ ($json['文案关键词'] || $json.Video_Keywords || $json.video_terms || \"\").toJsonString() }},\n  \"video_aspect\": {{ ($json['宽高比'] || \"16:9\").toJsonString() }},\n  \"video_concat_mode\": {{ ($json['合成模式'] || \"sequential\").toJsonString() }},\n  \"video_transition_mode\": {{ ($json['转场模式'] || \"none\").toJsonString() }},\n  \"video_clip_duration\": 4,\n  \"video_count\": 1,\n  \"video_source\": {{ ($json['素材来源'] || \"local\").toJsonString() }},\n  \"video_materials\": {{ $json['本地图片视频素材'] || [] }},\n  \"bgm_file\": {{ ($json['本地背景音乐素材'] || \"\").toJsonString() }},\n  \"video_language\": \"\",\n  \"voice_name\": {{ ($json['配音音色'] || \"zh-CN-XiaoxiaoNeural\").toJsonString() }},\n  \"voice_volume\": 1.0,\n  \"voice_rate\": 1.2,\n  \"bgm_type\": {{ ($json['背景音乐类型'] || \"none\").toJsonString() }},\n  \"bgm_volume\": 0.4,\n  \"subtitle_enabled\": true,\n  \"subtitle_position\": \"bottom\",\n  \"custom_position\": 70.0,\n  \"font_name\": \"MicrosoftYaHeiBold.ttc\",\n  \"text_fore_color\": \"#FFFFFF\",\n  \"text_background_color\": true,\n  \"font_size\": 60,\n  \"stroke_color\": \"#000000\",\n  \"stroke_width\": 1.5,\n  \"n_threads\": 2,\n  \"paragraph_number\": 1\n}",
           "options": {}
         },
         "type": "n8n-nodes-base.set",
@@ -4771,7 +4771,7 @@
     },
     "nodeGroups": [],
     "authors": "Vincent Li",
-    "name": "Version 9c1b2560",
+    "name": "Version eeaf6be7",
     "description": "",
     "autosaved": true
   },
